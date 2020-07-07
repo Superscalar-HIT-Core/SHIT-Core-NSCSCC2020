@@ -52,7 +52,9 @@ wire [`PRF_NUM-1:0] free_list_after_alloc = allocatable ? free_list_3 : free_lis
 assign free_list_4 = free_0_req ? (free_list_after_alloc & ~(`PRF_NUM'b1 << free_0_num)) : free_list_after_alloc;
 assign free_list_5 = free_1_req ? (free_list_4 & ~(`PRF_NUM'b1 << free_1_num)) : free_list_4;
 
-assign allocatable = free_valid_0 & free_valid_1;
+assign allocatable =  (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req) ||
+                      (free_valid_0 && inst_0_req && ~inst_1_req) ||
+                      (free_valid_1 && inst_1_req && ~inst_0_req); // 只有一个指令请求，且请求完就满了的情况
 
 always @(posedge clk)   begin
     if(rst) begin
