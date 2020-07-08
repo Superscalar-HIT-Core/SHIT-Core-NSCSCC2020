@@ -41,6 +41,7 @@ module map_table(
     input commit_1_valid,
     input commit_info commit_info_0,
     input commit_info commit_info_1
+    // TODO: 处理HILO寄存器，重命名是统一的重命名，但是映射表中进行单独的记录
 );
 
 
