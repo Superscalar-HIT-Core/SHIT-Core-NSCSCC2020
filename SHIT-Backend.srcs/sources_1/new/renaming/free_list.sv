@@ -1,9 +1,10 @@
-`include "defines.svh"
+`timescale 1ns / 1ps
+`include "../defines/defines.svh"
 module free_list(
     input clk,
     input rst,
     input recover,      // recover 信号仅支持一个周期
-    // 来自指令的重命名请求
+    // 来自指令的重命名请求，如果目的寄存器是0，则不需要进行重命名
     input inst_0_req,
     input inst_1_req,
     output [`PRF_NUM_WIDTH-1:0] inst_0_prf,
