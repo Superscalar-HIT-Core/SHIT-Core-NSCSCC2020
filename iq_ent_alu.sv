@@ -1,6 +1,5 @@
 `timescale 1ns / 1ps
-`define ALU_OP_WIDTH 4
-`define PRF_NUM_WIDTH 6
+`include "defines/defines.svh"
 module iq_ent_alu(
     input clk,
     input rst,
@@ -81,31 +80,29 @@ end
 wire rs1_bypass_rdy_inqueue =   ( wb_num0_i == prf_rs_1_o ) || 
                                 ( wb_num1_i == prf_rs_1_o ) ||
                                 ( wb_num2_i == prf_rs_1_o ) ||
-                                ( wb_num3_i == prf_rs_1_o ) || 
-                                ( ~r_rs1_o );
+                                ( wb_num3_i == prf_rs_1_o ) ;
 
 wire rs2_bypass_rdy_inqueue =   ( wb_num0_i == prf_rs_2_o ) || 
                                 ( wb_num1_i == prf_rs_2_o ) ||
                                 ( wb_num2_i == prf_rs_2_o ) ||
-                                ( wb_num3_i == prf_rs_2_o ) ||
-                                ( ~r_rs2_o );
+                                ( wb_num3_i == prf_rs_2_o ) ;
 
-// 进入时作比较
-wire rs1_bypass_rdy_atentry =   ( wb_num0_i == prf_rs_1_i ) || 
-                                ( wb_num1_i == prf_rs_1_i ) ||
-                                ( wb_num2_i == prf_rs_1_i ) ||
-                                ( wb_num3_i == prf_rs_1_i ) ||
-                                ( ~r_rs1_i );
+// 进入时作比较(no longer needed since the logic is handled in the busy table)
+// wire rs1_bypass_rdy_atentry =   ( wb_num0_i == prf_rs_1_i ) || 
+//                                 ( wb_num1_i == prf_rs_1_i ) ||
+//                                 ( wb_num2_i == prf_rs_1_i ) ||
+//                                 ( wb_num3_i == prf_rs_1_i ) ||
+//                                 ( ~r_rs1_i );
 
-wire rs2_bypass_rdy_atentry =   ( wb_num0_i == prf_rs_2_i ) || 
-                                ( wb_num1_i == prf_rs_2_i ) ||
-                                ( wb_num2_i == prf_rs_2_i ) ||
-                                ( wb_num3_i == prf_rs_2_i ) ||
-                                ( ~r_rs2_i );
+// wire rs2_bypass_rdy_atentry =   ( wb_num0_i == prf_rs_2_i ) || 
+//                                 ( wb_num1_i == prf_rs_2_i ) ||
+//                                 ( wb_num2_i == prf_rs_2_i ) ||
+//                                 ( wb_num3_i == prf_rs_2_i ) ||
+//                                 ( ~r_rs2_i );
 
 // 不读寄存器，永远是ready，否则需要入口判断
-wire rs1_rdy_atentry = ( ~r_rs1_i ) || ( r_rs1_i && prf_rs_1_rdy_i ) || rs1_bypass_rdy_atentry ;  
-wire rs2_rdy_atentry = ( ~r_rs2_i ) || ( r_rs2_i && prf_rs_2_rdy_i ) || rs2_bypass_rdy_atentry ;
+wire rs1_rdy_atentry = ( ~r_rs1_i ) || ( r_rs1_i && prf_rs_1_rdy_i ) ;  
+wire rs2_rdy_atentry = ( ~r_rs2_i ) || ( r_rs2_i && prf_rs_2_rdy_i ) ;
 
 reg rs1_rdy,rs2_rdy;
 
