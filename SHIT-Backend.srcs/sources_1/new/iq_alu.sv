@@ -6,7 +6,7 @@ module iq_alu(
     input enq_req_0,
     input enq_req_1,
     input deq_req_0,
-    input deq_req_1
+    input deq_req_1 
     
     );
 genvar i;

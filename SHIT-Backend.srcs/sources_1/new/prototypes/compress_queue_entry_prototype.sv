@@ -6,6 +6,8 @@ module compress_queue_entry_prototype(
     input rst,
     input cmp_en,
     input [1:0] dsel,
+    input enq_en,
+    input enq_sel,
     input [3:0] din1,
     input [3:0] din2,
 
@@ -19,12 +21,16 @@ wire [3:0] new_data = (dsel == `CMPQ_SEL_DIN1) ? din1 :
                       (dsel == `CMPQ_SEL_UP1) ? up1_data :
                       (dsel == `CMPQ_SEL_UP2) ? up2_data : dout;
 
+wire [3:0] enq_data = (enq_sel == 0) ? din1 : din2;
+
 always @(posedge clk) begin
     if(rst) begin
         dout <= 4'b0;
-    end else if(wen)    begin
+    end else if(cmp_en)    begin
         dout <= new_data;
-    end 
+    end else if(enq_en)     begin
+        dout <= enq_data;
+    end
 end
 
 endmodule
