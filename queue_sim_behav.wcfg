@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="queue_sim_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="queue_sim" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="1370001fs"></ZoomEndTime>
+      <Cursor1Time time="0fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="175"></NameColumnWidth>
+      <ValueColumnWidth column_width="145"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="22" />
+   <wvobject fp_name="/queue_sim/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/enq1req" type="logic">
+      <obj_property name="ElementShortName">enq1req</obj_property>
+      <obj_property name="ObjectShortName">enq1req</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/enq2req" type="logic">
+      <obj_property name="ElementShortName">enq2req</obj_property>
+      <obj_property name="ObjectShortName">enq2req</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/deq1req" type="logic">
+      <obj_property name="ElementShortName">deq1req</obj_property>
+      <obj_property name="ObjectShortName">deq1req</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/deq2req" type="logic">
+      <obj_property name="ElementShortName">deq2req</obj_property>
+      <obj_property name="ObjectShortName">deq2req</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/din1" type="array">
+      <obj_property name="ElementShortName">din1[3:0]</obj_property>
+      <obj_property name="ObjectShortName">din1[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/din2" type="array">
+      <obj_property name="ElementShortName">din2[3:0]</obj_property>
+      <obj_property name="ObjectShortName">din2[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/deq1idx" type="array">
+      <obj_property name="ElementShortName">deq1idx[3:0]</obj_property>
+      <obj_property name="ObjectShortName">deq1idx[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/deq2idx" type="array">
+      <obj_property name="ElementShortName">deq2idx[3:0]</obj_property>
+      <obj_property name="ObjectShortName">deq2idx[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/deq1data" type="array">
+      <obj_property name="ElementShortName">deq1data[3:0]</obj_property>
+      <obj_property name="ObjectShortName">deq1data[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/deq2data" type="array">
+      <obj_property name="ElementShortName">deq2data[3:0]</obj_property>
+      <obj_property name="ObjectShortName">deq2data[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/almost_full" type="logic">
+      <obj_property name="ElementShortName">almost_full</obj_property>
+      <obj_property name="ObjectShortName">almost_full</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/almost_empty" type="logic">
+      <obj_property name="ElementShortName">almost_empty</obj_property>
+      <obj_property name="ObjectShortName">almost_empty</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/full" type="logic">
+      <obj_property name="ElementShortName">full</obj_property>
+      <obj_property name="ObjectShortName">full</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/empty" type="logic">
+      <obj_property name="ElementShortName">empty</obj_property>
+      <obj_property name="ObjectShortName">empty</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/u_compress_queue_prototype/tail" type="array">
+      <obj_property name="ElementShortName">tail[3:0]</obj_property>
+      <obj_property name="ObjectShortName">tail[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/u_compress_queue_prototype/wr_vec_0" type="array">
+      <obj_property name="ElementShortName">wr_vec_0[15:0]</obj_property>
+      <obj_property name="ObjectShortName">wr_vec_0[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/queue_sim/u_compress_queue_prototype/wr_vec_1" type="array">
+      <obj_property name="ElementShortName">wr_vec_1[15:0]</obj_property>
+      <obj_property name="ObjectShortName">wr_vec_1[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="group152" type="group">
+      <obj_property name="label">Slot 0</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /clk" type="logic">
+         <obj_property name="ElementShortName">clk</obj_property>
+         <obj_property name="ObjectShortName">clk</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /rst" type="logic">
+         <obj_property name="ElementShortName">rst</obj_property>
+         <obj_property name="ObjectShortName">rst</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /cmp_en" type="logic">
+         <obj_property name="ElementShortName">cmp_en</obj_property>
+         <obj_property name="ObjectShortName">cmp_en</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /dsel" type="array">
+         <obj_property name="ElementShortName">dsel[1:0]</obj_property>
+         <obj_property name="ObjectShortName">dsel[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /enq_en" type="logic">
+         <obj_property name="ElementShortName">enq_en</obj_property>
+         <obj_property name="ObjectShortName">enq_en</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /enq_sel" type="logic">
+         <obj_property name="ElementShortName">enq_sel</obj_property>
+         <obj_property name="ObjectShortName">enq_sel</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /din1" type="array">
+         <obj_property name="ElementShortName">din1[3:0]</obj_property>
+         <obj_property name="ObjectShortName">din1[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /din2" type="array">
+         <obj_property name="ElementShortName">din2[3:0]</obj_property>
+         <obj_property name="ObjectShortName">din2[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /up2_data" type="array">
+         <obj_property name="ElementShortName">up2_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">up2_data[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /up1_data" type="array">
+         <obj_property name="ElementShortName">up1_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">up1_data[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /dout" type="array">
+         <obj_property name="ElementShortName">dout[3:0]</obj_property>
+         <obj_property name="ObjectShortName">dout[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /new_data" type="array">
+         <obj_property name="ElementShortName">new_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">new_data[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[0].u_compress_queue_entry_prototype /enq_data" type="array">
+         <obj_property name="ElementShortName">enq_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">enq_data[3:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group166" type="group">
+      <obj_property name="label">Slot 1</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /clk" type="logic">
+         <obj_property name="ElementShortName">clk</obj_property>
+         <obj_property name="ObjectShortName">clk</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /rst" type="logic">
+         <obj_property name="ElementShortName">rst</obj_property>
+         <obj_property name="ObjectShortName">rst</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /cmp_en" type="logic">
+         <obj_property name="ElementShortName">cmp_en</obj_property>
+         <obj_property name="ObjectShortName">cmp_en</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /dsel" type="array">
+         <obj_property name="ElementShortName">dsel[1:0]</obj_property>
+         <obj_property name="ObjectShortName">dsel[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /enq_en" type="logic">
+         <obj_property name="ElementShortName">enq_en</obj_property>
+         <obj_property name="ObjectShortName">enq_en</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /enq_sel" type="logic">
+         <obj_property name="ElementShortName">enq_sel</obj_property>
+         <obj_property name="ObjectShortName">enq_sel</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /din1" type="array">
+         <obj_property name="ElementShortName">din1[3:0]</obj_property>
+         <obj_property name="ObjectShortName">din1[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /din2" type="array">
+         <obj_property name="ElementShortName">din2[3:0]</obj_property>
+         <obj_property name="ObjectShortName">din2[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /up2_data" type="array">
+         <obj_property name="ElementShortName">up2_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">up2_data[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /up1_data" type="array">
+         <obj_property name="ElementShortName">up1_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">up1_data[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /dout" type="array">
+         <obj_property name="ElementShortName">dout[3:0]</obj_property>
+         <obj_property name="ObjectShortName">dout[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /new_data" type="array">
+         <obj_property name="ElementShortName">new_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">new_data[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[1].u_compress_queue_entry_prototype /enq_data" type="array">
+         <obj_property name="ElementShortName">enq_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">enq_data[3:0]</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group180" type="group">
+      <obj_property name="label">Slot 2</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /clk" type="logic">
+         <obj_property name="ElementShortName">clk</obj_property>
+         <obj_property name="ObjectShortName">clk</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /rst" type="logic">
+         <obj_property name="ElementShortName">rst</obj_property>
+         <obj_property name="ObjectShortName">rst</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /cmp_en" type="logic">
+         <obj_property name="ElementShortName">cmp_en</obj_property>
+         <obj_property name="ObjectShortName">cmp_en</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /dsel" type="array">
+         <obj_property name="ElementShortName">dsel[1:0]</obj_property>
+         <obj_property name="ObjectShortName">dsel[1:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /enq_en" type="logic">
+         <obj_property name="ElementShortName">enq_en</obj_property>
+         <obj_property name="ObjectShortName">enq_en</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /enq_sel" type="logic">
+         <obj_property name="ElementShortName">enq_sel</obj_property>
+         <obj_property name="ObjectShortName">enq_sel</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /din1" type="array">
+         <obj_property name="ElementShortName">din1[3:0]</obj_property>
+         <obj_property name="ObjectShortName">din1[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /din2" type="array">
+         <obj_property name="ElementShortName">din2[3:0]</obj_property>
+         <obj_property name="ObjectShortName">din2[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /up2_data" type="array">
+         <obj_property name="ElementShortName">up2_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">up2_data[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /up1_data" type="array">
+         <obj_property name="ElementShortName">up1_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">up1_data[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /dout" type="array">
+         <obj_property name="ElementShortName">dout[3:0]</obj_property>
+         <obj_property name="ObjectShortName">dout[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /new_data" type="array">
+         <obj_property name="ElementShortName">new_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">new_data[3:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/queue_sim/u_compress_queue_prototype/\genblk1[2].u_compress_queue_entry_prototype /enq_data" type="array">
+         <obj_property name="ElementShortName">enq_data[3:0]</obj_property>
+         <obj_property name="ObjectShortName">enq_data[3:0]</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>
