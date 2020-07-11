@@ -19,17 +19,16 @@ module map_table(
     // commit 阶段的输入，表示状态的确认
     input commit_info commit_info_0,
     input commit_info commit_info_1
-    // TODO: 处理HILO寄存器，重命名是统一的重命名，但是映射表中进行单独的记录
 );
 
 
 // Rename Map Table，两个Bank
-reg [31:0] rename_map_table_bank0 [`PRF_NUM_WIDTH-1:0];
-reg [31:0] rename_map_table_bank1 [`PRF_NUM_WIDTH-1:0];
+reg [`PRF_NUM_WIDTH-1:0] rename_map_table_bank0 [31:0];
+reg [`PRF_NUM_WIDTH-1:0] rename_map_table_bank1 [31:0];
 
 // 提交后的Map Table，也是两个Bank
-reg [31:0] committed_rename_map_table_bank0 [`PRF_NUM_WIDTH-1:0];
-reg [31:0] committed_rename_map_table_bank1 [`PRF_NUM_WIDTH-1:0];
+reg [`PRF_NUM_WIDTH-1:0] committed_rename_map_table_bank0 [31:0] ;
+reg [`PRF_NUM_WIDTH-1:0] committed_rename_map_table_bank1 [31:0] ;
 
 wire wr_rename_inst0 = (rname_input_inst0.req.wen && inst_0_valid);
 wire wr_rename_inst1 = (rname_input_inst1.req.wen && inst_1_valid);
@@ -88,6 +87,15 @@ always @(posedge clk)   begin
     end
 end
 
+`ifdef DEBUG
+always @(posedge clk)   begin
+    #5
+    for(i=0;i<32;i++)   begin
+        $display(i, "----->", rename_map_table_bank0[i], "(S)",
+                    committed_rename_map_table_bank0[i], "(C)", );
+    end
+end
+`endif
 
 always @(posedge clk)   begin
     if(rst) begin
