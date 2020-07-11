@@ -27,7 +27,6 @@ module free_list(
 // 1是占用，0是free
 reg [`PRF_NUM-1:0] free_list_1, committed_fl;
 wire [`PRF_NUM-1:0] free_list_2, free_list_3, free_list_4, free_list_5;
-reg [`PRF_NUM-1:0] allocated_list;
 wire free_valid_0, free_valid_1;
 
 wire [`PRF_NUM_WIDTH-1:0] free_num_0, free_num_1;
@@ -54,13 +53,12 @@ assign free_list_4 = free_0_req ? (free_list_after_alloc & ~(`PRF_NUM'b1 << free
 assign free_list_5 = free_1_req ? (free_list_4 & ~(`PRF_NUM'b1 << free_1_num)) : free_list_4;
 
 assign allocatable =  (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req) ||
-                      (free_valid_0 && inst_0_req && ~inst_1_req) ||
-                      (free_valid_1 && inst_1_req && ~inst_0_req); // 只有一个指令请求，且请求完就满了的情况
+                    (free_valid_0 && inst_0_req && ~inst_1_req) ||
+                    (free_valid_1 && inst_1_req && ~inst_0_req); // 只有一个指令请求，且请求完就满了的情况
 
 always @(posedge clk)   begin
     if(rst) begin
-        free_list_1 <= `PRF_NUM'b0;
-        allocated_list <= `PRF_NUM'b0;
+        free_list_1 <= `PRF_NUM'b1;     // 0号寄存器永远不分配出去
     end else if(recover)    begin
         free_list_1 <= committed_fl;
     end else begin
@@ -75,14 +73,14 @@ assign committed_fl_1 = commit_1_req ? (committed_fl_0 & ~(`PRF_NUM'b1 << commit
 
 always @(posedge clk)   begin
     if(rst) begin
-        committed_fl <= `PRF_NUM'b0;
+        committed_fl <= `PRF_NUM'b1;    // 0号寄存器永远不分配出去
     end else begin
         committed_fl <= committed_fl_1;
     end
 end
 
 
- 
+
 assign inst_0_prf = free_num_0;
 assign inst_1_prf = free_num_1;
 

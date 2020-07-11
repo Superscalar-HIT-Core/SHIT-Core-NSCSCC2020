@@ -61,7 +61,7 @@ reg [`PRF_NUM-1:0] busytable_bank0, busytable_bank1;
 //                             (rd_port3 == clr_busy_num_3 && clr_busy_3 ) ;   
 
 wire [`PRF_NUM-1:0] set_busy_vec =  ( set_busy_num_0 << set_busy_0 ) | 
-                                    ( set_busy_num_1 << set_busy_1 ) ;
+                                    ( set_busy_num_1 << set_busy_1 ) & ~(`PRF_NUM'b1) ;     // 0号寄存器永远不能Busy
 
 wire [`PRF_NUM-1:0] clr_busy_vec =  (~( clr_busy_num_0 << clr_busy_0 )) & 
                                     (~( clr_busy_num_1 << clr_busy_1 )) & 
