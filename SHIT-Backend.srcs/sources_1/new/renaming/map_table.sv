@@ -1,7 +1,7 @@
 `include "../defines/defines.svh"
 
 
-
+// 0号寄存器永远不分配，永远被映射到0，所以不用进行特殊的处理！
 module map_table(
     input clk,
     input rst,

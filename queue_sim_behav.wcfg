@@ -12,27 +12,100 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="1552668fs"></ZoomEndTime>
-      <Cursor1Time time="1000000fs"></Cursor1Time>
+      <ZoomStartTime time="61583fs"></ZoomStartTime>
+      <ZoomEndTime time="170084fs"></ZoomEndTime>
+      <Cursor1Time time="114083fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="175"></NameColumnWidth>
       <ValueColumnWidth column_width="140"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="3" />
-   <wvobject fp_name="group152" type="group">
-      <obj_property name="label">Slot 0</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
+   <WVObjectSize size="17" />
+   <wvobject fp_name="/rename_test/u_register_rename/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
    </wvobject>
-   <wvobject fp_name="group166" type="group">
-      <obj_property name="label">Slot 1</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
+   <wvobject fp_name="/rename_test/u_register_rename/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
    </wvobject>
-   <wvobject fp_name="group180" type="group">
-      <obj_property name="label">Slot 2</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
+   <wvobject fp_name="/rename_test/u_register_rename/recover" type="logic">
+      <obj_property name="ElementShortName">recover</obj_property>
+      <obj_property name="ObjectShortName">recover</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/inst_0_valid" type="logic">
+      <obj_property name="ElementShortName">inst_0_valid</obj_property>
+      <obj_property name="ObjectShortName">inst_0_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/inst_1_valid" type="logic">
+      <obj_property name="ElementShortName">inst_1_valid</obj_property>
+      <obj_property name="ObjectShortName">inst_1_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/rename_req_0" type="array">
+      <obj_property name="ElementShortName">rename_req_0</obj_property>
+      <obj_property name="ObjectShortName">rename_req_0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/rename_resp_0" type="array">
+      <obj_property name="ElementShortName">rename_resp_0</obj_property>
+      <obj_property name="ObjectShortName">rename_resp_0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/rename_req_1" type="array">
+      <obj_property name="ElementShortName">rename_req_1</obj_property>
+      <obj_property name="ObjectShortName">rename_req_1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/rename_resp_1" type="array">
+      <obj_property name="ElementShortName">rename_resp_1</obj_property>
+      <obj_property name="ObjectShortName">rename_resp_1</obj_property>
+      <wvobject fp_name="/rename_test/u_register_rename/rename_resp_1.prf_rs1" type="array">
+         <obj_property name="ElementShortName">.prf_rs1[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.prf_rs1[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/rename_test/u_register_rename/rename_resp_1.prf_rs2" type="array">
+         <obj_property name="ElementShortName">.prf_rs2[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.prf_rs2[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/rename_test/u_register_rename/rename_resp_1.prf_rd_stale" type="array">
+         <obj_property name="ElementShortName">.prf_rd_stale[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.prf_rd_stale[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/rename_test/u_register_rename/rename_resp_1.new_prd" type="array">
+         <obj_property name="ElementShortName">.new_prd[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.new_prd[5:0]</obj_property>
+         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/allocatable" type="logic">
+      <obj_property name="ElementShortName">allocatable</obj_property>
+      <obj_property name="ObjectShortName">allocatable</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/free_prf_0" type="array">
+      <obj_property name="ElementShortName">free_prf_0[5:0]</obj_property>
+      <obj_property name="ObjectShortName">free_prf_0[5:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/free_prf_1" type="array">
+      <obj_property name="ElementShortName">free_prf_1[5:0]</obj_property>
+      <obj_property name="ObjectShortName">free_prf_1[5:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/rnamet_input_inst0" type="array">
+      <obj_property name="ElementShortName">rnamet_input_inst0</obj_property>
+      <obj_property name="ObjectShortName">rnamet_input_inst0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/rnamet_input_inst1" type="array">
+      <obj_property name="ElementShortName">rnamet_input_inst1</obj_property>
+      <obj_property name="ObjectShortName">rnamet_input_inst1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/rnamet_output_inst0" type="array">
+      <obj_property name="ElementShortName">rnamet_output_inst0</obj_property>
+      <obj_property name="ObjectShortName">rnamet_output_inst0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/rnamet_output_inst1" type="array">
+      <obj_property name="ElementShortName">rnamet_output_inst1</obj_property>
+      <obj_property name="ObjectShortName">rnamet_output_inst1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/rename_test/u_register_rename/u_map_table/rename_map_table_bank0" type="array">
+      <obj_property name="ElementShortName">rename_map_table_bank0[31:0][5:0]</obj_property>
+      <obj_property name="ObjectShortName">rename_map_table_bank0[31:0][5:0]</obj_property>
    </wvobject>
 </wave_config>
