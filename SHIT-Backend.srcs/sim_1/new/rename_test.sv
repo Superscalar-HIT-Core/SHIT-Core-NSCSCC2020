@@ -27,7 +27,7 @@ task automatic request_rename(
     rename_req_0.ars2 = rs1_0;
     rename_req_0.ard  = rd_0;
     rename_req_0.wen = wen_0;
-    inst_valid_1 = 1;
+    inst_valid_1 = req1;
     rename_req_1.ars1 = rs0_1;
     rename_req_1.ars2 = rs1_1;
     rename_req_1.ard  = rd_1;
@@ -35,26 +35,31 @@ task automatic request_rename(
 endtask
 
 task automatic request_commit(
-    ref inst_valid_0, 
-    ref rename_req rename_req_0,
-    ref inst_valid_1, 
-    ref rename_req rename_req_1,
-    input req0, req1,
-    input ARFNum rs0_0, rs1_0, rd_0,
-    logic wen_0,
-    input ARFNum rs0_1, rs1_1, rd_1,
-    logic wen_1
+    ref commit_valid_0, 
+    ref commit_info commit_info_0,
+    ref commit_valid_1, 
+    ref commit_info commit_info_1,
+    input valid_0, valid_1,
+    input ARFNum    committed_arf_0, 
+    input PRFNum    committed_prf_0,
+    input PRFNum        stale_prf_0,
+    input               wr_commit_0,
+    input ARFNum    committed_arf_1, 
+    input PRFNum    committed_prf_1,
+    input PRFNum        stale_prf_1,
+    input               wr_commit_1
 );
-    inst_valid_0 = req0;
-    rename_req_0.ars1 = rs0_0;
-    rename_req_0.ars2 = rs1_0;
-    rename_req_0.ard  = rd_0;
-    rename_req_0.wen = wen_0;
-    inst_valid_1 = 1;
-    rename_req_1.ars1 = rs0_1;
-    rename_req_1.ars2 = rs1_1;
-    rename_req_1.ard  = rd_1;
-    rename_req_1.wen = wen_1;
+    commit_valid_0 =                        valid_0;
+    commit_info_0.committed_arf =   committed_arf_0;
+    commit_info_0.committed_prf =   committed_prf_0;
+    commit_info_0.stale_prf =           stale_prf_0;
+    commit_info_0.wr_reg_commit =       wr_commit_0;
+
+    commit_valid_1 =                        valid_1;
+    commit_info_1.committed_arf =   committed_arf_1;
+    commit_info_1.committed_prf =   committed_prf_1;
+    commit_info_1.stale_prf =           stale_prf_1;
+    commit_info_1.wr_reg_commit =       wr_commit_1;
 endtask
 
 register_rename u_register_rename(
@@ -77,17 +82,18 @@ integer i;
 
 initial begin
     #32 rst = 0;
-    for(i=0;i<63;i++)   begin
-    #20 request_rename(
-        .inst_valid_0(inst_0_valid), .rename_req_0(rename_req_0),.inst_valid_1(inst_1_valid), .rename_req_1(rename_req_1),
-        .req0   (1),            .req1  (1),
-        .rs0_0  (1),            .rs0_1 (2),
-        .rs1_0  (2),            .rs1_1 (3),
-        .rd_0   (3),            .rd_1  (4),
-        .wen_0  (1),            .wen_1 (1)
-    );  
-    end
-    $finish;
+    // Test for full
+    // for(i=0;i<63;i++)   begin
+    // #20 request_rename(
+    //     .inst_valid_0(inst_0_valid), .rename_req_0(rename_req_0),.inst_valid_1(inst_1_valid), .rename_req_1(rename_req_1),
+    //     .req0   (1),            .req1  (1),
+    //     .rs0_0  (1),            .rs0_1 (2),
+    //     .rs1_0  (2),            .rs1_1 (3),
+    //     .rd_0   (3),            .rd_1  (4),
+    //     .wen_0  (1),            .wen_1 (1)
+    // );  
+    // end
+    // $finish;
 
     #20 request_rename(
     .inst_valid_0(inst_0_valid), .rename_req_0(rename_req_0),.inst_valid_1(inst_1_valid), .rename_req_1(rename_req_1),
@@ -97,14 +103,48 @@ initial begin
     .rd_0   (3),            .rd_1  (4),
     .wen_0  (1),            .wen_1 (1)
 );
-//     #20 request_rename(
-//     .inst_valid_0(inst_0_valid), .rename_req_0(rename_req_0),.inst_valid_1(inst_1_valid), .rename_req_1(rename_req_1),
-//     .req0   (1),            .req1  (1),
-//     .rs0_0  (4),            .rs0_1 (7),
-//     .rs1_0  (5),            .rs1_1 (8),
-//     .rd_0   (6),            .rd_1  (9),
-//     .wen_0  (0),            .wen_1 (1)
-// );
+    // 3->1, 4->2 
+
+    #20 request_rename(
+    .inst_valid_0(inst_0_valid), .rename_req_0(rename_req_0),.inst_valid_1(inst_1_valid), .rename_req_1(rename_req_1),
+    .req0   (1),            .req1  (1),
+    .rs0_0  (4),            .rs0_1 (7),
+    .rs1_0  (5),            .rs1_1 (8),
+    .rd_0   (3),            .rd_1  (9),
+    .wen_0  (1),            .wen_1 (1)
+);
+    #20     
+    inst_0_valid = 0;
+    rename_req_0.ars1 = 0;
+    rename_req_0.ars2 = 0;
+    rename_req_0.ard  = 0;
+    rename_req_0.wen = 0;
+    inst_1_valid = 0;
+    rename_req_1.ars1 = 0;
+    rename_req_1.ars2 = 0;
+    rename_req_1.ard  = 0;
+    rename_req_1.wen = 0;
+    // 3->3, 9->4
+    #20 request_commit(
+    .commit_valid_0(commit_valid_0), 
+    .commit_info_0(commit_req_0),
+    .commit_valid_1(commit_valid_1), 
+    .commit_info_1(commit_req_1),
+    .valid_0            (1),                        .valid_1     (1),
+    .committed_arf_0    (3),                .committed_arf_1     (9), 
+    .committed_prf_0    (3),                .committed_prf_1     (4),
+    .stale_prf_0        (1),                    .stale_prf_1     (0),
+    .wr_commit_0        (1),                    .wr_commit_1     (1)
+);
+
+    #20 request_rename(
+    .inst_valid_0(inst_0_valid), .rename_req_0(rename_req_0),.inst_valid_1(inst_1_valid), .rename_req_1(rename_req_1),
+    .req0   (1),            .req1  (1),
+    .rs0_0  (4),            .rs0_1 (7),
+    .rs1_0  (5),            .rs1_1 (8),
+    .rd_0   (3),            .rd_1  (9),
+    .wen_0  (1),            .wen_1 (1)
+    );
 //     #20 request_rename(
 //     .inst_valid_0(inst_0_valid), .rename_req_0(rename_req_0),.inst_valid_1(inst_1_valid), .rename_req_1(rename_req_1),
 //     .req0   (1),            .req1  (1),
@@ -123,17 +163,17 @@ initial begin
 // );
 //     #20 recover = 1;
 //     #20 recover = 0;
-//     #20     
-//     inst_0_valid = 0;
-//     rename_req_0.ars1 = 0;
-//     rename_req_0.ars2 = 0;
-//     rename_req_0.ard  = 0;
-//     rename_req_0.wen = 0;
-//     inst_1_valid = 0;
-//     rename_req_1.ars1 = 0;
-//     rename_req_1.ars2 = 0;
-//     rename_req_1.ard  = 0;
-//     rename_req_1.wen = 0;
+    #20     
+    inst_0_valid = 0;
+    rename_req_0.ars1 = 0;
+    rename_req_0.ars2 = 0;
+    rename_req_0.ard  = 0;
+    rename_req_0.wen = 0;
+    inst_1_valid = 0;
+    rename_req_1.ars1 = 0;
+    rename_req_1.ars2 = 0;
+    rename_req_1.ard  = 0;
+    rename_req_1.wen = 0;
 
 $stop;
 end

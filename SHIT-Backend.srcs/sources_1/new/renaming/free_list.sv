@@ -58,9 +58,9 @@ always @(posedge clk)   begin
     if(rst) begin
         free_list_1 <= `PRF_NUM'b1;     // 0ºÅ¼Ä´æÆ÷ÓÀÔ¶²»·ÖÅä³öÈ¥
     end else if(recover)    begin
-        free_list_1 <= committed_fl;
+        free_list_1 <= committed_fl | `PRF_NUM'b1;
     end else begin
-        free_list_1 <= free_list_5;
+        free_list_1 <= free_list_5 | `PRF_NUM'b1;
     end
 end
 
@@ -73,7 +73,7 @@ always @(posedge clk)   begin
     if(rst) begin
         committed_fl <= `PRF_NUM'b1;    // 0ºÅ¼Ä´æÆ÷ÓÀÔ¶²»·ÖÅä³öÈ¥
     end else begin
-        committed_fl <= committed_fl_1;
+        committed_fl <= committed_fl_1 | `PRF_NUM'b1;
     end
 end
 
