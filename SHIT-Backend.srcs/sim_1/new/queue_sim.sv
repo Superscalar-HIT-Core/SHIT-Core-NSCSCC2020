@@ -37,11 +37,29 @@ initial begin
     #20 enq1req = 1; enq2req = 1; din1 = 4; din2 = 5;
     #20 enq1req = 0; enq2req = 0; 
 
-    #20 deq1req = 1; deq1idx = 2;
-    #20 deq1req = 0;
+    // #20 deq1req = 1; deq1idx = 2;
+    // #20 deq1req = 0;
 
-    #20 deq1req = 1; deq1idx = 0; deq2req = 1; deq2idx = 2;
-    #20 deq1req = 0;deq2req = 0;
+    // #20 deq1req = 1; deq1idx = 0; deq2req = 1; deq2idx = 2;
+    // #20 deq1req = 0;deq2req = 0;
+
+    #20 enq1req = 1; enq2req = 1; din1 = 2; din2 = 3;
+    #20 enq1req = 0; enq2req = 0; 
+
+    #20 enq1req = 1; enq2req = 1; din1 = 4; din2 = 5;
+    #20 enq1req = 0; enq2req = 0; 
+
+    #20 enq1req = 1; enq2req = 1; din1 = 2; din2 = 3;
+    #20 enq1req = 0; enq2req = 0; 
+
+    #20 enq1req = 1; enq2req = 1; din1 = 4; din2 = 5;
+    #20 enq1req = 0; enq2req = 0; 
+
+    #20 enq1req = 1; enq2req = 1; din1 = 2; din2 = 3;
+    #20 enq1req = 0; enq2req = 0; 
+
+    #20 enq1req = 1; enq2req = 1; din1 = 4; din2 = 5;
+    #20 enq1req = 0; enq2req = 0; 
 end
 
 integer i;
