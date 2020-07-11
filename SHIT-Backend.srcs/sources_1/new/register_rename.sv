@@ -7,6 +7,7 @@ module register_rename(
     input rst,
     input recover, 
     input inst_0_valid, inst_1_valid,               // 指令是否有效（指Fetch Buffer出来的层面，译码之后）
+    input commit_valid_0, commit_valid_1,
     input rename_req rename_req_0, rename_req_1,
     input commit_info commit_req_0, commit_req_1,
     output rename_resp rename_resp_0, rename_resp_1,
@@ -22,6 +23,8 @@ free_list u_free_list(
     .inst_1_req  (rename_req_1.wen && inst_1_valid  ),
     .inst_0_prf      (free_prf_0      ),
     .inst_1_prf      (free_prf_1      ),
+    .commit_valid_0     (commit_valid_0),
+    .commit_valid_1     (commit_valid_1),
     .commit_info_0 (commit_req_0 ),
     .commit_info_1 (commit_req_1 ),
     .allocatable (allocatable )
@@ -45,6 +48,8 @@ map_table u_map_table(
     .rname_input_inst1  (rnamet_input_inst1  ),
     .rname_output_inst0 (rnamet_output_inst0 ),
     .rname_output_inst1 (rnamet_output_inst1 ),
+    .commit_valid_0     (commit_valid_0),
+    .commit_valid_1     (commit_valid_1),
     .commit_info_0         (commit_req_0         ),
     .commit_info_1         (commit_req_1         )
 );

@@ -10,6 +10,8 @@ module map_table(
     // 指令是否有效（并不包括指令是否写寄存器，只是单纯的从指令队列输入）
     input inst_0_valid,
     input inst_1_valid,
+    input commit_valid_0,
+    input commit_valid_1,
     // 结构体，包含rs1, rs2, rd, 并指明是否需要写寄存器，以判定是否需要写重命名的表
     input rename_table_input  rname_input_inst0,
     input rename_table_input  rname_input_inst1,
@@ -105,12 +107,12 @@ always @(posedge clk)   begin
             committed_rename_map_table_bank1[i] <= 6'b0;
         end
     end else begin
-        if(commit_info_0.commit_req)    begin
+        if(commit_info_0.wr_reg_commit && commit_valid_0)    begin
             // Copy the commited state from the bank 
             committed_rename_map_table_bank0[commit_info_0.committed_arf] <= rename_map_table_bank0[commit_info_0.committed_arf];
             committed_rename_map_table_bank1[commit_info_0.committed_arf] <= rename_map_table_bank1[commit_info_0.committed_arf];
         end 
-        if(commit_info_1.commit_req)    begin
+        if(commit_info_1.wr_reg_commit && commit_valid_1)    begin
             // Copy the commited state from the bank 
             committed_rename_map_table_bank0[commit_info_1.committed_arf] <= rename_map_table_bank0[commit_info_1.committed_arf];
             committed_rename_map_table_bank1[commit_info_1.committed_arf] <= rename_map_table_bank1[commit_info_1.committed_arf];

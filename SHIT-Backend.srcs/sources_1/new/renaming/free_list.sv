@@ -11,6 +11,8 @@ module free_list(
     output PRFNum inst_0_prf,
     output PRFNum inst_1_prf,
     // Info from commit
+    input commit_valid_0,
+    input commit_valid_1,
     input commit_info commit_info_0,
     input commit_info commit_info_1,
     // 如果不足以同时满足两条指令的重命名请求，则直接暂停
@@ -49,8 +51,8 @@ assign allocatable =  (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req)
 wire [`PRF_NUM-1:0] free_list_after_alloc = allocatable ? free_list_3 : free_list_1;    // 必须一次能够分配两个，否则暂停
 
 // 完成Free之后，在commit阶段的输入，释放stale
-assign free_list_4 = commit_info_0.commit_req ? (free_list_after_alloc & ~(`PRF_NUM'b1 << commit_info_0.stale_prf)) : free_list_after_alloc;
-assign free_list_5 = commit_info_1.commit_req ? (free_list_4 & ~(`PRF_NUM'b1 << commit_info_1.stale_prf)) : free_list_4;
+assign free_list_4 = commit_info_0.wr_reg_commit && commit_valid_0 ? (free_list_after_alloc & ~(`PRF_NUM'b1 << commit_info_0.stale_prf)) : free_list_after_alloc;
+assign free_list_5 = commit_info_1.wr_reg_commit && commit_valid_1 ? (free_list_4 & ~(`PRF_NUM'b1 << commit_info_1.stale_prf)) : free_list_4;
 
 always @(posedge clk)   begin
     if(rst) begin
@@ -63,8 +65,8 @@ always @(posedge clk)   begin
 end
 
 wire [`PRF_NUM-1:0] committed_fl_0, committed_fl_1;
-assign committed_fl_0 = commit_info_0.commit_req ? (committed_fl & ~(`PRF_NUM'b1 << commit_info_0.stale_prf) | (`PRF_NUM'b1 << commit_info_0.committed_prf)) : committed_fl;
-assign committed_fl_1 = commit_info_1.commit_req ? (committed_fl_0 & ~(`PRF_NUM'b1 << commit_info_1.stale_prf) | (`PRF_NUM'b1 << commit_info_1.committed_prf)) : committed_fl_0;
+assign committed_fl_0 = commit_info_0.wr_reg_commit && commit_valid_0 ? (committed_fl & ~(`PRF_NUM'b1 << commit_info_0.stale_prf) | (`PRF_NUM'b1 << commit_info_0.committed_prf)) : committed_fl;
+assign committed_fl_1 = commit_info_1.wr_reg_commit && commit_valid_1 ? (committed_fl_0 & ~(`PRF_NUM'b1 << commit_info_1.stale_prf) | (`PRF_NUM'b1 << commit_info_1.committed_prf)) : committed_fl_0;
 
 
 always @(posedge clk)   begin

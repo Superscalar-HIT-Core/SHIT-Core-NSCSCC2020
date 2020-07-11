@@ -38,7 +38,7 @@ typedef struct packed {
     ARFNum committed_arf;        // 被提交的ARF信息
     PRFNum committed_prf;        // 被提交的PRF信息
     PRFNum stale_prf;           // 旧的PRF，需要被释放的
-    logic commit_req;         // the instruction actually write the register
+    logic wr_reg_commit;         // the instruction actually write the register
 } commit_info;
 
 typedef struct packed {
