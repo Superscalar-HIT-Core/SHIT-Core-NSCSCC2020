@@ -4,21 +4,15 @@ module free_list(
     input clk,
     input rst,
     input recover,      // recover 信号仅支持一个周期
-    // 来自指令的重命名请求，如果目的寄存器是0，则不需要进行重命名
+    // 来自指令的重命名请求
+    // 如果目的寄存器是0，则不需要进行重命名
     input inst_0_req,
     input inst_1_req,
-    output [`PRF_NUM_WIDTH-1:0] inst_0_prf,
-    output [`PRF_NUM_WIDTH-1:0] inst_1_prf,
-    input free_0_req,
-    input free_1_req,
-    input [`PRF_NUM_WIDTH-1:0] free_0_num,
-    input [`PRF_NUM_WIDTH-1:0] free_1_num,
-    input commit_0_req,
-    input [`PRF_NUM_WIDTH-1:0] commit_0_mark_num,
-    input [`PRF_NUM_WIDTH-1:0] commit_0_free_num,
-    input commit_1_req,
-    input [`PRF_NUM_WIDTH-1:0] commit_1_mark_num,
-    input [`PRF_NUM_WIDTH-1:0] commit_1_free_num,
+    output PRFNum inst_0_prf,
+    output PRFNum inst_1_prf,
+    // Info from commit
+    input commit_info commit_info_0,
+    input commit_info commit_info_1,
     // 如果不足以同时满足两条指令的重命名请求，则直接暂停
     output allocatable // 只有两个list都满足，才能够进行分配
 );
@@ -37,7 +31,7 @@ freelist_enc64 enc0(
     .free_num(free_num_0)
 );
 
-assign free_list_2 = inst_0_req ? (free_list_1 | (1'b1 << free_num_0)) : free_list_1; 
+assign free_list_2 = inst_0_req ? (free_list_1 | (1'b1 << free_num_0)) : free_list_1;   // 第一条指令分配之后
 
 freelist_enc64 enc1(
     .free_list(free_list_2),
@@ -45,16 +39,18 @@ freelist_enc64 enc1(
     .free_num(free_num_1)
 );
 
-assign free_list_3 = inst_1_req ? (free_list_2 | (1'b1 << free_num_1)) : free_list_2;
-
-// free_list after freeing the registers
-wire [`PRF_NUM-1:0] free_list_after_alloc = allocatable ? free_list_3 : free_list_1;
-assign free_list_4 = free_0_req ? (free_list_after_alloc & ~(`PRF_NUM'b1 << free_0_num)) : free_list_after_alloc;
-assign free_list_5 = free_1_req ? (free_list_4 & ~(`PRF_NUM'b1 << free_1_num)) : free_list_4;
+assign free_list_3 = inst_1_req ? (free_list_2 | (1'b1 << free_num_1)) : free_list_2;   // 第二条指令分配之后
 
 assign allocatable =  (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req) ||
                     (free_valid_0 && inst_0_req && ~inst_1_req) ||
                     (free_valid_1 && inst_1_req && ~inst_0_req); // 只有一个指令请求，且请求完就满了的情况
+
+// free_list after freeing the registers
+wire [`PRF_NUM-1:0] free_list_after_alloc = allocatable ? free_list_3 : free_list_1;    // 必须一次能够分配两个，否则暂停
+
+// 完成Free之后，在commit阶段的输入，释放stale
+assign free_list_4 = commit_info_0.commit_req ? (free_list_after_alloc & ~(`PRF_NUM'b1 << commit_info_0.stale_prf)) : free_list_after_alloc;
+assign free_list_5 = commit_info_1.commit_req ? (free_list_4 & ~(`PRF_NUM'b1 << commit_info_1.stale_prf)) : free_list_4;
 
 always @(posedge clk)   begin
     if(rst) begin
@@ -67,8 +63,8 @@ always @(posedge clk)   begin
 end
 
 wire [`PRF_NUM-1:0] committed_fl_0, committed_fl_1;
-assign committed_fl_0 = commit_0_req ? (committed_fl & ~(`PRF_NUM'b1 << commit_0_free_num) | (`PRF_NUM'b1 << commit_0_mark_num)) : committed_fl;
-assign committed_fl_1 = commit_1_req ? (committed_fl_0 & ~(`PRF_NUM'b1 << commit_1_free_num) | (`PRF_NUM'b1 << commit_1_mark_num)) : committed_fl_0;
+assign committed_fl_0 = commit_info_0.commit_req ? (committed_fl & ~(`PRF_NUM'b1 << commit_info_0.stale_prf) | (`PRF_NUM'b1 << commit_info_0.committed_prf)) : committed_fl;
+assign committed_fl_1 = commit_info_1.commit_req ? (committed_fl_0 & ~(`PRF_NUM'b1 << commit_info_1.stale_prf) | (`PRF_NUM'b1 << commit_info_1.committed_prf)) : committed_fl_0;
 
 
 always @(posedge clk)   begin

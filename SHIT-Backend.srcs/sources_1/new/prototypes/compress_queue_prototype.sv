@@ -16,6 +16,8 @@ module compress_queue_prototype(
     // 出队数据
     output [3:0] deq1data,
     output [3:0] deq2data,
+    output deq1data_valid,
+    output deq2data_valid,
 
     output almost_full,
     output almost_empty,
@@ -33,6 +35,7 @@ assign almost_full = (tail == 4'he);  // 差1位满，也不能写入
 assign empty = (tail == 4'b0);  // 差1位满，也不能写入
 assign full = (tail == 4'hf);
 assign almost_empty = (tail == 4'b1);
+wire freeze = almost_full || full;
 wire [15:0] deq,enq;
 reg [1:0] dsel[15:0];
 wire [3:0] up2_data[15:0];
@@ -43,9 +46,13 @@ wire [15:0] enq_sel;
 
 wire [3:0] new_tail_0 = tail - deq1req - deq2req;
 wire [3:0] new_tail_1 = tail + enq1req - deq1req - deq2req;
+wire [3:0] update_tail = $signed(new_tail_1) > 0 ? new_tail_1 : 0;
 
 wire [15:0] wr_vec_0 = enq1req ? ( 16'b1 << new_tail_0 ) : 16'b0;
 wire [15:0] wr_vec_1 = enq2req ? ( 16'b1 << new_tail_1 ) | wr_vec_0 : wr_vec_0;
+
+assign deq1data_valid = deq1req && (deq1idx < tail);
+assign deq2data_valid = deq2req && deq1data_valid && (deq2idx < (tail - deq1req));  // to be confirmed
 
 
 assign dout[16] = 4'b0;
@@ -54,11 +61,12 @@ genvar i;
 generate
     for(i=0;i<16;i++)   begin
         compress_queue_entry_prototype u_compress_queue_entry_prototype(
-        	.clk      (clk      ),
+            .clk      (clk      ),
             .rst      (rst      ),
-            .cmp_en   (cmp_en[i]      ),
+            .cmp_en   (cmp_en[i]),
+            .freeze   (freeze),         // If full, Should not update
             .dsel     (dsel[i]     ),
-            .enq_en   (wr_vec_1[i]),
+            .enq_en   (wr_vec_1[i] ),
             .enq_sel  (enq_sel[i]),
             .din1     (din1     ),
             .din2     (din2     ),

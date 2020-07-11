@@ -1,26 +1,6 @@
-`include "defines.svh"
+`include "../defines/defines.svh"
 
-typedef struct packed {
-    logic [`PRF_NUM_WIDTH-1:0] prf_rs1;
-    logic [`PRF_NUM_WIDTH-1:0] prf_rs2;
-    logic [`PRF_NUM_WIDTH-1:0] prf_rd_stale;
-} rename_output;
 
-typedef struct packed {
-    // From the instruction
-    logic [`ARF_NUM_WIDTH-1:0] arf_rs1;
-    logic [`ARF_NUM_WIDTH-1:0] arf_rs2;
-    logic [`ARF_NUM_WIDTH-1:0] arf_rd;
-    logic rename_en;
-    // From the free list
-    logic [`PRF_NUM_WIDTH-1:0] prf_rd_new;
-} rename_input;
-
-typedef struct packed {
-    // From the instruction
-    logic [`ARF_NUM_WIDTH-1:0] commited_arf;
-    logic commit_valid; // the instruction actually write the register
-} commit_info;
 
 module map_table(
     input clk,
@@ -31,49 +11,49 @@ module map_table(
     input inst_0_valid,
     input inst_1_valid,
     // 结构体，包含rs1, rs2, rd, 并指明是否需要写寄存器，以判定是否需要写重命名的表
-    input rename_input rname_input_inst0,
-    input rename_input rname_input_inst1,
+    input rename_table_input  rname_input_inst0,
+    input rename_table_input  rname_input_inst1,
     // 输出prs1, prs2, prd, 并做好旁路的处理
-    output rename_output rname_output_inst0,
-    output rename_output rname_output_inst1,
+    output rename_table_output rname_output_inst0,
+    output rename_table_output rname_output_inst1,
     // commit 阶段的输入，表示状态的确认
-    input commit_0_valid,
-    input commit_1_valid,
     input commit_info commit_info_0,
     input commit_info commit_info_1
     // TODO: 处理HILO寄存器，重命名是统一的重命名，但是映射表中进行单独的记录
 );
 
 
-// Rename Map Table
+// Rename Map Table，两个Bank
 reg [31:0] rename_map_table_bank0 [`PRF_NUM_WIDTH-1:0];
 reg [31:0] rename_map_table_bank1 [`PRF_NUM_WIDTH-1:0];
 
+// 提交后的Map Table，也是两个Bank
 reg [31:0] committed_rename_map_table_bank0 [`PRF_NUM_WIDTH-1:0];
 reg [31:0] committed_rename_map_table_bank1 [`PRF_NUM_WIDTH-1:0];
 
-wire wr_rename_inst0 = (rname_input_inst0.rename_en && inst_0_valid);
-wire wr_rename_inst1 = (rname_input_inst1.rename_en && inst_1_valid);
+wire wr_rename_inst0 = (rname_input_inst0.req.wen && inst_0_valid);
+wire wr_rename_inst1 = (rname_input_inst1.req.wen && inst_1_valid);
 
-wire dst_eq = (rname_input_inst1.arf_rd == rname_input_inst0.arf_rd);
+// 两个指令的目的寄存器相等
+wire dst_eq = (rname_input_inst1.req.ard == rname_input_inst0.req.ard);
 
 // Rename read port, note the bypass logic
 // For instruction1, needn't consider the bypass
-// TODO: do we need to consider add a1, a1, a1?
+// Do we need to consider add a1, a1, a1?
 // a1 will be renamed
-assign rname_output_inst0.prf_rs1 = rename_map_table_bank0[rname_input_inst0.arf_rs1];
-assign rname_output_inst0.prf_rs2 = rename_map_table_bank0[rname_input_inst0.arf_rs2];
+assign rname_output_inst0.prf_rs1 = rename_map_table_bank0[rname_input_inst0.req.ars1];
+assign rname_output_inst0.prf_rs2 = rename_map_table_bank0[rname_input_inst0.req.ars2];
 
 // For instruction2, need to consider the bypass logic when inst0.rd == inst1.rs 
-assign rname_output_inst1.prf_rs1 = (wr_rename_inst0 && rname_input_inst0.arf_rd == rname_input_inst1.arf_rs1) ? rname_input_inst0.prf_rd_new :
-                                        rename_map_table_bank1[rname_input_inst1.arf_rs1];
-assign rname_output_inst1.prf_rs2 = (wr_rename_inst0 && rname_input_inst0.arf_rd == rname_input_inst1.arf_rs2) ? rname_input_inst0.prf_rd_new :
-                                        rename_map_table_bank1[rname_input_inst1.arf_rs2];
+assign rname_output_inst1.prf_rs1 = (wr_rename_inst0 && rname_input_inst0.req.ard == rname_input_inst1.req.ars1) ? rname_input_inst0.prf_rd_new :
+                                        rename_map_table_bank1[rname_input_inst1.req.ars1];
+assign rname_output_inst1.prf_rs2 = (wr_rename_inst0 && rname_input_inst0.req.ard == rname_input_inst1.req.ars2) ? rname_input_inst0.prf_rd_new :
+                                        rename_map_table_bank1[rname_input_inst1.req.ars2];
 
-assign rname_output_inst0.prf_rd_stale = rename_map_table_bank0[rname_input_inst0.arf_rd];
+assign rname_output_inst0.prf_rd_stale = rename_map_table_bank0[rname_input_inst0.req.ard];
 // Attention the bypass logic
 assign rname_output_inst1.prf_rd_stale = (wr_rename_inst0 && (wr_rename_inst1 && dst_eq)) ? rname_input_inst0.prf_rd_new :
-                                            rename_map_table_bank1[rname_input_inst1.arf_rd];
+                                            rename_map_table_bank1[rname_input_inst1.req.ard];
 
 
 integer i;
@@ -93,19 +73,19 @@ always @(posedge clk)   begin
        // Write the 2 banks of rename map (SPECULATIVELY)
        // TODO: 考虑后一条指令和前一条同时写同一个寄存器
        // Inst 0 Rename Update
-       if( wr_rename_inst0 && !(wr_rename_inst1 && dst_eq) )   begin
-            rename_map_table_bank0[rname_input_inst0.arf_rd] <= rname_input_inst0.prf_rd_new;
-            rename_map_table_bank1[rname_input_inst0.arf_rd] <= rname_input_inst0.prf_rd_new;
-       end else if ( wr_rename_inst0 && (wr_rename_inst1 && dst_eq) ) begin
-            rename_map_table_bank0[rname_input_inst0.arf_rd] <= rname_input_inst1.prf_rd_new;
-            rename_map_table_bank1[rname_input_inst0.arf_rd] <= rname_input_inst1.prf_rd_new;
-       end
+        if( wr_rename_inst0 && !(wr_rename_inst1 && dst_eq) )   begin
+            rename_map_table_bank0[rname_input_inst0.req.ard] <= rname_input_inst0.prf_rd_new;
+            rename_map_table_bank1[rname_input_inst0.req.ard] <= rname_input_inst0.prf_rd_new;
+        end else if ( wr_rename_inst0 && (wr_rename_inst1 && dst_eq) ) begin
+            rename_map_table_bank0[rname_input_inst0.req.ard] <= rname_input_inst1.prf_rd_new;
+            rename_map_table_bank1[rname_input_inst0.req.ard] <= rname_input_inst1.prf_rd_new;
+        end
        // Inst 1 Rename Update
-       if( wr_rename_inst1 ) begin
-            rename_map_table_bank0[rname_input_inst1.arf_rd] <= rname_input_inst1.prf_rd_new;
-            rename_map_table_bank1[rname_input_inst1.arf_rd] <= rname_input_inst1.prf_rd_new;
-       end
-   end
+        if( wr_rename_inst1 ) begin
+            rename_map_table_bank0[rname_input_inst1.req.ard] <= rname_input_inst1.prf_rd_new;
+            rename_map_table_bank1[rname_input_inst1.req.ard] <= rname_input_inst1.prf_rd_new;
+        end
+    end
 end
 
 
@@ -117,15 +97,15 @@ always @(posedge clk)   begin
             committed_rename_map_table_bank1[i] <= 6'b0;
         end
     end else begin
-        if(commit_0_valid && commit_info_0.commit_valid)    begin
+        if(commit_info_0.commit_req)    begin
             // Copy the commited state from the bank 
-            committed_rename_map_table_bank0[commit_info_0.commited_arf] <= rename_map_table_bank0[commit_info_0.commited_arf];
-            committed_rename_map_table_bank1[commit_info_0.commited_arf] <= rename_map_table_bank1[commit_info_0.commited_arf];
+            committed_rename_map_table_bank0[commit_info_0.committed_arf] <= rename_map_table_bank0[commit_info_0.committed_arf];
+            committed_rename_map_table_bank1[commit_info_0.committed_arf] <= rename_map_table_bank1[commit_info_0.committed_arf];
         end 
-        if(commit_1_valid && commit_info_1.commit_valid)    begin
+        if(commit_info_1.commit_req)    begin
             // Copy the commited state from the bank 
-            committed_rename_map_table_bank0[commit_info_1.commited_arf] <= rename_map_table_bank0[commit_info_1.commited_arf];
-            committed_rename_map_table_bank1[commit_info_1.commited_arf] <= rename_map_table_bank1[commit_info_1.commited_arf];
+            committed_rename_map_table_bank0[commit_info_1.committed_arf] <= rename_map_table_bank0[commit_info_1.committed_arf];
+            committed_rename_map_table_bank1[commit_info_1.committed_arf] <= rename_map_table_bank1[commit_info_1.committed_arf];
         end
     end
 end
