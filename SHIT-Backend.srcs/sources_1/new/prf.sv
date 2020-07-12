@@ -1,55 +1,89 @@
 `timescale 1ns / 1ps
-`include "defines.svh"
+`include "defines/defines.svh"
 //////////////////////////////////////////////////////////////////////////////////
 // 物理寄存器堆文件
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
 module prf(
-    // ALU1
-    input [`PRF_NUM_WIDTH-1:0] rnum_ALU0_0,
-    input [`PRF_NUM_WIDTH-1:0] rnum_ALU0_1,
-    input [`PRF_NUM_WIDTH-1:0] wnum_ALU0,
-    input wen_ALU0,
-    input [31:0] wdata_ALU0,
-    output [31:0] rdata_ALU0_0,
-    output [31:0] rdata_ALU0_1,
-    // ALU2 
-    input [`PRF_NUM_WIDTH-1:0] rnum_ALU1_0,
-    input [`PRF_NUM_WIDTH-1:0] rnum_ALU1_1,
-    input [`PRF_NUM_WIDTH-1:0] wnum_ALU1,
-    input wen_ALU1,
-    input [31:0] wdata_ALU1,
-    output [31:0] rdata_ALU1_0,
-    output [31:0] rdata_ALU1_1,
-    // 1 * BRU
-    input [`PRF_NUM_WIDTH-1:0] rnum_BRU_0,
-    input [`PRF_NUM_WIDTH-1:0] rnum_BRU_1,
-    input [`PRF_NUM_WIDTH-1:0] wnum_BRU,
-    input wen_BRU,
-    input [31:0] wdata_BRU,
-    output [31:0] rdata_BRU_0,
-    output [31:0] rdata_BRU_1,
-    // 1 * LSU
-    input [`PRF_NUM_WIDTH-1:0] rnum_LSU_0,
-    input [`PRF_NUM_WIDTH-1:0] rnum_LSU_1,
-    input [`PRF_NUM_WIDTH-1:0] wnum_LSU,
-    input wen_LSU,
-    input [31:0] wdata_LSU,
-    output [31:0] rdata_LSU_0,
-    output [31:0] rdata_LSU_1,
-    // 1 * MDU (读2个寄存器，写寄存器固定是hi,lo)
-    input [`PRF_NUM_WIDTH-1:0] rnum_MDU_0,
-    input [`PRF_NUM_WIDTH-1:0] rnum_MDU_1,
-    // 由于MDU一次会写2个寄存器,hilo
-    input wen_MDU,
-    input [31:0] wdata_MDU_hi,
-    input [31:0] wdata_MDU_lo,
-    output [31:0] rdata_MDU_0,
-    output [31:0] rdata_MDU_1,
-
-    // hi, lo
-    output [31:0] hi,
-    output [31:0] lo
+    input clk,
+    input rst,
+    PRFwrNums wrnum_ALU_0, wrnum_ALU_1, wrnum_MDU, wrnum_LSU,
+    PRFrData rdata_ALU_0, rdata_ALU_1, rdata_MDU, rdata_LSU,
+    input wr_hi,
+    input wr_lo,
+    input Word wdata_hi,
+    input Word wdata_lo,
+    output Word Hi, Lo
     );
+// 4 Banks of prf
+reg [31:0] prfs_bank0[63:0];
+reg [31:0] prfs_bank1[63:0];
+reg [31:0] prfs_bank2[63:0];
+reg [31:0] prfs_bank3[63:0];
+
+assign rdata_ALU_0.rs0_data = prfs_bank0[wrnum_ALU_0.rs0];
+assign rdata_ALU_0.rs1_data = prfs_bank0[wrnum_ALU_0.rs1];
+
+assign rdata_ALU_1.rs0_data = prfs_bank1[wrnum_ALU_1.rs0];
+assign rdata_ALU_1.rs1_data = prfs_bank1[wrnum_ALU_1.rs1];
+
+assign rdata_MDU.rs0_data = prfs_bank2[wrnum_MDU.rs0];
+assign rdata_MDU.rs1_data = prfs_bank2[wrnum_MDU.rs1];
+
+assign rdata_LSU.rs0_data = prfs_bank3[wrnum_LSU.rs0];
+assign rdata_LSU.rs1_data = prfs_bank3[wrnum_LSU.rs1];
+
+integer i;
+always_ff @(posedge clk)    begin
+    if(rst) begin
+        for(i=0;i<64;i++)   begin
+            prfs_bank0[i] <= 32'b0;
+            prfs_bank1[i] <= 32'b0;
+            prfs_bank2[i] <= 32'b0;
+            prfs_bank3[i] <= 32'b0;
+        end
+    end else begin
+        if(wrnum_ALU_0.wen) begin
+            prfs_bank0[wrnum_ALU_0.rd] <= wrnum_ALU_0.wdata;
+            prfs_bank1[wrnum_ALU_0.rd] <= wrnum_ALU_0.wdata;
+            prfs_bank2[wrnum_ALU_0.rd] <= wrnum_ALU_0.wdata;
+            prfs_bank3[wrnum_ALU_0.rd] <= wrnum_ALU_0.wdata;
+        end
+        if(wrnum_ALU_1.wen) begin
+            prfs_bank0[wrnum_ALU_1.rd] <= wrnum_ALU_1.wdata;
+            prfs_bank1[wrnum_ALU_1.rd] <= wrnum_ALU_1.wdata;
+            prfs_bank2[wrnum_ALU_1.rd] <= wrnum_ALU_1.wdata;
+            prfs_bank3[wrnum_ALU_1.rd] <= wrnum_ALU_1.wdata;
+        end
+        // if(wrnum_MDU.wen) begin                              // Impossible!
+        //     prfs_bank0[wrnum_MDU.rd] <= wrnum_MDU.wdata;
+        //     prfs_bank1[wrnum_MDU.rd] <= wrnum_MDU.wdata;
+        //     prfs_bank2[wrnum_MDU.rd] <= wrnum_MDU.wdata;
+        //     prfs_bank3[wrnum_MDU.rd] <= wrnum_MDU.wdata;
+        // end
+        if(wrnum_LSU.wen) begin
+            prfs_bank0[wrnum_LSU.rd] <= wrnum_LSU.wdata;
+            prfs_bank1[wrnum_LSU.rd] <= wrnum_LSU.wdata;
+            prfs_bank2[wrnum_LSU.rd] <= wrnum_LSU.wdata;
+            prfs_bank3[wrnum_LSU.rd] <= wrnum_LSU.wdata;
+        end
+    end
+end
+
+always_ff @(posedge clk)    begin
+    if(rst) begin
+        Hi <= 32'b0;
+        Lo <= 32'b0;
+    end else begin
+        if(wr_hi)   begin
+            Hi <= wdata_hi;
+        end 
+        if(wr_lo)   begin
+            Lo <= wdata_lo;
+        end
+    end
+end
+
+
 endmodule
