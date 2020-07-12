@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "defines/defines.svh"
+`include "../defines/defines.svh"
 module iq_wrap(
     input clk,
     input rst,

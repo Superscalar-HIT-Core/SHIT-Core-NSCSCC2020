@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "defines/defines.svh"
+`include "../defines/defines.svh"
 module iq_ent_alu(
     input clk,
     input rst,

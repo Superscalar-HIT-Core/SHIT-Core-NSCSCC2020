@@ -110,13 +110,16 @@ typedef struct packed { // TODO
     logic[100:0] PlaceHolder;
 } Decode_ops;
 
-typedef struct packed { // TODO
+typedef struct packed {
     PRFNum rs0;
     PRFNum rs1;
+} PRFrNums;
+
+typedef struct packed { 
     PRFNum rd;
     logic wen;
     Word wdata;
-} PRFwrNums;
+} PRFwInfo;
 
 typedef struct packed { // TODO
     Word rs0_data;

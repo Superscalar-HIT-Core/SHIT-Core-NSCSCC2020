@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "defines/defines.svh"
+`include "../defines/defines.svh"
 `define ALU_QUEUE_LEN 8
 `define ALU_QUEUE_LEN_MINUS1 7
 `define ALU_QUEUE_LEN_MINUS2 6
