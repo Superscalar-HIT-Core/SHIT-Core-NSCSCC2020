@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+// TODO: Extract the fields in decode ops, then assign them to the output 
 `include "defines/defines.svh"
 module dispatch(
     input Decode_ops inst_0_ops, inst_1_ops,

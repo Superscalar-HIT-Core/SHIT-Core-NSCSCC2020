@@ -5,9 +5,9 @@ module fl_encoder_8(
     output reg [2:0] freenum,
     output reg free_valid
     );
-always @(*) begin
-   free_valid = 1;
-   casez(src)    
+always_comb begin
+    free_valid = 1;
+    casez(src)    
         8'b???????0: freenum = 3'b000;
         8'b??????01: freenum = 3'b001;
         8'b?????011: freenum = 3'b010;
