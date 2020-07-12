@@ -20,8 +20,20 @@ Decode_ops adin0, adin1;
 Decode_ops mdin0, mdin1;
 Decode_ops ldin0, ldin1;
 
+// Truth Table
+//                      RS_ALU_WEN_0     RS_ALU_WEN_1
+//  isALU_0, isALU_1        
+//       00                   0               0
+//      10,01                 1               0
+//       11                   1               1
 
-// 有两条都是ALU指令的时候，优先写第一个
+//  ________________| RS_ALU_dout_0     RS_ALU_dout_1
+//  isALU_0, isALU_1| -------------------------------       
+//       00         |         x               x
+//       10         |         din0            x
+//       01         |         din1            x
+//       11         |         din0           din1
+
 assign rs_alu_wen_0 = (inst_0_is_alu || inst_1_is_alu);
 assign rs_alu_wen_1 = inst_0_is_alu && inst_1_is_alu;
 assign adin0 =  ( (inst_0_is_alu && ~inst_1_is_alu ) || ( inst_0_is_alu && inst_1_is_alu ) ) ? inst_0_ops : inst_1_ops;
