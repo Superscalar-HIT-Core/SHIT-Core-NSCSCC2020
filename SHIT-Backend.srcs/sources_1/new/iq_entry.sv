@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 `include "defines/defines.svh"
-module iq_entry(
+module iq_entry_ALU(
     input clk,
     input rst,
     input Queue_Ctrl_Meta queue_ctrl,

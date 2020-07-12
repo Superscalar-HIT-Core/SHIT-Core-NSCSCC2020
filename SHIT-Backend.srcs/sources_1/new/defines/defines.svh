@@ -6,17 +6,24 @@
 `define PRF_NUM 64
 `define IQ_ALU_LENGTH 8
 `define ALU_OP_WIDTH 4
+`define RS_IDX_WIDTH 2
 
 `define CMPQ_SEL_DIN1    2'b00
 `define CMPQ_SEL_DIN2    2'b01
 `define CMPQ_SEL_UP1    2'b10
 `define CMPQ_SEL_UP2    2'b11
 
+`define RS_ALU 2'b00
+`define RS_MDU 2'b01
+`define RS_LSU 2'b10
+
 typedef logic [5:0] PRFNum; // 物理寄存器编号
 typedef logic [4:0] ARFNum; // 逻辑寄存器编号
 typedef logic [63:0] PRF_Vec;
 typedef logic [31:0] Word;
 typedef logic [`ALU_OP_WIDTH-1:0] ALUOP;
+typedef logic [`RS_IDX_WIDTH-1:0] RSNum;
+
 typedef struct packed {
     PRFNum prf_rs1;
     PRFNum prf_rs2;
@@ -73,6 +80,7 @@ typedef struct packed {
 typedef struct packed {
     logic prs1_rdy, prs2_rdy;
 } Arbitration_Info;
+// *_rdy = waked_up | busy list[i] = not busy
 
 typedef struct packed {
     logic cmp_en;
@@ -86,6 +94,21 @@ typedef struct packed {
     ALU_Inst_Ops ops;
     Arbitration_Info rdys;
 } ALU_Queue_Meta;
+
+typedef struct packed { // TODO
+    ALU_Inst_Ops ops;
+    Arbitration_Info rdys;
+} MDU_Queue_Meta;
+
+typedef struct packed { // TODO
+    ALU_Inst_Ops ops;
+    Arbitration_Info rdys;
+} LSU_Queue_Meta;
+
+typedef struct packed { // TODO
+    RSNum rs_num;
+    logic[100:0] PlaceHolder;
+} Decode_ops;
 
 `define DEBUG
 
