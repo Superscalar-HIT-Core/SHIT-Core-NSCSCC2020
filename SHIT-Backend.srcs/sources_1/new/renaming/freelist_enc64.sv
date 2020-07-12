@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "defines/defines.svh"
+`include "../defines/defines.svh"
 module freelist_enc64(
     input [`PRF_NUM-1:0] free_list,
     output free_valid,

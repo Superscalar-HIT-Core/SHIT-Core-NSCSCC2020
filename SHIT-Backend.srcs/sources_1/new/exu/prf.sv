@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "defines/defines.svh"
+`include "../defines/defines.svh"
 //////////////////////////////////////////////////////////////////////////////////
 // 物理寄存器堆文件
 // 
@@ -31,8 +31,8 @@ assign rdata_ALU_1.rs1_data = prfs_bank1[wrnum_ALU_1.rs1];
 assign rdata_MDU.rs0_data = prfs_bank2[wrnum_MDU.rs0];
 assign rdata_MDU.rs1_data = prfs_bank2[wrnum_MDU.rs1];
 
-assign rdata_LSU.rs0_data = prfs_bank3[wrnum_LSU.rs0];
-assign rdata_LSU.rs1_data = prfs_bank3[wrnum_LSU.rs1];
+assign rdata_LSU.rs0_data = prfs_bank3[wrnum_MDU.rs0];
+assign rdata_LSU.rs1_data = prfs_bank3[wrnum_MDU.rs1];
 
 integer i;
 always_ff @(posedge clk)    begin
