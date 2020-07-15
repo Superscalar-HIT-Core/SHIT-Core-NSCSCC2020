@@ -7,18 +7,18 @@ module busy_table(
     input rst,
     input flush,
     // 4 read ports for dispatching, handles bypass logic 
-    input [`PRF_NUM_WIDTH-1:0] rd_port0,
-    input [`PRF_NUM_WIDTH-1:0] rd_port1,
-    input [`PRF_NUM_WIDTH-1:0] rd_port2,
-    input [`PRF_NUM_WIDTH-1:0] rd_port3,
+    PRFNum rd_port0,
+    PRFNum rd_port1,
+    PRFNum rd_port2,
+    PRFNum rd_port3,
 
     // At most 2 instructions dispatched at one time 
     input set_busy_0,
     input set_busy_1,
 
 
-    input [`PRF_NUM_WIDTH-1:0] set_busy_num_0,
-    input [`PRF_NUM_WIDTH-1:0] set_busy_num_1,
+    PRFNum set_busy_num_0,
+    PRFNum set_busy_num_1,
 
     // At most 4 instructions finish at one time 
     input clr_busy_0,
@@ -26,10 +26,10 @@ module busy_table(
     input clr_busy_2,
     input clr_busy_3,
 
-    input [`PRF_NUM_WIDTH-1:0] clr_busy_num_0,
-    input [`PRF_NUM_WIDTH-1:0] clr_busy_num_1,
-    input [`PRF_NUM_WIDTH-1:0] clr_busy_num_2,
-    input [`PRF_NUM_WIDTH-1:0] clr_busy_num_3,
+    PRFNum clr_busy_num_0,
+    PRFNum clr_busy_num_1,
+    PRFNum clr_busy_num_2,
+    PRFNum clr_busy_num_3,
     
     output busy0,
     output busy1,

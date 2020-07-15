@@ -1,12 +1,12 @@
 `timescale 1ns / 1ps
-`include "defines/defines.svh"
+`include "../defines/defines.svh"
 
 
 module register_rename(
     input clk, 
     input rst,
     input recover, 
-    input inst_0_valid, inst_1_valid,               // 指令是否有效（指Fetch Buffer出来的层面，译码之后）
+    input inst_0_valid, inst_1_valid,               
     input commit_valid_0, commit_valid_1,
     input rename_req rename_req_0, rename_req_1,
     input commit_info commit_req_0, commit_req_1,

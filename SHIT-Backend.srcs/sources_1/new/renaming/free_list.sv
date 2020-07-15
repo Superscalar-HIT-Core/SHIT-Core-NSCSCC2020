@@ -34,6 +34,7 @@ freelist_enc64 enc0(
 );
 
 assign free_list_2 = inst_0_req ? (free_list_1 | (1'b1 << free_num_0)) : free_list_1;   // 第一条指令分配之后
+// assign free_list_2 = free_list_1;   // 第一条指令分配之后
 
 freelist_enc64 enc1(
     .free_list(free_list_2),
@@ -46,6 +47,10 @@ assign free_list_3 = inst_1_req ? (free_list_2 | (1'b1 << free_num_1)) : free_li
 assign allocatable =  (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req) ||
                     (free_valid_0 && inst_0_req && ~inst_1_req) ||
                     (free_valid_1 && inst_1_req && ~inst_0_req); // 只有一个指令请求，且请求完就满了的情况
+
+// assign allocatable =  (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req && (free_num_0 != free_num_1)) ||
+//                     (free_valid_0 && inst_0_req && ~inst_1_req) ||
+//                     (free_valid_1 && inst_1_req && ~inst_0_req); // 只有一个指令请求，且请求完就满了的情况
 
 // free_list after freeing the registers
 wire [`PRF_NUM-1:0] free_list_after_alloc = allocatable ? free_list_3 : free_list_1;    // 必须一次能够分配两个，否则暂停
