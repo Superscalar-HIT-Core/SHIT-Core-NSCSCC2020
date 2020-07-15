@@ -25,12 +25,12 @@ module map_table(
 
 
 // Rename Map Table，两个Bank
-reg [`PRF_NUM_WIDTH-1:0] rename_map_table_bank0 [31:0];
-reg [`PRF_NUM_WIDTH-1:0] rename_map_table_bank1 [31:0];
+reg [`PRF_NUM_WIDTH-1:0] rename_map_table_bank0 [33:0];
+reg [`PRF_NUM_WIDTH-1:0] rename_map_table_bank1 [33:0];
 
 // 提交后的Map Table，也是两个Bank
-reg [`PRF_NUM_WIDTH-1:0] committed_rename_map_table_bank0 [31:0] ;
-reg [`PRF_NUM_WIDTH-1:0] committed_rename_map_table_bank1 [31:0] ;
+reg [`PRF_NUM_WIDTH-1:0] committed_rename_map_table_bank0 [33:0] ;
+reg [`PRF_NUM_WIDTH-1:0] committed_rename_map_table_bank1 [33:0] ;
 
 wire wr_rename_inst0 = (rname_input_inst0.req.wen && inst_0_valid);
 wire wr_rename_inst1 = (rname_input_inst1.req.wen && inst_1_valid);
@@ -61,12 +61,12 @@ integer i;
 always @(posedge clk)   begin
     if(rst) begin
         // reset the rename map
-        for(i=0;i<32;i++)   begin
+        for(i=0;i<34;i++)   begin
             rename_map_table_bank0[i] <= 6'b0;
             rename_map_table_bank1[i] <= 6'b0;
         end
     end else if(recover)    begin
-        for(i=0;i<32;i++)   begin
+        for(i=0;i<34;i++)   begin
             rename_map_table_bank0[i] <= committed_rename_map_table_bank0[i];
             rename_map_table_bank1[i] <= committed_rename_map_table_bank1[i];
         end
@@ -96,13 +96,17 @@ always @(posedge clk)   begin
         $display(i, "----->", rename_map_table_bank0[i], "(S)",
                     committed_rename_map_table_bank0[i], "(C)", );
     end
+    $display("Hi ----->", rename_map_table_bank0[32], "(S)",
+                    committed_rename_map_table_bank0[33], "(C)", );
+    $display("Lo ----->", rename_map_table_bank0[32], "(S)",
+                    committed_rename_map_table_bank0[33], "(C)", );
 end
 `endif
 
 always @(posedge clk)   begin
     if(rst) begin
         // reset the committed map
-        for(i=0;i<32;i++)   begin
+        for(i=0;i<34;i++)   begin
             committed_rename_map_table_bank0[i] <= 6'b0;
             committed_rename_map_table_bank1[i] <= 6'b0;
         end

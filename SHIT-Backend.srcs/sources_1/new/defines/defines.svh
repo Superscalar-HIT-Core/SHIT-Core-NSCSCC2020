@@ -2,7 +2,7 @@
 `define DEFINES
 `define REG_WIDTH 32
 `define PRF_NUM_WIDTH 6
-`define ARF_NUM_WIDTH 5
+`define ARF_NUM_WIDTH 6
 `define PRF_NUM 64
 `define IQ_ALU_LENGTH 8
 `define ALU_OP_WIDTH 4
@@ -25,7 +25,7 @@
 `define FALSE       1'b0
 
 typedef logic [5:0] PRFNum; // 物理寄存器编号
-typedef logic [4:0] ARFNum; // 逻辑寄存器编号
+typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
 typedef logic [63:0] PRF_Vec;
 typedef logic [31:0] Word;
 typedef logic [`ALU_OP_WIDTH-1:0] ALUOP;
