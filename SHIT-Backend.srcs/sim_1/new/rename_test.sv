@@ -140,9 +140,9 @@ initial begin
     #20 request_rename(
     .inst_valid_0(inst_0_valid), .rename_req_0(rename_req_0),.inst_valid_1(inst_1_valid), .rename_req_1(rename_req_1),
     .req0   (1),            .req1  (1),
-    .rs0_0  (4),            .rs0_1 (7),
-    .rs1_0  (5),            .rs1_1 (8),
-    .rd_0   (3),            .rd_1  (9),
+    .rs0_0  (4),            .rs0_1 (4),
+    .rs1_0  (5),            .rs1_1 (5),
+    .rd_0   (32),            .rd_1  (33),
     .wen_0  (1),            .wen_1 (1)
     );
 //     #20 request_rename(

@@ -97,8 +97,8 @@ always @(posedge clk)   begin
                     committed_rename_map_table_bank0[i], "(C)", );
     end
     $display("Hi ----->", rename_map_table_bank0[32], "(S)",
-                    committed_rename_map_table_bank0[33], "(C)", );
-    $display("Lo ----->", rename_map_table_bank0[32], "(S)",
+                    committed_rename_map_table_bank0[32], "(C)", );
+    $display("Lo ----->", rename_map_table_bank0[33], "(S)",
                     committed_rename_map_table_bank0[33], "(C)", );
 end
 `endif
