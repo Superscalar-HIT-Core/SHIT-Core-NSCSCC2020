@@ -17,6 +17,13 @@
 `define RS_MDU 2'b01
 `define RS_LSU 2'b10
 
+`define UOP_WIDTH   7:0
+`define ROB_SIZE    64
+`define ROB_ID_W    1+`ROB_ADDR_W
+`define ROB_ADDR_W  5:0
+`define TRUE        1'b1
+`define FALSE       1'b0
+
 typedef logic [5:0] PRFNum; // 物理寄存器编号
 typedef logic [4:0] ARFNum; // 逻辑寄存器编号
 typedef logic [63:0] PRF_Vec;
@@ -125,6 +132,106 @@ typedef struct packed { // TODO
     Word rs0_data;
     Word rs1_data;
 } PRFrData;
+
+typedef struct packed {
+    logic   [`UOP_WIDTH]    uOP;
+    logic   [`ROB_ID_W]     id;
+    logic   [31:0]          pc;
+    logic                   isDS;
+    logic                   isPrev;
+    logic   [4:0]           cp0Num;
+    logic   [31:0]          cp0Data;
+    logic                   busy;
+    logic                   valid;
+    logic                   committed;  // is it committed before?
+    // TODO
+} UOPBundle;
+
+interface Ctrl;
+    logic   pauseReq;
+    logic   flushReq;
+    logic   pause;
+    logic   flush;
+
+    modport master(input pauseReq, flushReq, output pause, flush);
+    modport slave(output pauseReq, flushReq, input pause, flush);
+
+    task automatic startPause(ref logic clk);
+        @(posedge clk) #1 pause = `TRUE;
+    endtask //automatic
+
+    task automatic stopPause(ref logic clk);
+        @(posedge clk) #1 pause = `FALSE;
+    endtask //automatic
+endinterface //Ctrl
+
+interface Dispatch_ROB;
+    UOPBundle   uOP0;
+    UOPBundle   uOP1;
+    logic       ready;
+    logic       valid;
+    logic       empty;
+
+    modport dispatch(output uOP0, uOP1, valid, input ready, empty);
+    modport rob(input uOP0, uOP1, valid, output ready, empty);
+
+    task automatic sendUOP(logic [31:0] pc0, logic valid0, logic [31:0] pc1, logic valid1, ref logic clk);
+        #1
+        uOP0.pc     = pc0;
+        uOP0.valid  = valid0;
+        uOP0.busy   = `TRUE;
+
+        uOP1.pc     = pc1;
+        uOP1.valid  = valid1;
+        uOP1.busy   = `TRUE;
+
+        valid       = `TRUE;
+        do @(posedge clk);
+        while(!ready);
+        #1
+        valid       = `FALSE;
+    endtask //automatic
+endinterface //Dispatch_ROB
+
+interface FU_ROB;
+    logic               setFinish;
+    logic [`ROB_ID_W]   id;
+
+    task automatic sendFinish(logic [`ROB_ID_W] idIn, ref logic clk);
+        id          = idIn;
+        setFinish   = `TRUE;
+        @(posedge clk) #1 begin
+            setFinish   = `FALSE;
+        end
+    endtask //automatic
+
+    modport fu(output setFinish, id);
+    modport rob(input setFinish, id);
+endinterface //FU_ROB
+
+interface ROB_Commit;
+    UOPBundle   uOP0;
+    UOPBundle   uOP1;
+    logic       ready;
+    logic       valid;
+    
+    modport rob(output uOP0, uOP1, valid, input ready);
+    modport commit(input uOP0, uOP1, valid, output ready);
+
+    task automatic commitUOP(ref logic clk);
+        #1
+        ready   = `TRUE;
+        do  @(posedge clk);
+        while(!valid);
+        $display(
+            "commit:%h, %h", 
+            (!uOP0.busy && uOP0.valid && !uOP0.committed ? uOP0.pc : 32'hX), 
+            (!uOP1.busy && uOP1.valid && !uOP1.committed ? uOP1.pc : 32'hx)
+        );
+        #1
+        ready   = `FALSE;
+    endtask //automatic
+endinterface //ROB_Commit
 
 `define DEBUG
 
