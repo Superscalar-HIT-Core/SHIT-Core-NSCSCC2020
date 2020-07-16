@@ -63,21 +63,21 @@ generate
             .clk                (clk             ),
             .rst                (rst             ),
             .flush              (flush           ),
-            .queue_ctrl         (queue_ctrl[i]),
-            .din0               (din_0  ),
-            .din1               (din_1  ),
-            .up0                (dout[i+1]),
-            .up1                (dout[i+2]),
-            .dout               (dout[i]),
-            .rdy                (ready_vec[i]         ),
-            .wake_Info          (wake_Info)
+            .queue_ctrl         (queue_ctrl[i]   ),
+            .din0               (din_0           ),
+            .din1               (din_1           ),
+            .up0                (dout[i+1]       ),
+            .up1                (dout[i+2]       ),
+            .dout               (dout[i]         ),
+            .rdy                (ready_vec[i]    ),
+            .wake_Info          (wake_Info       )
         );
-        assign queue_ctrl[i].enq_sel = (new_tail_0 != i);
-        assign queue_ctrl[i].cmp_en = ( deq_req_0 && i>= deq0_idx );
-        assign queue_ctrl[i].cmp_sel = ( deq_req_0 && ~deq_req_1 && i >= deq0_idx ) 
-                                        || (deq_req_0 && deq_req_1 && i >= deq0_idx && i < deq1_idx -1) ? 0 : 1;
-        assign queue_ctrl[i].enq_en = w_en[i];
-        assign queue_ctrl[i].freeze = freeze;
+        assign queue_ctrl[i].enq_sel    =   ( new_tail_0 != i );
+        assign queue_ctrl[i].cmp_en     =   ( deq_req_0 && i>= deq0_idx );
+        assign queue_ctrl[i].cmp_sel    =   ( deq_req_0 && ~deq_req_1 && i >= deq0_idx ) || 
+                                            ( deq_req_0 && deq_req_1 && i >= deq0_idx && i < deq1_idx -1 ) ? 0 : 1;
+        assign queue_ctrl[i].enq_en     =   w_en[i];
+        assign queue_ctrl[i].freeze     =   freeze;
     end
 endgenerate
 
