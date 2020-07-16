@@ -575,9 +575,9 @@ typedef struct packed {
 } ALU_Queue_Meta;
 
 typedef struct packed {
-    PRFNum wrNum,
-    Word wData,
-    logic wen
+    PRFNum wrNum;
+    Word wData;
+    logic wen;
 } BypassInfo;
 
 `define DEBUG
