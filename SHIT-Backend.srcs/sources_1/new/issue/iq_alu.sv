@@ -9,6 +9,7 @@ module iq_alu(
     input enq_req_1,
     input deq_req_0,
     input deq_req_1,
+    input Wake_Info wake_Info,
     input [`ALU_QUEUE_IDX_LEN-2:0] deq0_idx,
     input [`ALU_QUEUE_IDX_LEN-2:0] deq1_idx,
     input ALU_Queue_Meta din_0, din_1,
@@ -68,7 +69,8 @@ generate
             .up0                (dout[i+1]),
             .up1                (dout[i+2]),
             .dout               (dout[i]),
-            .rdy                (ready_vec[i]         )
+            .rdy                (ready_vec[i]         ),
+            .wake_Info          (wake_Info)
         );
         assign queue_ctrl[i].enq_sel = (new_tail_0 != i);
         assign queue_ctrl[i].cmp_en = ( deq_req_0 && i>= deq0_idx );

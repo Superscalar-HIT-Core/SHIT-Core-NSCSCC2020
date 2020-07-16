@@ -4,7 +4,7 @@ module issue_alu(
     input clk,
     input rst,
     input flush,        // 清除请求
-    input Wake_Info wake_info,      // TODO,外部输入唤醒信号,连接到队列中
+    input Wake_Info wake_Info,      // TODO,外部输入唤醒信号,连接到队列中
     input ALU_Queue_Meta inst_Ops_0, inst_Ops_1,      // 从译码模块来的，指令的译码信息
     input enq_req_0, enq_req_1,                     // 指令入队请求
     output UOPBundle issue_info_0, issue_info_1,         // 输出给执行单元流水线的
@@ -16,20 +16,20 @@ module issue_alu(
 
 wire [`ALU_QUEUE_LEN-1:0] ready_vec, valid_vec;
 
-wire [`ALU_QUEUE_IDX_LEN-1:0] sel0, sel1;
-wire sel0_valid, sel1_valid, sel_valid;
-ALU_Queue_Meta alu_queue_dout0, alu_queue_dout1;
-UOPBundle uops0, uops1;
-assign uops0 = alu_queue_dout0.ops;
-assign uops1 = alu_queue_dout1.ops;
-assign wake_reg_0 = uops0.dstPAddr;
-assign wake_reg_1 = uops1.dstPAddr;
-assign wake_reg_0_en = uops0.dstwe && sel0_valid;
-assign wake_reg_1_en = uops1.dstwe && sel1_valid;
-assign issue_info_0 = uops0;
-assign issue_info_1 = uops1;
-assign issue_en_0 = sel0_valid;
-assign issue_en_1 = sel1_valid;
+wire [`ALU_QUEUE_IDX_LEN-2:0]   sel0, sel1;
+wire                            sel0_valid, sel1_valid, sel_valid;
+ALU_Queue_Meta                  alu_queue_dout0, alu_queue_dout1;
+UOPBundle                       uops0, uops1;
+assign uops0                    = alu_queue_dout0.ops;
+assign uops1                    = alu_queue_dout1.ops;
+assign wake_reg_0               = uops0.dstPAddr;
+assign wake_reg_1               = uops1.dstPAddr;
+assign wake_reg_0_en            = uops0.dstwe && sel0_valid;
+assign wake_reg_1_en            = uops1.dstwe && sel1_valid;
+assign issue_info_0             = uops0;
+assign issue_info_1             = uops1;
+assign issue_en_0               = sel0_valid;
+assign issue_en_1               = sel1_valid;
 
 iq_alu u_iq_alu(
     // Global Signals
@@ -54,7 +54,9 @@ iq_alu u_iq_alu(
     .dout_1         (alu_queue_dout1),
     // To Dispatch
     .almost_full    (almost_full    ),
-    .full           (full           )
+    .full           (full           ),
+    // Wake Info
+    .wake_Info      (wake_Info)
 );
 
 assign ready = ~(almost_full | full);   // 如果满了，则不能继续接受
