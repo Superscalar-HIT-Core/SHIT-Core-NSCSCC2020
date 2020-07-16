@@ -7,3 +7,12 @@ SHIT-Backend.runs
 *.str
 *.log
 *.jou
+proj0.cache
+proj0.hw
+proj0.runs
+proj0.sim/sim_1/behav
+sim_scripts
+*.log
+*.veo
+*.vho
+!*.sv
