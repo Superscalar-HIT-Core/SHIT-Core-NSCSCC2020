@@ -339,12 +339,12 @@ typedef struct packed {
 
 
 typedef struct packed { // TODO
-    ALU_Inst_Ops ops;
+    // ALU_Inst_Ops ops;
     Arbitration_Info rdys;
 } MDU_Queue_Meta;
 
 typedef struct packed { // TODO
-    ALU_Inst_Ops ops;
+    // ALU_Inst_Ops ops;
     Arbitration_Info rdys;
 } LSU_Queue_Meta;
 
