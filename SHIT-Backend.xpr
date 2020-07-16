@@ -199,6 +199,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/new/decode_rename_regs.sv">
       <File Path="$PSRCDIR/sources_1/new/renaming/register_rename.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
