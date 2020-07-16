@@ -16,3 +16,13 @@ sim_scripts
 *.veo
 *.vho
 !*.sv
+SHIT-Core.cache
+SHIT-Core.hw
+SHIT-Core.sim
+SHIT-Core.ip_user_files
+SHIT-Core.runs
+*
+.*
+!*.xpr
+!*.wcfg
+!source
