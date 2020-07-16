@@ -230,6 +230,32 @@ typedef logic [`RS_IDX_WIDTH-1:0] RSNum;
 
 typedef enum bit[1:0] { typeJ, typeBR, typeJR, typeNormal } BranchType;
 
+typedef struct packed {
+    logic   [31:0]  target;
+    logic   [1:0]   bimState;
+    logic           taken;
+    logic           valid;
+} NLPPredInfo;
+
+typedef struct packed {
+    logic   [31:0]  target;
+    logic   [1:0]   bimState;
+    logic           shouldTake;
+    logic           valid;
+} NLPUpdateInfo;
+
+typedef struct packed {
+    // logic   [31:0]  target;
+    logic           taken;
+    logic           valid;
+} BPDPredInfo;
+
+typedef struct packed {
+    // logic   [31:0]  target;
+    logic           taken;
+    logic           valid;
+} BPDUpdateInfo;
+
 typedef enum bit[3:0] {
     ExcIntOverflow,
     ExcInterrupt,
@@ -275,22 +301,22 @@ typedef struct packed {
     PRFNum new_prd;
 } rename_resp;
 
-typedef struct packed {
-    Word PC;  // 指令的PC
-    // 只保存寄存器的编号，寄存器的值发射的时候再给
-    PRFNum prs1;
-    PRFNum prs2;
-    // 需要读寄存器
-    logic rs1_ren;
-    logic rs2_ren;
-    PRFNum prd;
-    PRFNum prd_stale;
-    logic wen;
-    Word imm;
-    ALUOP alu_op;
-    logic is_ds_i; // 是否为延迟槽指令
-    logic is_special_i;  // 是否是特殊的指令，例如CP0等等，需要单独的发射
-} ALU_Inst_Ops;
+// typedef struct packed {
+//     Word PC;  // 指令的PC
+//     // 只保存寄存器的编号，寄存器的值发射的时候再给
+//     PRFNum prs1;
+//     PRFNum prs2;
+//     // 需要读寄存器
+//     logic rs1_ren;
+//     logic rs2_ren;
+//     PRFNum prd;
+//     PRFNum prd_stale;
+//     logic wen;
+//     Word imm;
+//     ALUOP alu_op;
+//     logic is_ds_i; // 是否为延迟槽指令
+//     logic is_special_i;  // 是否是特殊的指令，例如CP0等等，需要单独的发射
+// } ALU_Inst_Ops;
 
 typedef struct packed {
     logic wen_0, wen_1, wen_2, wen_3;
@@ -310,10 +336,7 @@ typedef struct packed {
     logic freeze;
 } Queue_Ctrl_Meta;
 
-typedef struct packed {
-    ALU_Inst_Ops ops;
-    Arbitration_Info rdys;
-} ALU_Queue_Meta;
+
 
 typedef struct packed { // TODO
     ALU_Inst_Ops ops;
@@ -365,16 +388,16 @@ typedef struct packed {
     logic   [`UOP_WIDTH]    uOP;
     logic   [4:0]           cacheOP;
 
-    logic   [5:0]           op0LAddr;   // logical
-    logic   [6:0]           op0PAddr;   // physical
+    ARFNum                  op0LAddr;   // logical
+    PRFNum                  op0PAddr;   // physical
     logic                   op0re;
 
-    logic   [5:0]           op1LAddr;
-    logic   [6:0]           op1PAddr;
+    ARFNum                  op1LAddr;
+    PRFNum                  op1PAddr;
     logic                   op1re;
 
-    logic   [5:0]           dstLAddr;
-    logic   [6:0]           dstPAddr;
+    ARFNum                  dstLAddr;
+    PRFNum                  dstPAddr;
     logic                   dstwe;
 
     logic   [31:0]          imm;
@@ -543,6 +566,11 @@ interface Regs_Dispatch;
     modport regs(output uOP0, uOP1);
     modport dispatch(input uOP0, uOP1);
 endinterface //Regs_Dispatch
+
+typedef struct packed {
+    UOPBundle ops;
+    Arbitration_Info rdys;
+} ALU_Queue_Meta;
 
 `define DEBUG
 
