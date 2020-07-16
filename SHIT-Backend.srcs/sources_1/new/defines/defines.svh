@@ -2,7 +2,7 @@
 `define DEFINES
 `define REG_WIDTH 32
 `define PRF_NUM_WIDTH 6
-`define ARF_NUM_WIDTH 5
+`define ARF_NUM_WIDTH 6
 `define PRF_NUM 64
 `define IQ_ALU_LENGTH 8
 `define ALU_OP_WIDTH 4
@@ -24,6 +24,13 @@
 `define TRUE        1'b1
 `define FALSE       1'b0
 
+`define ALU_QUEUE_LEN 8
+`define ALU_QUEUE_LEN_MINUS1 7
+`define ALU_QUEUE_LEN_MINUS2 6
+`define ALU_QUEUE_IDX_LEN 3
+
+typedef logic [5:0] PRFNum; // 物理寄存器编号
+typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
 `define REGHI       6'd32
 `define REGLO       6'd33
 `define REG31       6'd31
@@ -216,9 +223,6 @@
 `define NOP_U       8'b01000010
 `define WAIT_U      8'b01000101
 
-
-typedef logic [5:0] PRFNum; // 物理寄存器编号
-typedef logic [4:0] ARFNum; // 逻辑寄存器编号 // note-willson: [5:0]?
 typedef logic [63:0] PRF_Vec;
 typedef logic [31:0] Word;
 typedef logic [`ALU_OP_WIDTH-1:0] ALUOP;
@@ -291,6 +295,7 @@ typedef struct packed {
 } ALU_Inst_Ops;
 
 typedef struct packed {
+    logic wen_0, wen_1, wen_2, wen_3;
     PRFNum wb_num0_i, wb_num1_i, wb_num2_i, wb_num3_i;  //唤醒信息
 } Wake_Info;
 
@@ -487,6 +492,16 @@ interface ROB_Commit;
     endtask //automatic
 endinterface //ROB_Commit
 
+interface ALU_ISSUE_INFO;
+    // 发射的两条指令的ALU基本操作
+    ALU_Inst_Ops   uOP;
+    logic       ready;
+    logic       valid;
+    
+    modport issue_unit(output uOP, valid, input ready);
+    modport pipe_reg(input uOP, valid, output ready);
+
+endinterface //ALU_ISSUE_INFO
 interface InstBuffer_Backend;
     InstBundle      inst0;
     InstBundle      inst1;

@@ -1,12 +1,10 @@
 `timescale 1ns / 1ps
 `include "../defines/defines.svh"
-`define ALU_QUEUE_LEN 8
-`define ALU_QUEUE_LEN_MINUS1 7
-`define ALU_QUEUE_LEN_MINUS2 6
-`define ALU_QUEUE_IDX_LEN 3
+
 module iq_alu(
     input clk,
     input rst,
+    input flush, 
     input enq_req_0,
     input enq_req_1,
     input deq_req_0,
@@ -16,12 +14,12 @@ module iq_alu(
     input ALU_Queue_Meta din_0, din_1,
     output ALU_Queue_Meta dout_0,
     output ALU_Queue_Meta dout_1,
-    output dout0_valid,
-    output dout1_valid,
     output almost_full,
     output full,
     output empty,
-    output almost_empty
+    output almost_empty,
+    output [`ALU_QUEUE_LEN-1:0] ready_vec,
+    output [`ALU_QUEUE_LEN-1:0] valid_vec
     );
 reg [`ALU_QUEUE_IDX_LEN-1:0] tail;
 assign almost_full = (tail == `ALU_QUEUE_IDX_LEN'h`ALU_QUEUE_LEN_MINUS1);  // 差1位满，也不能写入
@@ -45,22 +43,31 @@ wire [`ALU_QUEUE_LEN-1:0] cmp_en;
 wire [`ALU_QUEUE_LEN-1:0] w_en = wr_vec_1;
 ALU_Queue_Meta dout[`ALU_QUEUE_LEN+1:0];
 Queue_Ctrl_Meta queue_ctrl[`ALU_QUEUE_LEN-1:0];
-wire [`ALU_QUEUE_LEN-1:0] rdy;
 assign dout[`ALU_QUEUE_LEN] = 0;
 assign dout[`ALU_QUEUE_LEN+1] = 0;
+assign valid_vec =  ( tail == `ALU_QUEUE_IDX_LEN'd0 ) ? `ALU_QUEUE_LEN'b0000_0000 : 
+                    ( tail == `ALU_QUEUE_IDX_LEN'd1 ) ? `ALU_QUEUE_LEN'b0000_0001 : 
+                    ( tail == `ALU_QUEUE_IDX_LEN'd2 ) ? `ALU_QUEUE_LEN'b0000_0011 : 
+                    ( tail == `ALU_QUEUE_IDX_LEN'd3 ) ? `ALU_QUEUE_LEN'b0000_0111 : 
+                    ( tail == `ALU_QUEUE_IDX_LEN'd4 ) ? `ALU_QUEUE_LEN'b0000_1111 : 
+                    ( tail == `ALU_QUEUE_IDX_LEN'd5 ) ? `ALU_QUEUE_LEN'b0001_1111 : 
+                    ( tail == `ALU_QUEUE_IDX_LEN'd6 ) ? `ALU_QUEUE_LEN'b0011_1111 : 
+                    ( tail == `ALU_QUEUE_IDX_LEN'd7 ) ? `ALU_QUEUE_LEN'b0111_1111 : `ALU_QUEUE_LEN'b0000_0000;
+
 genvar i;
 generate 
     for(i=0;i<`ALU_QUEUE_LEN;i++)   begin
         iq_entry_ALU u_iq_entry_ALU(
             .clk                (clk             ),
             .rst                (rst             ),
+            .flush              (flush           ),
             .queue_ctrl         (queue_ctrl[i]),
             .din0               (din_0  ),
             .din1               (din_1  ),
             .up0                (dout[i+1]),
             .up1                (dout[i+2]),
             .dout               (dout[i]),
-            .rdy                (rdy[i]         )
+            .rdy                (ready_vec[i]         )
         );
         assign queue_ctrl[i].enq_sel = (new_tail_0 != i);
         assign queue_ctrl[i].cmp_en = ( deq_req_0 && i>= deq0_idx );

@@ -9,12 +9,7 @@ module prf(
     input rst,
     PRFrNums rnum_ALU_0, rnum_ALU_1, rnum_MDU, rnum_LSU,
     PRFrData rdata_ALU_0, rdata_ALU_1, rdata_MDU, rdata_LSU,
-    PRFwInfo wb_ALU_0, wb_ALU_1, wb_MDU, wb_LSU,
-    input wr_hi,
-    input wr_lo,
-    input Word wdata_hi,
-    input Word wdata_lo,
-    output Word Hi, Lo
+    PRFwInfo wb_ALU_0, wb_ALU_1, wb_MDU, wb_LSU
     );
 // 4 Banks of prf
 reg [31:0] prfs_bank0[63:0];
@@ -110,20 +105,5 @@ always_ff @(posedge clk)    begin
         end
     end
 end
-
-always_ff @(posedge clk)    begin
-    if(rst) begin
-        Hi <= 32'b0;
-        Lo <= 32'b0;
-    end else begin
-        if(wr_hi)   begin
-            Hi <= wdata_hi;
-        end 
-        if(wr_lo)   begin
-            Lo <= wdata_lo;
-        end
-    end
-end
-
 
 endmodule
