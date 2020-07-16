@@ -265,8 +265,10 @@ typedef enum bit[3:0] {
     ExcReservedInst,
     ExcTLBErrL,
     ExcTLBErrS,
+    ExcTLBModified,
     ExcAddressErrL,
-    ExcAddressErrS
+    ExcAddressErrS,
+    ExcEret
 } ExceptionType;
 
 typedef struct packed {
@@ -559,7 +561,7 @@ interface Decode_Regs;
     modport regs(input uOP0, uOP1);
 endinterface //Decode_Regs
 
-interface Regs_Dispatch;
+interface Regs_Re;
     UOPBundle   uOP0;
     UOPBundle   uOP1;
 
