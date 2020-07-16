@@ -574,6 +574,12 @@ typedef struct packed {
     Arbitration_Info rdys;
 } ALU_Queue_Meta;
 
+typedef struct packed {
+    PRFNum wrNum,
+    Word wData,
+    logic wen
+} BypassInfo;
+
 `define DEBUG
 
 `endif

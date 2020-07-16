@@ -50,6 +50,30 @@ initial begin
     inst_Ops_1.ops.dstPAddr = 6;            inst_Ops_1.ops.dstwe = 1;
     enq_req_1 = 1;
     #20 
+    inst_Ops_0 = 0; inst_Ops_0.ops.pc = 8; 
+    inst_Ops_0.rdys.prs1_rdy = 0;       inst_Ops_0.rdys.prs2_rdy = 0;
+    inst_Ops_0.ops.op0PAddr = 7;            inst_Ops_0.ops.op1PAddr = 8;
+    inst_Ops_0.ops.dstPAddr = 9;            inst_Ops_0.ops.dstwe = 1;
+    enq_req_0 = 1;
+
+    inst_Ops_1 = 0; inst_Ops_1.ops.pc = 12; 
+    inst_Ops_1.rdys.prs1_rdy = 1;       inst_Ops_1.rdys.prs2_rdy = 1;
+    inst_Ops_1.ops.op0PAddr = 0;            inst_Ops_1.ops.op1PAddr = 0;
+    inst_Ops_1.ops.dstPAddr = 7;            inst_Ops_1.ops.dstwe = 1;
+    enq_req_1 = 1;
+    #20 
+    inst_Ops_0 = 0; inst_Ops_0.ops.pc = 16; 
+    inst_Ops_0.rdys.prs1_rdy = 1;       inst_Ops_0.rdys.prs2_rdy = 1;
+    inst_Ops_0.ops.op0PAddr = 0;            inst_Ops_0.ops.op1PAddr = 0;
+    inst_Ops_0.ops.dstPAddr = 8;            inst_Ops_0.ops.dstwe = 1;
+    enq_req_0 = 1;
+
+    inst_Ops_1 = 0; inst_Ops_1.ops.pc = 20; 
+    inst_Ops_1.rdys.prs1_rdy = 1;       inst_Ops_1.rdys.prs2_rdy = 1;
+    inst_Ops_1.ops.op0PAddr = 0;            inst_Ops_1.ops.op1PAddr = 0;
+    inst_Ops_1.ops.dstPAddr = 0;            inst_Ops_1.ops.dstwe = 0;
+    enq_req_1 = 0;
+    #20 
     enq_req_0 = 0;
     enq_req_1 = 0;
     #50
