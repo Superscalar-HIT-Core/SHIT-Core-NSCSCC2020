@@ -5,6 +5,7 @@
 *.*
 !*.xci
 !*.sv
+!*.svh
 SHIT-Core.cache
 SHIT-Core.hw
 SHIT-Core.sim
