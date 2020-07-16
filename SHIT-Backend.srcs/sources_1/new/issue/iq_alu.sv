@@ -9,8 +9,8 @@ module iq_alu(
     input enq_req_1,
     input deq_req_0,
     input deq_req_1,
-    input [`ALU_QUEUE_IDX_LEN-1:0] deq0_idx,
-    input [`ALU_QUEUE_IDX_LEN-1:0] deq1_idx,
+    input [`ALU_QUEUE_IDX_LEN-2:0] deq0_idx,
+    input [`ALU_QUEUE_IDX_LEN-2:0] deq1_idx,
     input ALU_Queue_Meta din_0, din_1,
     output ALU_Queue_Meta dout_0,
     output ALU_Queue_Meta dout_1,
@@ -24,7 +24,7 @@ module iq_alu(
 reg [`ALU_QUEUE_IDX_LEN-1:0] tail;
 assign almost_full = (tail == `ALU_QUEUE_IDX_LEN'h`ALU_QUEUE_LEN_MINUS1);  // 差1位满，也不能写入
 assign empty = (tail == `ALU_QUEUE_IDX_LEN'h0);  // 差1位满，也不能写入
-assign full = (tail == `ALU_QUEUE_IDX_LEN'h`ALU_QUEUE_LEN_MINUS2);
+assign full = (tail == `ALU_QUEUE_IDX_LEN'h`ALU_QUEUE_LEN);
 assign almost_empty = (tail == `ALU_QUEUE_IDX_LEN'h1);
 wire freeze = almost_full || full;
 
@@ -52,7 +52,8 @@ assign valid_vec =  ( tail == `ALU_QUEUE_IDX_LEN'd0 ) ? `ALU_QUEUE_LEN'b0000_000
                     ( tail == `ALU_QUEUE_IDX_LEN'd4 ) ? `ALU_QUEUE_LEN'b0000_1111 : 
                     ( tail == `ALU_QUEUE_IDX_LEN'd5 ) ? `ALU_QUEUE_LEN'b0001_1111 : 
                     ( tail == `ALU_QUEUE_IDX_LEN'd6 ) ? `ALU_QUEUE_LEN'b0011_1111 : 
-                    ( tail == `ALU_QUEUE_IDX_LEN'd7 ) ? `ALU_QUEUE_LEN'b0111_1111 : `ALU_QUEUE_LEN'b0000_0000;
+                    ( tail == `ALU_QUEUE_IDX_LEN'd7 ) ? `ALU_QUEUE_LEN'b0111_1111 : 
+                    ( tail == `ALU_QUEUE_IDX_LEN'd8 ) ? `ALU_QUEUE_LEN'b1111_1111 : `ALU_QUEUE_LEN'b0000_0000;
 
 genvar i;
 generate 
@@ -73,6 +74,8 @@ generate
         assign queue_ctrl[i].cmp_en = ( deq_req_0 && i>= deq0_idx );
         assign queue_ctrl[i].cmp_sel = ( deq_req_0 && ~deq_req_1 && i >= deq0_idx ) 
                                         || (deq_req_0 && deq_req_1 && i >= deq0_idx && i < deq1_idx -1) ? 0 : 1;
+        assign queue_ctrl[i].enq_en = w_en[i];
+        assign queue_ctrl[i].freeze = freeze;
     end
 endgenerate
 
@@ -82,8 +85,10 @@ assign dout_1 = dout[deq1_idx];
 always @(posedge clk)   begin
     if(rst) begin
         tail <= `ALU_QUEUE_IDX_LEN'b0;
+    end else if(freeze)begin
+        tail <= tail - deq_req_0 - deq_req_1;
     end else begin
-        tail <= tail + enq_req_0 + enq_req_1 + deq_req_0 + deq_req_1;
+        tail <= tail + enq_req_0 + enq_req_1 - deq_req_0 - deq_req_1;
     end
 end
 

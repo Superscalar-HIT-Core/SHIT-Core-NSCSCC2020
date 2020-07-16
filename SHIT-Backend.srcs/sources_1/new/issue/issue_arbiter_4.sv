@@ -28,10 +28,10 @@ wire [3:0] rdys_1 = rdys_0 & ~(sel0_valid << sel0);
 always_comb begin
     sel1_valid = 1;
     casez(rdys_1)    
-        4'b???????1: sel0 = 2'b00;
-        4'b??????10: sel0 = 2'b01;
-        4'b?????100: sel0 = 2'b10;
-        4'b????1000: sel0 = 2'b11;
+        4'b???1: sel0 = 2'b00;
+        4'b??10: sel0 = 2'b01;
+        4'b?100: sel0 = 2'b10;
+        4'b1000: sel0 = 2'b11;
         default: begin
             sel1 = 2'b00 ;
             sel1_valid = 0;

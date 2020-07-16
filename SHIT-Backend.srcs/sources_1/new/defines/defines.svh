@@ -27,7 +27,7 @@
 `define ALU_QUEUE_LEN 8
 `define ALU_QUEUE_LEN_MINUS1 7
 `define ALU_QUEUE_LEN_MINUS2 6
-`define ALU_QUEUE_IDX_LEN 3
+`define ALU_QUEUE_IDX_LEN 4
 
 typedef logic [5:0] PRFNum; // 物理寄存器编号
 typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
