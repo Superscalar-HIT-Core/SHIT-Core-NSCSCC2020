@@ -7,7 +7,30 @@ reg clk,rst;
 
 Regs_Decode  regs_decode();
 Decode_Regs  decode_regs();
+
 decode dec0(.*);
+
+
+
+register_rename u_register_rename(
+	.clk          (clk          ),
+    .rst          (rst          ),
+    .recover      (recover      ),
+    // From instruction
+    .inst_0_valid (inst_0_valid ),
+    .inst_1_valid (inst_1_valid ),
+    .rename_req_0   (rename_req_0   ),
+    .rename_req_1   (rename_req_1   ),
+    .rename_resp_0  (rename_resp_0  ),
+    .rename_resp_1  (rename_resp_1  ),
+    .allocatable  (allocatable  ),
+
+    .commit_req_0  (commit_req_0  ),
+    .commit_req_1  (commit_req_1  ),
+    .commit_valid_0 (commit_valid_0),
+    .commit_valid_1 (commit_valid_1)
+);
+
 integer fp;
 integer count;
 initial begin
@@ -18,6 +41,7 @@ initial begin
     #20 regs_decode.inst = 0;     regs_decode.inst.valid = 1;
 end
 
+// Insturction Generator
 always @(posedge clk)   begin
     if(!rst)  begin
         count <= $fscanf(fp,"%h" ,regs_decode.inst.inst);
@@ -38,9 +62,10 @@ always @(posedge clk)   begin
                 dec0.decode_regs.uOP0.imm
         );
         end
-
     end
 end
+
+
 
 always begin
     #10 clk = ~clk;

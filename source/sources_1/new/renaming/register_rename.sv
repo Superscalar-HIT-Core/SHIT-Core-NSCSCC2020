@@ -6,11 +6,10 @@ module register_rename(
     input clk, 
     input rst,
     input recover, 
-    input inst_0_valid, inst_1_valid,               
+    input UOPBundle inst0_ops_in, inst1_ops_in,
+    output UOPBundle inst0_ops_out, inst1_ops_out,
     input commit_valid_0, commit_valid_1,
-    input rename_req rename_req_0, rename_req_1,
     input commit_info commit_req_0, commit_req_1,
-    output rename_resp rename_resp_0, rename_resp_1,
     output allocatable
     );
 wire PRFNum free_prf_0, free_prf_1;
@@ -19,8 +18,8 @@ free_list u_free_list(
 	.clk         (clk         ),
     .rst         (rst         ),
     .recover     (recover     ),
-    .inst_0_req  (rename_req_0.wen && inst_0_valid ),
-    .inst_1_req  (rename_req_1.wen && inst_1_valid  ),
+    .inst_0_req  (inst0_ops_in.dstwe && inst0_ops_in.valid ),
+    .inst_1_req  (inst1_ops_in.dstwe && inst1_ops_in.valid  ),
     .inst_0_prf      (free_prf_0      ),
     .inst_1_prf      (free_prf_1      ),
     .commit_valid_0     (commit_valid_0),
@@ -31,9 +30,20 @@ free_list u_free_list(
 );
 rename_table_input rnamet_input_inst0, rnamet_input_inst1;
 
-assign rnamet_input_inst0.req = rename_req_0;
+rename_req rename_req0, rename_req1;
+assign rename_req0.ars1 = inst0_ops_in.op0LAddr;
+assign rename_req0.ars2 = inst0_ops_in.op1LAddr;
+assign rename_req0.ard = inst0_ops_in.dstLAddr;
+assign rename_req0.wen = inst0_ops_in.dstwe;
+
+assign rename_req1.ars1 = inst1_ops_in.op0LAddr;
+assign rename_req1.ars2 = inst1_ops_in.op1LAddr;
+assign rename_req1.ard = inst1_ops_in.dstLAddr;
+assign rename_req1.wen = inst1_ops_in.dstwe;
+
+assign rnamet_input_inst0.req = rename_req0;
 assign rnamet_input_inst0.prf_rd_new = free_prf_0;
-assign rnamet_input_inst1.req = rename_req_1;
+assign rnamet_input_inst1.req = rename_req1;
 assign rnamet_input_inst1.prf_rd_new = free_prf_1;
 
 rename_table_output rnamet_output_inst0, rnamet_output_inst1;
@@ -42,8 +52,8 @@ map_table u_map_table(
 	.clk                 (clk                 ),
     .rst                 (rst                 ),
     .recover             (recover             ),
-    .inst_0_valid        (inst_0_valid  && allocatable ),
-    .inst_1_valid        (inst_1_valid  && allocatable ),
+    .inst_0_valid        (inst0_ops_in.valid  && allocatable ),
+    .inst_1_valid        (inst1_ops_in.valid  && allocatable ),
     .rname_input_inst0  (rnamet_input_inst0  ),
     .rname_input_inst1  (rnamet_input_inst1  ),
     .rname_output_inst0 (rnamet_output_inst0 ),
@@ -54,49 +64,58 @@ map_table u_map_table(
     .commit_info_1         (commit_req_1         )
 );
 
-assign rename_resp_0.prf_rs1 = rnamet_output_inst0.prf_rs1;
-assign rename_resp_0.prf_rs2 = rnamet_output_inst0.prf_rs2;
-assign rename_resp_0.prf_rd_stale = rnamet_output_inst0.prf_rd_stale;
-assign rename_resp_0.new_prd = free_prf_0;
 
-assign rename_resp_1.prf_rs1 = rnamet_output_inst1.prf_rs1;
-assign rename_resp_1.prf_rs2 = rnamet_output_inst1.prf_rs2;
-assign rename_resp_1.prf_rd_stale = rnamet_output_inst1.prf_rd_stale;
-assign rename_resp_1.new_prd = free_prf_1;
+
+
+always_comb begin
+    inst0_ops_out = inst0_ops_in;
+    inst0_ops_out.op0PAddr = rnamet_output_inst0.prf_rs1;
+    inst0_ops_out.op1PAddr = rnamet_output_inst0.prf_rs2;
+    inst0_ops_out.dstPAddr = free_prf_0;
+    inst0_ops_out.dstPStale = rnamet_output_inst0.prf_rd_stale;
+end
+
+always_comb begin
+    inst1_ops_out = inst1_ops_in;
+    inst1_ops_out.op0PAddr = rnamet_output_inst1.prf_rs1;
+    inst1_ops_out.op1PAddr = rnamet_output_inst1.prf_rs2;
+    inst1_ops_out.dstPAddr = free_prf_1;
+    inst1_ops_out.dstPStale = rnamet_output_inst1.prf_rd_stale;
+end
 
 `ifdef DEBUG
 always @(posedge clk) begin
     #5
-    if(inst_0_valid)    begin
-        if(rename_req_0.wen)    begin
+    if(inst0_ops_in.valid)    begin
+        if(rename_req0.wen)    begin
         $strobe("Inst_0: RS1 %d -> %d ; RS2 %d -> %d ; RD %d -> %d (stale %d)", 
-            rename_req_0.ars1,  rename_resp_0.prf_rs1,
-            rename_req_0.ars2,  rename_resp_0.prf_rs2,
-            rename_req_0.ard,  rename_resp_0.new_prd,
+            rename_req0.ars1,  rename_resp_0.prf_rs1,
+            rename_req0.ars2,  rename_resp_0.prf_rs2,
+            rename_req0.ard,  rename_resp_0.new_prd,
             rename_resp_0.prf_rd_stale
             );
         end else begin
         $strobe("Inst_0: RS1 %d -> %d ; RS2 %d -> %d ; RD %d -> %d (stale %d), Do not rename", 
-            rename_req_0.ars1,  rename_resp_0.prf_rs1,
-            rename_req_0.ars2,  rename_resp_0.prf_rs2,
-            rename_req_0.ard,  rename_resp_0.new_prd,
+            rename_req0.ars1,  rename_resp_0.prf_rs1,
+            rename_req0.ars2,  rename_resp_0.prf_rs2,
+            rename_req0.ard,  rename_resp_0.new_prd,
             rename_resp_0.prf_rd_stale
             );
         end
     end
-    if(inst_1_valid)    begin
-        if(rename_req_1.wen)    begin
+    if(inst1_ops_in.valid)    begin
+        if(rename_req1.wen)    begin
         $strobe("Inst_1: RS1 %d -> %d ; RS2 %d -> %d ; RD %d -> %d (stale %d)", 
-        rename_req_1.ars1,  rename_resp_1.prf_rs1,
-        rename_req_1.ars2,  rename_resp_1.prf_rs2,
-        rename_req_1.ard,  rename_resp_1.new_prd,
+        rename_req1.ars1,  rename_resp_1.prf_rs1,
+        rename_req1.ars2,  rename_resp_1.prf_rs2,
+        rename_req1.ard,  rename_resp_1.new_prd,
         rename_resp_1.prf_rd_stale
         );
     end else begin
         $strobe("Inst_1: RS1 %d -> %d ; RS2 %d -> %d ; RD %d -> %d (stale %d), Do not rename", 
-        rename_req_1.ars1,  rename_resp_1.prf_rs1,
-        rename_req_1.ars2,  rename_resp_1.prf_rs2,
-        rename_req_1.ard,  rename_resp_1.new_prd,
+        rename_req1.ars1,  rename_resp_1.prf_rs1,
+        rename_req1.ars2,  rename_resp_1.prf_rs2,
+        rename_req1.ard,  rename_resp_1.new_prd,
         rename_resp_1.prf_rd_stale
         );
         end

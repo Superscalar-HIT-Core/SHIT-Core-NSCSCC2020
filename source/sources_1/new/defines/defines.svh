@@ -450,6 +450,7 @@ typedef struct packed {
 
     ARFNum                  dstLAddr;
     PRFNum                  dstPAddr;
+    PRFNum                  dstPStale;
     logic                   dstwe;
 
     logic   [31:0]          imm;
