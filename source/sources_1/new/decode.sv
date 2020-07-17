@@ -54,7 +54,7 @@ module decode(
             uOP0.valid      = `TRUE;
             uOP1.valid      = `FALSE;
             uOP0.causeExc   = `FALSE;
-            priority case(inst)
+            priority casez(inst)
                 `NOP: begin
                     uOP0.valid      = `FALSE;
                 end
