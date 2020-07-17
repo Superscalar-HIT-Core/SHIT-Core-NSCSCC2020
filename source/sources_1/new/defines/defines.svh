@@ -13,10 +13,6 @@
 `define CMPQ_SEL_UP1    2'b10
 `define CMPQ_SEL_UP2    2'b11
 
-`define RS_ALU 2'b00
-`define RS_MDU 2'b01
-`define RS_LSU 2'b10
-
 `define UOP_WIDTH   7:0
 `define ROB_SIZE    64
 `define ROB_ID_W    1+`ROB_ADDR_W
@@ -235,6 +231,7 @@ typedef enum bit[7:0] {
     SLTI_U      ,
     SLTU_U      ,
     SLTIU_U     ,
+    // MDU, not in ALU
     DIVHI_U     ,
     DIVLO_U     ,
     DIVUHI_U    ,
@@ -305,6 +302,10 @@ typedef enum bit[7:0] {
     WAIT_U      
 } uOP;
 
+typedef enum bit [1:0] {
+    RS_ALU, RS_MDU, RS_LSU, CP0
+} RS_Type;
+
 typedef logic [63:0] PRF_Vec;
 typedef logic [31:0] Word;
 typedef logic [`ALU_OP_WIDTH-1:0] ALUOP;
@@ -312,31 +313,6 @@ typedef logic [`RS_IDX_WIDTH-1:0] RSNum;
 
 typedef enum bit[1:0] { typeJ, typeBR, typeJR, typeNormal } BranchType;
 
-typedef struct packed {
-    logic   [31:0]  target;
-    logic   [1:0]   bimState;
-    logic           taken;
-    logic           valid;
-} NLPPredInfo;
-
-typedef struct packed {
-    logic   [31:0]  target;
-    logic   [1:0]   bimState;
-    logic           shouldTake;
-    logic           valid;
-} NLPUpdateInfo;
-
-typedef struct packed {
-    // logic   [31:0]  target;
-    logic           taken;
-    logic           valid;
-} BPDPredInfo;
-
-typedef struct packed {
-    // logic   [31:0]  target;
-    logic           taken;
-    logic           valid;
-} BPDUpdateInfo;
 
 typedef enum bit[3:0] {
     ExcIntOverflow,
@@ -453,26 +429,12 @@ typedef struct packed { // TODO
     Word rs1_data;
 } PRFrData;
 
-typedef struct packed {
-    logic   [31:0]  inst;
-    logic   [31:0]  pc;
-    logic           isBr;
-    logic           isDs;
-    logic           isJ;
-    logic   [31:0]  target;
-    logic           taken;
-    logic           valid;
-    NLPPredInfo     nlpInfo;
-    BPDPredInfo     bpdInfo;
-    logic           predTaken;
-    logic   [31:0]  predAddr;
-} InstBundle;
 
 typedef struct packed {
     // logic   [`UOP_WIDTH]    uOP;
     uOP                     uOP;
     logic   [4:0]           cacheOP;
-
+    RS_Type                 rs_type;
     ARFNum                  op0LAddr;   // logical
     PRFNum                  op0PAddr;   // physical
     logic                   op0re;

@@ -408,15 +408,15 @@ interface BackendRedirect;
     endtask //automatic
 endinterface //BackendRedirect
 
-interface Ctrl;
-    logic           pauseReq;
-    logic           flushReq;
-    logic           pause;
-    logic           flush;
+// interface Ctrl;
+//     logic           pauseReq;
+//     logic           flushReq;
+//     logic           pause;
+//     logic           flush;
 
-    modport master(input pauseReq, flushReq, output pause, flush);
-    modport slave(output pauseReq, flushReq, input pause, flush);
-endinterface //Ctrl
+//     modport master(input pauseReq, flushReq, output pause, flush);
+//     modport slave(output pauseReq, flushReq, input pause, flush);
+// endinterface //Ctrl
 
 interface IFU_InstBuffer;
     InstBundle      inst0;
@@ -426,26 +426,26 @@ interface IFU_InstBuffer;
     modport instBuffer(input inst0, inst1);
 endinterface //IFU_InstBuffer
 
-interface InstBuffer_Backend;
-    InstBundle      inst0;
-    InstBundle      inst1;
-    logic           valid;
-    logic           ready;
-    logic           flushReq;
+// interface InstBuffer_Backend;
+//     InstBundle      inst0;
+//     InstBundle      inst1;
+//     logic           valid;
+//     logic           ready;
+//     logic           flushReq;
 
-    modport instBuffer(output inst0, inst1, valid, input ready, flushReq);
-    modport backend(input inst0, inst1, output ready, flushReq);
+//     modport instBuffer(output inst0, inst1, valid, input ready, flushReq);
+//     modport backend(input inst0, inst1, output ready, flushReq);
     
-    task automatic getResp(ref logic clk);
-        ready       =   `TRUE;
-        flushReq    =   `FALSE;
-        do @(posedge clk);
-        while (!valid);
-        $display("get pc: %h, %h", inst0.valid ? inst0.pc : 32'bX, inst1.valid ? inst1.pc : 32'bX);
-        #1
-        ready   =   `FALSE;
-    endtask //automatic
-endinterface //IFU_InstBuffer
+//     task automatic getResp(ref logic clk);
+//         ready       =   `TRUE;
+//         flushReq    =   `FALSE;
+//         do @(posedge clk);
+//         while (!valid);
+//         $display("get pc: %h, %h", inst0.valid ? inst0.pc : 32'bX, inst1.valid ? inst1.pc : 32'bX);
+//         #1
+//         ready   =   `FALSE;
+//     endtask //automatic
+// endinterface //IFU_InstBuffer
 
 // package defs;
 //     typedef enum logic {False, True} bool;
