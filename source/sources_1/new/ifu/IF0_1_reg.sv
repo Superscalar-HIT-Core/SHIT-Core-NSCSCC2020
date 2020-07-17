@@ -18,7 +18,7 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-`include "defs.sv"
+`include "../defs.sv"
 
 module IF0_1_reg(
     input wire clk,

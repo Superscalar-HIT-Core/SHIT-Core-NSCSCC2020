@@ -18,7 +18,7 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-`include "defs.sv"
+`include "../defs.sv"
 
 module BPD(
     BPD_IF3.bpd         bpd_if3,

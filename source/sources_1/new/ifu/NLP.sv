@@ -18,7 +18,7 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-`include "defs.sv"
+`include "../defs.sv"
 
 module NLP(
     Regs_NLP.nlp    regs_nlp,

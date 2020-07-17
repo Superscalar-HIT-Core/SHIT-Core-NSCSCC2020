@@ -18,7 +18,7 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-`include "defs.sv"
+`include "../defs.sv"
 
 module AXIInterface(
     input clk,

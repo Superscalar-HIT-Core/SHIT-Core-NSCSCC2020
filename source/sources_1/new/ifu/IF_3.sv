@@ -18,7 +18,7 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-`include "defs.sv"
+`include "../defs.sv"
 
 module IF_3(
     Regs_IF3.if3            regs_if3,

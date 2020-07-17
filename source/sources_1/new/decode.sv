@@ -730,7 +730,7 @@ module decode(
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
-                    uOP0.cacheOP    = inst[10:16];
+                    uOP0.cacheOP    = inst[16:10];
                 end
                 `WAIT: begin    // must be priv
                     uOP0.uOP        = WAIT_U;

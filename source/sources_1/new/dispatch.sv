@@ -4,10 +4,12 @@
 module dispatch(
     input UOPBundle inst_0_ops, inst_1_ops,
     input [`PRF_NUM-1:0] busy_table,
-    output rs_alu_wen_0, rs_alu_wen_1, rs_mdu_wen_0, rs_mdu_wen_1, rs_lsu_wen_0, rs_lsu_wen_1,
-    output ALU_Queue_Meta rs_alu_dout_0, rs_alu_dout_1,
-    output MDU_Queue_Meta rs_mdu_dout_0, rs_mdu_dout_1,
-    output LSU_Queue_Meta rs_lsu_dout_0, rs_lsu_dout_1
+    output rs_alu_wen_0, rs_alu_wen_1, 
+    output rs_mdu_wen_0, rs_mdu_wen_1, 
+    output rs_lsu_wen_0, rs_lsu_wen_1,
+    output UOPBundle rs_alu_dout_0, rs_alu_dout_1,
+    output UOPBundle rs_mdu_dout_0, rs_mdu_dout_1,
+    output UOPBundle rs_lsu_dout_0, rs_lsu_dout_1
     );
 // 分配判断
 wire inst_0_is_alu = inst_0_ops.rs_type == RS_ALU;
