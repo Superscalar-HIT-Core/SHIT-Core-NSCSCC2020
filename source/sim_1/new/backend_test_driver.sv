@@ -11,15 +11,35 @@ decode dec0(.*);
 integer fp;
 integer count;
 initial begin
-    #0 fp = $fopen("../../../../source/instr.txt","r");
+    #0 fp = $fopen("../../../../source/instr.hex","r");
+    regs_decode.inst.valid = 1;
     #0 clk = 0;rst = 1;
     #22 rst = 0;
-    #20 regs_decode.inst = 0; regs_decode.inst.valid = 1;
+    #20 regs_decode.inst = 0;     regs_decode.inst.valid = 1;
 end
 
 always @(posedge clk)   begin
+    if(!rst)  begin
         count <= $fscanf(fp,"%h" ,regs_decode.inst.inst);
         regs_decode.inst.pc <= regs_decode.inst.pc+4;
+        #2
+        if (decode_regs.uOP0.op1re)     begin
+            $display("OP: %s %d, %d, %d", 
+                dec0.decode_regs.uOP0.uOP.name,
+                dec0.decode_regs.uOP0.dstLAddr,
+                dec0.decode_regs.uOP0.op0LAddr,
+                dec0.decode_regs.uOP0.op1LAddr
+        );
+        end else begin
+            $display("OP: %s %d, %d, IMM %d", 
+                dec0.decode_regs.uOP0.uOP.name,
+                dec0.decode_regs.uOP0.dstLAddr,
+                dec0.decode_regs.uOP0.op0LAddr,
+                dec0.decode_regs.uOP0.imm
+        );
+        end
+
+    end
 end
 
 always begin
