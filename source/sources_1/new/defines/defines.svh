@@ -26,6 +26,16 @@
 `define ALU_QUEUE_LEN_MINUS2 6
 `define ALU_QUEUE_IDX_LEN 4
 
+`define MDU_QUEUE_LEN 8
+`define MDU_QUEUE_LEN_MINUS1 7
+`define MDU_QUEUE_LEN_MINUS2 6
+`define MDU_QUEUE_IDX_LEN 4
+
+`define LSU_QUEUE_LEN 4
+`define LSU_QUEUE_LEN_MINUS1 3
+`define LSU_QUEUE_LEN_MINUS2 2
+`define LSU_QUEUE_IDX_LEN 3
+
 typedef logic [5:0] PRFNum; // 物理寄存器编号
 typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
 `define REGHI       6'd32
@@ -624,6 +634,17 @@ typedef struct packed {
     UOPBundle ops;
     Arbitration_Info rdys;
 } ALU_Queue_Meta;
+
+typedef struct packed {
+    UOPBundle ops;
+    Arbitration_Info rdys;
+    logic isMul;
+} MDU_Queue_Meta;
+
+typedef struct packed {
+    UOPBundle ops;
+    Arbitration_Info rdys;
+} LSU_Queue_Meta;
 
 typedef struct packed {
     PRFNum wrNum;

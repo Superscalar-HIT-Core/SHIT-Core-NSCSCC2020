@@ -5,31 +5,11 @@ module backend_test_driver(
     );
 reg clk,rst;
 
-Regs_Decode  regs_decode();
-Decode_Regs  decode_regs();
+Regs_Decode  regs_decode0(),regs_decode1();
+Decode_Regs  decode_regs0(),decode_regs1();
 
 decode dec0(.*);
 
-
-
-register_rename u_register_rename(
-	.clk          (clk          ),
-    .rst          (rst          ),
-    .recover      (recover      ),
-    // From instruction
-    .inst_0_valid (inst_0_valid ),
-    .inst_1_valid (inst_1_valid ),
-    .rename_req_0   (rename_req_0   ),
-    .rename_req_1   (rename_req_1   ),
-    .rename_resp_0  (rename_resp_0  ),
-    .rename_resp_1  (rename_resp_1  ),
-    .allocatable  (allocatable  ),
-
-    .commit_req_0  (commit_req_0  ),
-    .commit_req_1  (commit_req_1  ),
-    .commit_valid_0 (commit_valid_0),
-    .commit_valid_1 (commit_valid_1)
-);
 
 integer fp;
 integer count;
