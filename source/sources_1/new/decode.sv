@@ -13,34 +13,40 @@ module decode(
     logic   [ 5:0]  funct;
     logic   [31:0]  imm;
     logic   [31:0]  imm2;
+    logic   [31:0]  imm_lui;
     logic   [25:0]  address;
-    logic   [31:0]  inst;
+    logic   [31:0]  inst_raw;
+    InstBundle      inst;
     UOPBundle       uOP0, uOP1;
 
     
     assign decode_regs.uOP0 = uOP0;
     assign decode_regs.uOP1 = uOP1;
 
-    assign inst     = regs_decode.inst.inst;
-    assign opcode   = inst[31:26];
-    assign rs       = {1'b0, inst[25:21]};
-    assign rt       = {1'b0, inst[10:16]};
-    assign rd       = {1'b0, inst[15:11]};
-    assign funct    = inst[ 5: 0];
-    assign imm      = {{16{inst[15]}}, inst[15: 0]};
-    assign imm2     = {27'h0, inst[10: 6]};
-    assign address  = inst[25: 0];
-
-    assign uOP0.pc          = inst.pc;
-    assign uOP0.predTaken   = inst.predTaken;
-    assign uOP0.predAddr    = inst.predAddr;
-    assign uOP0.isDS        = inst.isDs;
-    assign uOP0.committed   = `FALSE;
-    assign uOP1.pc          = inst.pc;
-    assign uOP1.isDS        = inst.isDs;
-    assign uOP1.committed   = `FALSE;
+    assign inst     = regs_decode.inst;
+    assign inst_raw = regs_decode.inst.inst;
+    assign opcode   = inst_raw[31:26];
+    assign rs       = {1'b0, inst_raw[25:21]};
+    assign rt       = {1'b0, inst_raw[16:10]};
+    assign rd       = {1'b0, inst_raw[15:11]};
+    assign funct    = inst_raw[5: 0];
+    assign imm      = {{16{inst_raw[15]}}, inst_raw[15: 0]};
+    assign imm2     = {27'h0, inst_raw[10: 6]};
+    assign imm_lui  = { inst_raw[15:0] , 16'b0 };
+    assign address  = inst_raw[25: 0];
+    // regs_decode.inst: InstBundle
 
     always_comb begin
+        uOP0             = 0;
+        uOP1             = 0;
+        uOP0.pc          = inst.pc;
+        uOP0.predTaken   = inst.predTaken;
+        uOP0.predAddr    = inst.predAddr;
+        uOP0.isDS        = inst.isDs;
+        uOP0.committed   = `FALSE;
+        uOP1.pc          = inst.pc;
+        uOP1.isDS        = inst.isDs;
+        uOP1.committed   = `FALSE;
         if(inst.valid) begin
             uOP0.isPriv     = `FALSE;
             uOP0.branchType = typeNormal;
@@ -54,6 +60,8 @@ module decode(
                 end
                 `ADD: begin
                     uOP0.uOP        = ADD_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_ARITH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = rd;
@@ -63,6 +71,8 @@ module decode(
                 end
                 `ADDU: begin
                     uOP0.uOP        = ADDU_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_ARITH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = rd;
@@ -72,6 +82,8 @@ module decode(
                 end
                 `ADDI: begin
                     uOP0.uOP        = ADDI_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_ARITH;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -80,6 +92,8 @@ module decode(
                 end
                 `ADDIU: begin
                     uOP0.uOP        = ADDIU_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_ARITH;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -88,6 +102,8 @@ module decode(
                 end
                 `SUB: begin
                     uOP0.uOP        = SUB_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_ARITH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = rd;
@@ -97,6 +113,8 @@ module decode(
                 end
                 `SUBU: begin
                     uOP0.uOP        = SUBU_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_ARITH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = rd;
@@ -106,6 +124,8 @@ module decode(
                 end
                 `SLT: begin
                     uOP0.uOP        = SLT_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_ARITH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = rd;
@@ -115,6 +135,8 @@ module decode(
                 end
                 `SLTU: begin
                     uOP0.uOP        = SLTU_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_ARITH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = rd;
@@ -124,6 +146,8 @@ module decode(
                 end
                 `SLTI: begin
                     uOP0.uOP        = SLTI_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_ARITH;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -132,6 +156,8 @@ module decode(
                 end
                 `SLTIU: begin
                     uOP0.uOP        = SLTIU_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_ARITH;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -140,6 +166,7 @@ module decode(
                 end
                 `DIV: begin
                     uOP0.uOP        = DIVHI_U;
+                    uOP0.rs_type    = RS_MDU;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = `REGHI;
@@ -148,6 +175,7 @@ module decode(
                     uOP0.dstwe      = `TRUE;
 
                     uOP1.uOP        = DIVLO_U;
+                    uOP1.rs_type    = RS_MDU;
                     uOP1.op0LAddr   = rs;
                     uOP1.op1LAddr   = rt;
                     uOP1.dstLAddr   = `REGLO;
@@ -158,6 +186,7 @@ module decode(
                 end
                 `DIVU: begin
                     uOP0.uOP        = DIVUHI_U;
+                    uOP0.rs_type    = RS_MDU;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = `REGHI;
@@ -166,6 +195,7 @@ module decode(
                     uOP0.dstwe      = `TRUE;
 
                     uOP1.uOP        = DIVULO_U;
+                    uOP1.rs_type    = RS_MDU;
                     uOP1.op0LAddr   = rs;
                     uOP1.op1LAddr   = rt;
                     uOP1.dstLAddr   = `REGLO;
@@ -176,6 +206,7 @@ module decode(
                 end
                 `MULT: begin
                     uOP0.uOP        = MULTHI_U;
+                    uOP0.rs_type    = RS_MDU;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = `REGHI;
@@ -184,6 +215,7 @@ module decode(
                     uOP0.dstwe      = `TRUE;
 
                     uOP1.uOP        = MULTLO_U;
+                    uOP1.rs_type    = RS_MDU;
                     uOP1.op0LAddr   = rs;
                     uOP1.op1LAddr   = rt;
                     uOP1.dstLAddr   = `REGLO;
@@ -194,6 +226,7 @@ module decode(
                 end
                 `MULTU: begin
                     uOP0.uOP        = MULTUHI_U;
+                    uOP0.rs_type    = RS_MDU;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = `REGHI;
@@ -202,6 +235,7 @@ module decode(
                     uOP0.dstwe      = `TRUE;
 
                     uOP1.uOP        = MULTULO_U;
+                    uOP1.rs_type    = RS_MDU;
                     uOP1.op0LAddr   = rs;
                     uOP1.op1LAddr   = rt;
                     uOP1.dstLAddr   = `REGLO;
@@ -212,6 +246,8 @@ module decode(
                 end
                 `AND: begin
                     uOP0.uOP        = AND_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_LOGIC;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = rd;
@@ -221,6 +257,8 @@ module decode(
                 end
                 `ANDI: begin
                     uOP0.uOP        = ANDI_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_LOGIC;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -229,6 +267,8 @@ module decode(
                 end
                 `OR: begin
                     uOP0.uOP        = OR_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_LOGIC;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = rd;
@@ -238,6 +278,8 @@ module decode(
                 end
                 `ORI: begin
                     uOP0.uOP        = ORI_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_LOGIC;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -246,6 +288,8 @@ module decode(
                 end
                 `XOR: begin
                     uOP0.uOP        = XOR_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_LOGIC;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = rd;
@@ -255,6 +299,8 @@ module decode(
                 end
                 `XORI: begin
                     uOP0.uOP        = XORI_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_LOGIC;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -263,6 +309,8 @@ module decode(
                 end
                 `NOR: begin
                     uOP0.uOP        = NOR_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_LOGIC;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.dstLAddr   = rd;
@@ -270,15 +318,20 @@ module decode(
                     uOP0.op1re      = `TRUE;
                     uOP0.dstwe      = `TRUE;
                 end
-                `LUI: begin
+                `LUI: begin         // LUI作为OR处理
                     uOP0.uOP        = LUI_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_LOGIC;
+                    uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
-                    uOP0.op0re      = `FALSE;
+                    uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `TRUE;
                 end
                 `SLL: begin
                     uOP0.uOP        = SLL_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_SHIFT;
                     uOP0.op0LAddr   = rt;
                     uOP0.dstLAddr   = rd;
                     uOP0.imm        = imm2;
@@ -288,6 +341,8 @@ module decode(
                 end
                 `SLLV: begin
                     uOP0.uOP        = SLLV_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_SHIFT;
                     uOP0.op0LAddr   = rt;
                     uOP0.op1LAddr   = rs;
                     uOP0.dstLAddr   = rd;
@@ -297,6 +352,8 @@ module decode(
                 end
                 `SRA: begin
                     uOP0.uOP        = SRA_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_SHIFT;
                     uOP0.op0LAddr   = rt;
                     uOP0.dstLAddr   = rd;
                     uOP0.imm        = imm2;
@@ -306,6 +363,8 @@ module decode(
                 end
                 `SRAV: begin
                     uOP0.uOP        = SRAV_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_SHIFT;
                     uOP0.op0LAddr   = rt;
                     uOP0.op1LAddr   = rs;
                     uOP0.dstLAddr   = rd;
@@ -315,6 +374,8 @@ module decode(
                 end
                 `SRL: begin
                     uOP0.uOP        = SRL_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_SHIFT;
                     uOP0.op0LAddr   = rt;
                     uOP0.dstLAddr   = rd;
                     uOP0.imm        = imm2;
@@ -324,6 +385,8 @@ module decode(
                 end
                 `SRLV: begin
                     uOP0.uOP        = SRLV_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_SHIFT;
                     uOP0.op0LAddr   = rt;
                     uOP0.op1LAddr   = rs;
                     uOP0.dstLAddr   = rd;
@@ -333,6 +396,8 @@ module decode(
                 end
                 `BEQ: begin
                     uOP0.uOP        = BEQ_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -343,6 +408,8 @@ module decode(
                 end
                 `BNE: begin
                     uOP0.uOP        = BNE_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -353,6 +420,8 @@ module decode(
                 end
                 `BGEZ: begin
                     uOP0.uOP        = BGEZ_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
@@ -362,6 +431,8 @@ module decode(
                 end
                 `BGTZ: begin
                     uOP0.uOP        = BGTZ_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
@@ -371,6 +442,8 @@ module decode(
                 end
                 `BLEZ: begin
                     uOP0.uOP        = BLEZ_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
@@ -380,6 +453,8 @@ module decode(
                 end
                 `BLTZ: begin
                     uOP0.uOP        = BLTZ_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.op0LAddr   = rs;
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
@@ -389,6 +464,8 @@ module decode(
                 end
                 `BGEZAL: begin
                     uOP0.uOP        = BGEZAL_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = `REG31;
                     uOP0.op0re      = `TRUE;
@@ -399,6 +476,8 @@ module decode(
                 end
                 `BLTZAL: begin
                     uOP0.uOP        = BLTZAL_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = `REG31;
                     uOP0.op0re      = `TRUE;
@@ -409,6 +488,8 @@ module decode(
                 end
                 `J: begin
                     uOP0.uOP        = J_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
@@ -417,6 +498,8 @@ module decode(
                 end
                 `JAL: begin
                     uOP0.uOP        = JAL_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.dstLAddr   = `REG31;
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
@@ -426,6 +509,8 @@ module decode(
                 end
                 `JR: begin
                     uOP0.uOP        = J_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.op1LAddr   = rs;
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
@@ -434,6 +519,8 @@ module decode(
                 end
                 `JALR: begin
                     uOP0.uOP        = JALR_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_BRANCH;
                     uOP0.op1LAddr   = rs;
                     uOP0.dstLAddr   = rd;
                     uOP0.op0re      = `TRUE;
@@ -443,6 +530,8 @@ module decode(
                 end
                 `MFHI: begin
                     uOP0.uOP        = MFHI_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MOVE;
                     uOP0.op1LAddr   = `REGHI;
                     uOP0.dstLAddr   = rd;
                     uOP0.op0re      = `TRUE;
@@ -451,6 +540,8 @@ module decode(
                 end
                 `MFLO: begin
                     uOP0.uOP        = MFLO_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MOVE;
                     uOP0.op1LAddr   = `REGLO;
                     uOP0.dstLAddr   = rd;
                     uOP0.op0re      = `TRUE;
@@ -459,6 +550,8 @@ module decode(
                 end
                 `MTHI: begin
                     uOP0.uOP        = MTHI_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MOVE;
                     uOP0.op1LAddr   = rs;
                     uOP0.dstLAddr   = `REGHI;
                     uOP0.op0re      = `TRUE;
@@ -467,6 +560,8 @@ module decode(
                 end
                 `MTLO: begin
                     uOP0.uOP        = MTLO_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MOVE;
                     uOP0.op1LAddr   = rs;
                     uOP0.dstLAddr   = `REGLO;
                     uOP0.op0re      = `TRUE;
@@ -475,6 +570,8 @@ module decode(
                 end
                 `SYSCALL: begin
                     uOP0.uOP        = SYSCALL_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MISC;
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
@@ -484,6 +581,8 @@ module decode(
                 end
                 `BREAK: begin
                     uOP0.uOP        = BREAK_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MISC;
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
@@ -493,6 +592,7 @@ module decode(
                 end
                 `LB: begin
                     uOP0.uOP        = LB_U;
+                    uOP0.rs_type    = RS_LSU;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -501,6 +601,7 @@ module decode(
                 end
                 `LH: begin
                     uOP0.uOP        = LB_U;
+                    uOP0.rs_type    = RS_LSU;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -509,6 +610,7 @@ module decode(
                 end
                 `LBU: begin
                     uOP0.uOP        = LBU_U;
+                    uOP0.rs_type    = RS_LSU;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -517,6 +619,7 @@ module decode(
                 end
                 `LHU: begin
                     uOP0.uOP        = LBU_U;
+                    uOP0.rs_type    = RS_LSU;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -525,6 +628,7 @@ module decode(
                 end
                 `LW: begin
                     uOP0.uOP        = LW_U;
+                    uOP0.rs_type    = RS_LSU;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -533,6 +637,7 @@ module decode(
                 end
                 `SB: begin
                     uOP0.uOP        = SB_U;
+                    uOP0.rs_type    = RS_LSU;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -541,6 +646,7 @@ module decode(
                 end
                 `SH: begin
                     uOP0.uOP        = SB_U;
+                    uOP0.rs_type    = RS_LSU;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -549,6 +655,7 @@ module decode(
                 end
                 `SWL: begin
                     uOP0.uOP        = SWL_U;
+                    uOP0.rs_type    = RS_LSU;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -557,6 +664,7 @@ module decode(
                 end
                 `SWR: begin
                     uOP0.uOP        = SWL_U;
+                    uOP0.rs_type    = RS_LSU;
                     uOP0.op0LAddr   = rs;
                     uOP0.op1LAddr   = rt;
                     uOP0.op0re      = `TRUE;
@@ -565,6 +673,8 @@ module decode(
                 end
                 `ERET: begin
                     uOP0.uOP        = ERET_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MISC;
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
@@ -572,6 +682,7 @@ module decode(
                 end
                 `MFC0: begin
                     uOP0.uOP        = MFC0_U;
+                    uOP0.rs_type    = CP0;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
@@ -582,6 +693,7 @@ module decode(
                 end
                 `MTC0: begin
                     uOP0.uOP        = MTC0_U;
+                    uOP0.rs_type    = CP0;
                     uOP0.op0LAddr   = rt;
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
@@ -592,6 +704,8 @@ module decode(
                 end
                 `TLBP: begin
                     uOP0.uOP        = TLBP_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MISC;
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
@@ -600,6 +714,8 @@ module decode(
                 end
                 `TLBWI: begin
                     uOP0.uOP        = TLBP_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MISC;
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
@@ -608,6 +724,8 @@ module decode(
                 end
                 `CACHE: begin
                     uOP0.uOP        = CACHE_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MISC;
                     uOP0.op0LAddr   = rs;
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
@@ -616,6 +734,8 @@ module decode(
                 end
                 `WAIT: begin    // must be priv
                     uOP0.uOP        = WAIT_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MISC;
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;

@@ -2,7 +2,7 @@
 // TODO: Extract the fields in decode ops, then assign them to the output 
 `include "defines/defines.svh"
 module dispatch(
-    input Decode_ops inst_0_ops, inst_1_ops,
+    input UOPBundle inst_0_ops, inst_1_ops,
     input [`PRF_NUM-1:0] busy_table,
     output rs_alu_wen_0, rs_alu_wen_1, rs_mdu_wen_0, rs_mdu_wen_1, rs_lsu_wen_0, rs_lsu_wen_1,
     output ALU_Queue_Meta rs_alu_dout_0, rs_alu_dout_1,
@@ -10,12 +10,12 @@ module dispatch(
     output LSU_Queue_Meta rs_lsu_dout_0, rs_lsu_dout_1
     );
 // 分配判断
-wire inst_0_is_alu = inst_0_ops.rs_num == `RS_ALU;
-wire inst_1_is_alu = inst_1_ops.rs_num == `RS_ALU;
-wire inst_0_is_mdu = inst_0_ops.rs_num == `RS_MDU;
-wire inst_1_is_mdu = inst_1_ops.rs_num == `RS_MDU;
-wire inst_0_is_lsu = inst_1_ops.rs_num == `RS_LSU;
-wire inst_1_is_lsu = inst_1_ops.rs_num == `RS_LSU;
+wire inst_0_is_alu = inst_0_ops.rs_type == RS_ALU;
+wire inst_1_is_alu = inst_1_ops.rs_type == RS_ALU;
+wire inst_0_is_mdu = inst_0_ops.rs_type == RS_MDU;
+wire inst_1_is_mdu = inst_1_ops.rs_type == RS_MDU;
+wire inst_0_is_lsu = inst_1_ops.rs_type == RS_LSU;
+wire inst_1_is_lsu = inst_1_ops.rs_type == RS_LSU;
 
 Decode_ops adin0, adin1;
 Decode_ops mdin0, mdin1;

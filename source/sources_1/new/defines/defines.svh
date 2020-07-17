@@ -1,5 +1,6 @@
 `ifndef DEFINES
 `define DEFINES
+`include "../defs.sv"
 `define REG_WIDTH 32
 `define PRF_NUM_WIDTH 6
 `define ARF_NUM_WIDTH 6
@@ -429,10 +430,14 @@ typedef struct packed { // TODO
     Word rs1_data;
 } PRFrData;
 
+typedef enum bit[2:0] {
+    ALU_LOGIC, ALU_SHIFT, ALU_ARITH, ALU_MOVE, ALU_BRANCH, ALU_MISC
+} ALUType;
 
 typedef struct packed {
     // logic   [`UOP_WIDTH]    uOP;
     uOP                     uOP;
+    ALUType                 aluType;
     logic   [4:0]           cacheOP;
     RS_Type                 rs_type;
     ARFNum                  op0LAddr;   // logical
