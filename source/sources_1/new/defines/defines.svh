@@ -223,6 +223,88 @@ typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
 `define NOP_U       8'b01000010
 `define WAIT_U      8'b01000101
 
+typedef enum bit[7:0] {
+    //arithmetic
+    ADD_U       ,
+    ADDI_U      ,
+    ADDU_U      ,
+    ADDIU_U     ,
+    SUB_U       ,
+    SUBU_U      ,
+    SLT_U       ,
+    SLTI_U      ,
+    SLTU_U      ,
+    SLTIU_U     ,
+    DIVHI_U     ,
+    DIVLO_U     ,
+    DIVUHI_U    ,
+    DIVULO_U    ,
+    MULTHI_U    ,
+    MULTLO_U    ,
+    MULTUHI_U   ,
+    MULTULO_U   ,
+    //logical_U,
+    AND_U       ,
+    ANDI_U      ,
+    LUI_U       ,
+    NOR_U       ,
+    OR_U        ,
+    ORI_U       ,
+    XOR_U       ,
+    XORI_U      ,
+    CLZ_U       ,
+    CLO_U       ,
+    //shift_U,
+    SLL_U       ,
+    SLLV_U      ,
+    SRA_U       ,
+    SRAV_U      ,
+    SRL_U       ,
+    SRLV_U      ,
+    //branch_U,
+    BEQ_U       ,
+    BNE_U       ,
+    BGEZ_U      ,
+    BGTZ_U      ,
+    BLEZ_U      ,
+    BLTZ_U      ,
+    BGEZAL_U    ,
+    BLTZAL_U    ,
+    J_U         ,
+    JAL_U       ,
+    JR_U        ,
+    JALR_U      ,
+    //move_U,
+    MFHI_U      ,
+    MTHI_U      ,
+    MFLO_U      ,
+    MTLO_U      ,
+    //exception_U
+    SYSCALL_U   ,
+    BREAK_U     ,
+    //load/store_U
+    LB_U        ,
+    LH_U        ,
+    LBU_U       ,
+    LHU_U       ,
+    LW_U        ,
+    SB_U        ,
+    SH_U        ,
+    SW_U        ,
+    SWL_U       ,
+    SWR_U       ,
+    //privilege_U,
+    ERET_U      ,
+    MFC0_U      ,
+    MTC0_U      ,
+    TLBP_U      ,
+    TLBWI_U     ,
+    //misc_U,
+    CACHE_U     ,
+    NOP_U       ,
+    WAIT_U      
+} uOP;
+
 typedef logic [63:0] PRF_Vec;
 typedef logic [31:0] Word;
 typedef logic [`ALU_OP_WIDTH-1:0] ALUOP;
@@ -387,7 +469,8 @@ typedef struct packed {
 } InstBundle;
 
 typedef struct packed {
-    logic   [`UOP_WIDTH]    uOP;
+    // logic   [`UOP_WIDTH]    uOP;
+    uOP                     uOP;
     logic   [4:0]           cacheOP;
 
     ARFNum                  op0LAddr;   // logical
