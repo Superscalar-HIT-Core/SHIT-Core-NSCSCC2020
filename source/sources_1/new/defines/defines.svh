@@ -31,10 +31,10 @@
 `define MDU_QUEUE_LEN_MINUS2 6
 `define MDU_QUEUE_IDX_LEN 4
 
-`define LSU_QUEUE_LEN 4
-`define LSU_QUEUE_LEN_MINUS1 3
-`define LSU_QUEUE_LEN_MINUS2 2
-`define LSU_QUEUE_IDX_LEN 3
+`define LSU_QUEUE_LEN 8
+`define LSU_QUEUE_LEN_MINUS1 7
+`define LSU_QUEUE_LEN_MINUS2 6
+`define LSU_QUEUE_IDX_LEN 4
 
 typedef logic [5:0] PRFNum; // 物理寄存器编号
 typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
