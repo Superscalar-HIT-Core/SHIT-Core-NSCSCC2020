@@ -633,6 +633,7 @@ typedef struct packed {
 
 typedef struct packed {
     UOPBundle ops;
+    logic isStore;
     Arbitration_Info rdys;
 } LSU_Queue_Meta;
 
