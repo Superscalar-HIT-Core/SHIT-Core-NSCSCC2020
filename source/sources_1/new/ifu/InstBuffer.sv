@@ -74,7 +74,7 @@ module InstBuffer(
     logic   [31:0]          debug_inst_count;
 
     assign debug_inst_count = vTail - head;
-    assign waitForDS        = !oSlot1Loaded && (data[oSlot0].isJ || data[oSlot0].isBr);
+    assign waitForDS        = !instBuffer_backend.inst1.valid && (data[oSlot0].isJ || data[oSlot0].isBr);
 
     InstBundle  data [`IB_SIZE-1:0];
 
@@ -138,10 +138,9 @@ module InstBuffer(
         end else if(empty && !passThrough) begin
             head    <= head;
         end else begin
-            instBuffer_backend.valid <= `TRUE;
-            if(passThrough || !instBuffer_backend.ready) begin
+            if(passThrough || !instBuffer_backend.ready || !instBuffer_backend.valid) begin
                 head    <= head;
-            end else if(data[oSlot1].isJ || data[oSlot1].isBr || !waitForDS) begin
+            end else if(data[oSlot1].isJ || data[oSlot1].isBr || (!oSlot1Loaded && !waitForDS)) begin
                 head    <= head + 1'b1;
             end else if(oSlot0Loaded && oSlot1Loaded) begin
                 head    <= head + 2'h2;
@@ -156,21 +155,24 @@ module InstBuffer(
             instBuffer_backend.valid    = `FALSE;
         end else begin
             instBuffer_backend.valid    = `TRUE;
-            if(passThrough) begin
-                instBuffer_backend.inst0        = ifu_instBuffer.inst0;
-                instBuffer_backend.inst1        = ifu_instBuffer.inst1;
-                instBuffer_backend.inst0.isDs   = `FALSE;
-                instBuffer_backend.inst1.isDs   = instBuffer_backend.inst0.isBr || instBuffer_backend.inst0.isJ;
-            end else if((data[oSlot1].isJ || data[oSlot1].isBr || !oSlot1Loaded) && !waitForDS) begin
-                instBuffer_backend.inst0        = data[oSlot0];
-                instBuffer_backend.inst0.isDs   = `FALSE;
-                instBuffer_backend.inst1.valid  = `FALSE;
-            end else begin
-                instBuffer_backend.inst0        = data[oSlot0];
-                instBuffer_backend.inst1        = data[oSlot1];
-                instBuffer_backend.inst0.isDs   = `FALSE;
-                instBuffer_backend.inst1.isDs   = data[oSlot0].isBr || data[oSlot0].isJ;
-            end
+        end
+    end
+
+    always_comb begin
+        if(passThrough) begin
+            instBuffer_backend.inst0        = ifu_instBuffer.inst0;
+            instBuffer_backend.inst1        = ifu_instBuffer.inst1;
+            instBuffer_backend.inst0.isDs   = `FALSE;
+            instBuffer_backend.inst1.isDs   = instBuffer_backend.inst0.isBr || instBuffer_backend.inst0.isJ;
+        end else if(data[oSlot1].isJ || data[oSlot1].isBr || !oSlot1Loaded) begin
+            instBuffer_backend.inst0        = data[oSlot0];
+            instBuffer_backend.inst0.isDs   = `FALSE;
+            instBuffer_backend.inst1.valid  = `FALSE;
+        end else begin
+            instBuffer_backend.inst0        = data[oSlot0];
+            instBuffer_backend.inst1        = data[oSlot1];
+            instBuffer_backend.inst0.isDs   = `FALSE;
+            instBuffer_backend.inst1.isDs   = data[oSlot0].isBr || data[oSlot0].isJ;
         end
     end
 

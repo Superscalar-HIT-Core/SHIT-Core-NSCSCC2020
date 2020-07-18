@@ -79,6 +79,7 @@ module MyCPU(
     Ctrl                ctrl_if3();
     Ctrl                ctrl_if3_output_regs();
     Ctrl                ctrl_instBuffer();
+    Ctrl                ctrl_nlp();
 
     BackendRedirect     backend_if0();
     BPDUpdate           backend_bpd();
