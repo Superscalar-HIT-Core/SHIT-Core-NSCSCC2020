@@ -43,9 +43,12 @@ typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
 `define REG31       6'd31
 
 `define CP0INDEX    5'd0
+`define CP0RANDOM   5'd1
 `define CP0ENTRYLO0 5'd2
 `define CP0ENTRYLO1 5'd3
 `define CP0CONTEXT  5'd4
+`define CP0PAGEMASK 5'd5
+`define CP0WIRED    5'd6
 `define CP0BADVADDR 5'd8
 `define CP0COUNT    5'd9
 `define CP0ENTRYHI  5'd10
@@ -55,8 +58,28 @@ typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
 `define CP0EPC      5'd14
 `define CP0PRID     5'd15
 `define CP0EBASE    5'd15
-`define CP0CONFIG0  5'd16
+`define CP0CONFIG   5'd16
 `define CP0CONFIG1  5'd16
+`define CP0ERROREPC 5'd30
+
+`define CP0INDEXMASK    32'b00000000_00000000_00000000_00011111
+`define CP0ENTRYLO0MASK 32'b00111111_11111111_11111111_11111111
+`define CP0ENTRYLO1MASK 32'b00111111_11111111_11111111_11111111
+`define CP0CONTEXTMASK  32'b11111111_10000000_00000000_00000000
+`define CP0PAGEMASKMASK 32'b00011111_11111111_11100000_00000000
+`define CP0WIREDMASK    32'b00000000_00000000_00000000_00011111
+`define CP0COUNTMASK    32'b11111111_11111111_11111111_11111111
+`define CP0ENTRYHIMASK  32'b11111111_11111111_11100000_11111111
+`define CP0COMPAREMASK  32'b11111111_11111111_11111111_11111111
+`define CP0STATUSMASK   32'b11111010_01111000_11111111_00010111
+`define CP0CAUSEMASK    32'b00000000_11000000_00000011_00000000
+`define CP0EPCMASK      32'b11111111_11111111_11111111_11111111
+`define CP0EBASEMASK    32'b10111111_11111111_11110000_00000000
+`define CP0CONFIGMASK   32'b00000000_00000000_00000000_00000011
+`define CP0ERROREPCMASK 32'b11111111_11111111_11111111_11111111
+
+`define CP0ADDR     4:0
+`define CP0SEL      2:0
 
 // arithmetic
 `define ADD         32'b000000??_????????_?????000_00100000
@@ -619,6 +642,50 @@ interface Regs_Rename;
     modport regs(output uOP0, uOP1);
     modport dispatch(input uOP0, uOP1);
 endinterface //Regs_Dispatch
+
+interface CP0WRInterface;
+    logic [`CP0ADDR]    addr;
+    logic [`CP0SEL]     sel;
+    logic [31:0]        readData;
+    logic [31:0]        writeData;
+    logic               writeEn;
+
+    modport req(output addr, writeData, writeEn, sel, input readData);
+    modport cp0(input addr, writeData, writeEn, sel, output readData);
+endinterface //CP0WRInterface
+
+interface CP0StatusRegs;
+    logic [31:0]    count;
+    logic [31:0]    status;
+    logic [31:0]    cause;
+    logic [31:0]    ePc;
+    logic [31:0]    eBase;
+    logic [31:0]    random;
+
+    modport cp0(output count, status, cause, ePc, eBase, random);
+    modport recv(input count, status, cause, ePc, eBase, random);
+endinterface //CP0Status
+
+interface CP0_TLB;
+    logic           writeEn;
+    logic   [31:0]  rEntryHi;
+    logic   [31:0]  rPageMask;
+    logic   [31:0]  rEntryLo0;
+    logic   [31:0]  rEntryLo1;
+    logic   [31:0]  wEntryHi;
+    logic   [31:0]  wPageMask;
+    logic   [31:0]  wEntryLo0;
+    logic   [31:0]  wEntryLo1;
+
+    modport cp0(
+        output rEntryHi, rPageMask, rEntryLo0, rEntryLo1,
+        input writeEn, wEntryHi, wPageMask, wEntryLo0, wEntryLo1
+    );
+    modport tlb(
+        input rEntryHi, rPageMask, rEntryLo0, rEntryLo1,
+        output writeEn, wEntryHi, wPageMask, wEntryLo0, wEntryLo1
+    );
+endinterface //CP0_TLB
 
 typedef struct packed {
     UOPBundle ops;
