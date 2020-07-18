@@ -22,10 +22,10 @@ module decode_rename_regs(
     
     always_ff @ (posedge clk) begin
         if(rst || ctrl_decode_rename_regs.flush) begin
-            uOP0.valid  <= `FALSE;
-            uOP1.valid  <= `FALSE;
-            uOP2.valid  <= `FALSE;
-            uOP3.valid  <= `FALSE;
+            uOP0        <= 0;
+            uOP1        <= 0;
+            uOP2        <= 0;
+            uOP3        <= 0;
             lastIsFull  <= `FALSE;
         end else if(ctrl_decode_rename_regs.pause || full) begin
             uOP0        <= uOP0;

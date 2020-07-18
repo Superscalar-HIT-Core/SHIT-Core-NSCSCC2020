@@ -24,6 +24,8 @@ decode_rename_regs dec_rename(
 
 UOPBundle rename_dispatch_0, rename_dispatch_1;
 wire allocatable_rename;
+PRFNum rr_bs_set_busy0,rr_bs_set_busy1;
+wire set_busy_0, set_busy_1;
 register_rename rr(
     .clk(clk), 
     .rst(rst),
@@ -37,7 +39,96 @@ register_rename rr(
     .commit_valid_1(0),
     .commit_req_0(0), 
     .commit_req_1(0),
-    .allocatable(allocatable_rename)
+    .allocatable(allocatable_rename),
+    .set_busy_num_0(rr_bs_set_busy0),
+    .set_busy_num_1(rr_bs_set_busy1),
+    .set_busy_0(set_busy_0),
+    .set_busy_1(set_busy_1)
+    );
+
+wire busy_dispatch_inst0_r0;
+wire busy_dispatch_inst0_r1;
+wire busy_dispatch_inst1_r0;
+wire busy_dispatch_inst1_r1;
+PRFNum dispatch_inst0_r0;
+PRFNum dispatch_inst0_r1;
+PRFNum dispatch_inst1_r0;
+PRFNum dispatch_inst1_r1;
+
+busy_table u_bt( 
+    // Handle the bypass logic in busy table instead of in the iq
+    .clk(clk),
+    .rst(rst),
+    .flush(0),
+    // 4 read ports for dispatching, handles bypass logic 
+    .rd_port0(dispatch_inst0_r0),
+    .rd_port1(dispatch_inst0_r1),
+    .rd_port2(dispatch_inst1_r0),
+    .rd_port3(dispatch_inst1_r1),
+    // At most 2 instructions dispatched at one time 
+    .set_busy_0(set_busy_0),
+    .set_busy_1(set_busy_1),
+    .set_busy_num_0(rr_bs_set_busy0),
+    .set_busy_num_1(rr_bs_set_busy1),
+
+    // At most 4 instructions finish at one time 
+    .clr_busy_0(0),
+    .clr_busy_1(0),
+    .clr_busy_2(0),
+    .clr_busy_3(0),
+
+    .clr_busy_num_0(0),
+    .clr_busy_num_1(0),
+    .clr_busy_num_2(0),
+    .clr_busy_num_3(0),
+    
+    .busy0(busy_dispatch_inst0_r0),
+    .busy1(busy_dispatch_inst0_r1),
+    .busy2(busy_dispatch_inst1_r0),
+    .busy3(busy_dispatch_inst1_r1)
+    );
+
+UOPBundle dispatch_inst0_in, dispatch_inst1_in;
+rename_dispatch_reg r_d_reg(
+    .clk(clk),
+    .rst(rst),
+    .inst0_in(rename_dispatch_0), 
+    .inst1_in(rename_dispatch_1),
+    .inst0_out(dispatch_inst0_in), 
+    .inst1_out(dispatch_inst1_in),
+    .flush(0)
+    );
+
+wire rs_alu_wen_0;
+wire rs_alu_wen_1;
+wire rs_mdu_wen_0;
+wire rs_mdu_wen_1;
+wire rs_lsu_wen_0;
+wire rs_lsu_wen_1;
+
+dispatch u_dispatch(
+    .inst_0_ops(dispatch_inst0_in), 
+    .inst_1_ops(dispatch_inst1_in),
+    .busy_dispatch_inst0_r0(busy_dispatch_inst0_r0),
+    .busy_dispatch_inst0_r1(busy_dispatch_inst0_r1),
+    .busy_dispatch_inst1_r0(busy_dispatch_inst1_r0),
+    .busy_dispatch_inst1_r1(busy_dispatch_inst1_r1),
+    .dispatch_inst0_r0(dispatch_inst0_r0),
+    .dispatch_inst0_r1(dispatch_inst0_r1),
+    .dispatch_inst1_r0(dispatch_inst1_r0),
+    .dispatch_inst1_r1(dispatch_inst1_r1),
+    .rs_alu_wen_0(rs_alu_wen_0), 
+    .rs_alu_wen_1(rs_alu_wen_1), 
+    .rs_mdu_wen_0(rs_mdu_wen_0), 
+    .rs_mdu_wen_1(rs_mdu_wen_1), 
+    .rs_lsu_wen_0(rs_lsu_wen_0), 
+    .rs_lsu_wen_1(rs_lsu_wen_1),
+    .rs_alu_dout_0(), 
+    .rs_alu_dout_1(),
+    .rs_mdu_dout_0(), 
+    .rs_mdu_dout_1(),
+    .rs_lsu_dout_0(), 
+    .rs_lsu_dout_1()
     );
 
 integer fp;
@@ -56,6 +147,7 @@ initial begin
     #22 rst = 0;
 end
 
+integer i;
 // Insturction Generator
 always @(posedge clk)   begin
     if(!rst && !ctrl_decode_rename_regs.pauseReq)  begin
@@ -105,6 +197,12 @@ always @(posedge clk)   begin
                 decode_regs1.uOP0.imm,
                 decode_regs1.uOP0.pc
         );
+        end
+        $display("Busy:");
+        for(i=0;i<64;i++)   begin
+            if(u_bt.busytable_bank0[i] == 1) begin
+                $display(i);
+            end
         end
     end else begin
         regs_decode0.inst.valid <= 1;
