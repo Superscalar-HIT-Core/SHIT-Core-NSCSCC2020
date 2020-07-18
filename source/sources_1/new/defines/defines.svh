@@ -582,7 +582,7 @@ interface InstBuffer_Backend;
     logic           flushReq;
 
     modport instBuffer(output inst0, inst1, valid, input ready, flushReq);
-    modport backend(input inst0, inst1, output ready, flushReq);
+    modport backend(input inst0, inst1, valid, output ready, flushReq);
     
     task automatic getResp(ref logic clk);
         ready       =   `TRUE;
