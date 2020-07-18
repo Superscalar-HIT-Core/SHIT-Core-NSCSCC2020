@@ -6,7 +6,7 @@ module iq_entry_LSU(
     input flush,
     input Wake_Info wake_Info,
     input Queue_Ctrl_Meta queue_ctrl,
-    input LSU_Queue_Meta din0, din1, up0, up1,
+    input LSU_Queue_Meta din0, din1, up0,
     output LSU_Queue_Meta dout,
     output rdy,
     output isStore
@@ -14,7 +14,7 @@ module iq_entry_LSU(
 
     LSU_Queue_Meta up_data; 
     wire rs1waked, rs2waked, new_prs1_rdy, new_prs2_rdy;
-    assign up_data = ( queue_ctrl.cmp_sel == 1'b0 ) ? up0 : up1;
+    assign up_data = up0;
     LSU_Queue_Meta enq_data; 
     assign enq_data = ( queue_ctrl.enq_sel == 1'b0 ) ? din0: din1;
     LSU_Queue_Meta next_data;
@@ -40,7 +40,7 @@ module iq_entry_LSU(
     assign rdys.prs1_rdy = new_prs1_rdy;
     assign rdys.prs2_rdy = new_prs2_rdy;
 
-    ALU_Queue_Meta next_data_with_wake;
+    LSU_Queue_Meta next_data_with_wake;
     assign next_data_with_wake.ops = next_data.ops;
     assign next_data_with_wake.rdys = rdys;
 
@@ -63,13 +63,10 @@ module iq_lsu(
     input enq_req_0,
     input enq_req_1,
     input deq_req_0,
-    input deq_req_1,
     input Wake_Info wake_Info,
     input [`LSU_QUEUE_IDX_LEN-2:0] deq0_idx,
-    input [`LSU_QUEUE_IDX_LEN-2:0] deq1_idx,
     input LSU_Queue_Meta din_0, din_1,
     output LSU_Queue_Meta dout_0,
-    output LSU_Queue_Meta dout_1,
     output almost_full,
     output full,
     output empty,
@@ -89,8 +86,8 @@ module iq_lsu(
     wire [`LSU_QUEUE_LEN-1:0] deq, enq;
     wire [`LSU_QUEUE_LEN-1:0] cmp_sel, enq_sel;
 
-    wire [`LSU_QUEUE_IDX_LEN-1:0] new_tail_0 = tail - deq_req_0 - deq_req_1 ; 
-    wire [`LSU_QUEUE_IDX_LEN-1:0] new_tail_1 = tail - deq_req_0 - deq_req_1 + enq_req_0; 
+    wire [`LSU_QUEUE_IDX_LEN-1:0] new_tail_0 = tail - deq_req_0 ; 
+    wire [`LSU_QUEUE_IDX_LEN-1:0] new_tail_1 = tail - deq_req_0 + enq_req_0; 
     wire [`LSU_QUEUE_IDX_LEN-1:0] tail_update_val = $signed(new_tail_1) > 0 ? new_tail_1 : 0;
 
     wire [`LSU_QUEUE_LEN-1:0] wr_vec_0 = enq_req_0 ? ( 16'b1 << new_tail_0 ) : 16'b0;
@@ -123,7 +120,6 @@ module iq_lsu(
                 .din0               (din_0           ),
                 .din1               (din_1           ),
                 .up0                (dout[i+1]       ),
-                .up1                (dout[i+2]       ),
                 .dout               (dout[i]         ),
                 .rdy                (ready_vec[i]    ),
                 .wake_Info          (wake_Info       ),
@@ -131,23 +127,21 @@ module iq_lsu(
             );
             assign queue_ctrl[i].enq_sel    =   ( new_tail_0 != i );
             assign queue_ctrl[i].cmp_en     =   ( deq_req_0 && i>= deq0_idx );
-            assign queue_ctrl[i].cmp_sel    =   ( deq_req_0 && ~deq_req_1 && i >= deq0_idx ) || 
-                                                ( deq_req_0 && deq_req_1 && i >= deq0_idx && i < deq1_idx -1 ) ? 0 : 1;
+            assign queue_ctrl[i].cmp_sel    =   1;
             assign queue_ctrl[i].enq_en     =   w_en[i];
             assign queue_ctrl[i].freeze     =   freeze;
         end
     endgenerate
 
     assign dout_0 = dout[deq0_idx];
-    assign dout_1 = dout[deq1_idx];
 
     always @(posedge clk)   begin
         if(rst) begin
             tail <= `LSU_QUEUE_IDX_LEN'b0;
         end else if(freeze)begin
-            tail <= tail - deq_req_0 - deq_req_1;
+            tail <= tail - deq_req_0;
         end else begin
-            tail <= tail + enq_req_0 + enq_req_1 - deq_req_0 - deq_req_1;
+            tail <= tail + enq_req_0 + enq_req_1 - deq_req_0;
         end
     end
 
@@ -162,30 +156,24 @@ module issue_unit_LSU(
     input enq_req_0, enq_req_1,                     // 指令入队请求
     // 此处，LSU没有准备好，是不能发射的
     input lsu_busy,
-    output UOPBundle issue_info_0, issue_info_1,         // 输出给执行单元流水线的
-    output issue_en_0, issue_en_1,
+    output UOPBundle issue_info_0,         // 输出给执行单元流水线的
+    output issue_en_0,
     output ready
     );
 
-wire [`MDU_QUEUE_LEN-1:0] ready_vec, valid_vec;
-
-wire [`MDU_QUEUE_IDX_LEN-2:0]   sel0, sel1;
-wire                            sel0_valid, sel1_valid, sel_valid;
-MDU_Queue_Meta                  lsu_queue_dout0, lsu_queue_dout1;
-UOPBundle                       uops0, uops1;
+wire [`LSU_QUEUE_LEN-1:0] ready_vec, valid_vec, isStore_vec;
+reg [`LSU_QUEUE_LEN-1:0] store_mask;
+wire [`LSU_QUEUE_IDX_LEN-2:0]   sel0;
+wire                            sel0_valid;
+LSU_Queue_Meta                  lsu_queue_dout0;
+UOPBundle                       uops0;
 assign uops0                    = lsu_queue_dout0.ops;
-assign uops1                    = lsu_queue_dout1.ops;
 assign wake_reg_0               = uops0.dstPAddr;
-assign wake_reg_1               = uops1.dstPAddr;
 assign wake_reg_0_en            = uops0.dstwe && sel0_valid;
-assign wake_reg_1_en            = uops1.dstwe && sel1_valid;
 assign issue_info_0             = uops0;
-assign issue_info_1             = uops1;
 assign issue_en_0               = sel0_valid;
-assign issue_en_1               = sel1_valid;
 
-// TODO!!
-iq_alu u_iq_alu(
+iq_lsu u_iq_lsu(
     // Global Signals
 	.clk            (clk            ),
     .rst            (rst            ),
@@ -197,15 +185,13 @@ iq_alu u_iq_alu(
     .din_1          (inst_Ops_1 ),
     // From Arbiter
     .deq_req_0      (sel0_valid      ),
-    .deq_req_1      (sel1_valid      ),
     .deq0_idx       (sel0       ),
-    .deq1_idx       (sel1       ),
     // To Arbiter
     .ready_vec      (ready_vec),
     .valid_vec      (valid_vec),
+    .isStore_vec    (isStore_vec),
     // To Exu
     .dout_0         (lsu_queue_dout0),
-    .dout_1         (lsu_queue_dout1),
     // To Dispatch
     .almost_full    (almost_full    ),
     .full           (full           ),
@@ -215,16 +201,21 @@ iq_alu u_iq_alu(
 
 assign ready = ~(almost_full | full);   // 如果满了，则不能继续接受
 
-wire [`LSU_QUEUE_LEN-1:0] arbit_vec = ready_vec & valid_vec & { 8{~lsu_busy} };
+store_bitmask_gen u_mask(
+    .store_vec(isStore_vec),
+    .store_mask(store_mask)
+);
+
+wire [`LSU_QUEUE_LEN-1:0] arbit_vec =   ready_vec & 
+                                        valid_vec & 
+                                        { 8{~lsu_busy} } & 
+                                        store_mask;
 
 // 发射仲裁逻辑
-issue_arbiter_8 u_issue_arbiter_8(
+issue_arbiter_8_sel1 u_issue_arbiter_8(
 	.rdys       (arbit_vec  ),
     .sel0       (sel0       ),
-    .sel1       (sel1       ),
-    .sel0_valid (sel0_valid ),
-    .sel1_valid (sel1_valid ),
-    .sel_valid  (sel_valid  )
+    .sel0_valid (sel0_valid )
 );
 
 endmodule
