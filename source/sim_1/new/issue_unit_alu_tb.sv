@@ -18,7 +18,7 @@ wire wake_reg_0_en, wake_reg_1_en;
 reg wake_reg_2_en, wake_reg_3_en;
 wire ready;
 
-issue_alu is_alu(.*);
+issue_unit_ALU is_alu(.*);
 
 wake_unit wku(.*);
 
