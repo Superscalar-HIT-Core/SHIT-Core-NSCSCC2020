@@ -17,7 +17,7 @@ module decode_rename_regs(
     logic       lastIsFull;
     UOPBundle   uOP0, uOP1, uOP2, uOP3;
 
-    assign full = (uOP1.valid || uOP2.valid) && !lastIsFull;
+    assign full = (uOP1.valid || uOP3.valid) && !lastIsFull;
     assign ctrl_decode_rename_regs.pauseReq = full;
     
     always_ff @ (posedge clk) begin
@@ -27,12 +27,12 @@ module decode_rename_regs(
             uOP2.valid  <= `FALSE;
             uOP3.valid  <= `FALSE;
             lastIsFull  <= `FALSE;
-        end else if(ctrl_decode_rename_regs.pause || lastIsFull) begin
+        end else if(ctrl_decode_rename_regs.pause || full) begin
             uOP0        <= uOP0;
             uOP1        <= uOP1;
             uOP2        <= uOP2;
             uOP3        <= uOP3;
-            lastIsFull  <= ctrl_decode_rename_regs.pause;
+            lastIsFull  <= full || lastIsFull;
         end else begin
             uOP0        <= decode0_regs.uOP0;
             uOP1        <= decode0_regs.uOP1;
