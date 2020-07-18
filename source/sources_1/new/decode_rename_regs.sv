@@ -10,12 +10,12 @@ module decode_rename_regs(
     Decode_Regs.regs    decode0_regs,
     Decode_Regs.regs    decode1_regs,
 
-    Regs_Dispatch.regs  regs_dispatch
+    Regs_Rename.regs  regs_rename
 );
 
     logic       full;
     logic       lastIsFull;
-    uOPBundle   uOP0, uOP1, uOP2, uOP3;
+    UOPBundle   uOP0, uOP1, uOP2, uOP3;
 
     assign full = (uOP1.valid || uOP2.valid) && !lastIsFull;
     assign ctrl_decode_rename_regs.pauseReq = full;
@@ -44,14 +44,14 @@ module decode_rename_regs(
 
     always_comb begin
         if(lastIsFull) begin
-            regs_dispatch.uOP0  = uOP2;
-            regs_dispatch.uOP1  = uOP3;
+            regs_rename.uOP0  = uOP2;
+            regs_rename.uOP1  = uOP3;
         end else if(full) begin
-            regs_dispatch.uOP0  = uOP0;
-            regs_dispatch.uOP1  = uOP1;
+            regs_rename.uOP0  = uOP0;
+            regs_rename.uOP1  = uOP1;
         end else begin
-            regs_dispatch.uOP0  = uOP0;
-            regs_dispatch.uOP1  = uOP2;
+            regs_rename.uOP0  = uOP0;
+            regs_rename.uOP1  = uOP2;
         end
     end
 

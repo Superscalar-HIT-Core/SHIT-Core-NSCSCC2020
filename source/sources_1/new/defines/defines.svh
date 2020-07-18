@@ -407,18 +407,6 @@ typedef struct packed {
     logic freeze;
 } Queue_Ctrl_Meta;
 
-
-
-typedef struct packed { // TODO
-    // ALU_Inst_Ops ops;
-    Arbitration_Info rdys;
-} MDU_Queue_Meta;
-
-typedef struct packed { // TODO
-    // ALU_Inst_Ops ops;
-    Arbitration_Info rdys;
-} LSU_Queue_Meta;
-
 typedef struct packed { // TODO
     RSNum rs_num;
     logic[100:0] PlaceHolder;
@@ -622,7 +610,7 @@ interface Decode_Regs;
     modport regs(input uOP0, uOP1);
 endinterface //Decode_Regs
 
-interface Regs_Re;
+interface Regs_Rename;
     UOPBundle   uOP0;
     UOPBundle   uOP1;
 

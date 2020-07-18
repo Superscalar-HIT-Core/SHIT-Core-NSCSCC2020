@@ -89,35 +89,35 @@ always @(posedge clk) begin
     if(inst0_ops_in.valid)    begin
         if(rename_req0.wen)    begin
         $strobe("Inst_0: RS1 %d -> %d ; RS2 %d -> %d ; RD %d -> %d (stale %d)", 
-            rename_req0.ars1,  rename_resp_0.prf_rs1,
-            rename_req0.ars2,  rename_resp_0.prf_rs2,
-            rename_req0.ard,  rename_resp_0.new_prd,
-            rename_resp_0.prf_rd_stale
+            rename_req0.ars1,  inst0_ops_out.op0PAddr,
+            rename_req0.ars2,  inst0_ops_out.op1PAddr,
+            rename_req0.ard,  inst0_ops_out.dstPAddr,
+            inst0_ops_out.dstPStale
             );
         end else begin
         $strobe("Inst_0: RS1 %d -> %d ; RS2 %d -> %d ; RD %d -> %d (stale %d), Do not rename", 
-            rename_req0.ars1,  rename_resp_0.prf_rs1,
-            rename_req0.ars2,  rename_resp_0.prf_rs2,
-            rename_req0.ard,  rename_resp_0.new_prd,
-            rename_resp_0.prf_rd_stale
+            rename_req0.ars1,  inst0_ops_out.op0PAddr,
+            rename_req0.ars2,  inst0_ops_out.op1PAddr,
+            rename_req0.ard,  inst0_ops_out.dstPAddr,
+            inst0_ops_out.dstPStale
             );
         end
     end
     if(inst1_ops_in.valid)    begin
         if(rename_req1.wen)    begin
         $strobe("Inst_1: RS1 %d -> %d ; RS2 %d -> %d ; RD %d -> %d (stale %d)", 
-        rename_req1.ars1,  rename_resp_1.prf_rs1,
-        rename_req1.ars2,  rename_resp_1.prf_rs2,
-        rename_req1.ard,  rename_resp_1.new_prd,
-        rename_resp_1.prf_rd_stale
-        );
+            rename_req1.ars1,  inst1_ops_out.op0PAddr,
+            rename_req1.ars2,  inst1_ops_out.op1PAddr,
+            rename_req1.ard,  inst1_ops_out.dstPAddr,
+            inst1_ops_out.dstPStale
+            );
     end else begin
         $strobe("Inst_1: RS1 %d -> %d ; RS2 %d -> %d ; RD %d -> %d (stale %d), Do not rename", 
-        rename_req1.ars1,  rename_resp_1.prf_rs1,
-        rename_req1.ars2,  rename_resp_1.prf_rs2,
-        rename_req1.ard,  rename_resp_1.new_prd,
-        rename_resp_1.prf_rd_stale
-        );
+            rename_req1.ars1,  inst1_ops_out.op0PAddr,
+            rename_req1.ars2,  inst1_ops_out.op1PAddr,
+            rename_req1.ard,  inst1_ops_out.dstPAddr,
+            inst1_ops_out.dstPStale
+            );
         end
     end
 end

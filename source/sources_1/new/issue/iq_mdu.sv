@@ -59,7 +59,7 @@ assign valid_vec =  ( tail == `MDU_QUEUE_IDX_LEN'd0 ) ? `MDU_QUEUE_LEN'b0000_000
 genvar i;
 generate 
     for(i=0;i<`MDU_QUEUE_LEN;i++)   begin
-        iq_entry_ALU u_iq_entry_ALU(
+        iq_entry_MDU u_iq_entry_MDU(
             .clk                (clk             ),
             .rst                (rst             ),
             .flush              (flush           ),
