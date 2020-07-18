@@ -40,6 +40,8 @@ module decode(
     always_comb begin
         uOP0             = 0;
         uOP1             = 0;
+        uOP0.uOP         = NOP_U;
+        uOP1.uOP         = NOP_U;
         uOP0.pc          = inst.pc;
         uOP0.predTaken   = inst.predTaken;
         uOP0.predAddr    = inst.predAddr;

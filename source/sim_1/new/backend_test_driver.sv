@@ -44,20 +44,23 @@ integer fp;
 integer count;
 initial begin
     #0 fp = $fopen("../../../../source/instr.hex","r");
-    regs_decode0.inst.valid = 1;
+    regs_decode0.inst.valid = 0;
+    regs_decode1.inst.valid = 0;
     ctrl_decode_rename_regs.pause = 0;
     ctrl_decode_rename_regs.flush = 0;
+    regs_decode0.inst = 0; 
+    regs_decode1.inst = 0; 
+    regs_decode1.inst.pc = 4;     
     recover = 0;
-    regs_decode1.inst = 0; regs_decode1.inst.valid = 0;
     #0 clk = 0;rst = 1;
     #22 rst = 0;
-    #20 regs_decode0.inst = 0;     regs_decode0.inst.valid = 1; 
-        regs_decode0.inst.pc = 4;     regs_decode0.inst.valid = 1;
 end
 
 // Insturction Generator
 always @(posedge clk)   begin
-    if(!rst)  begin
+    if(!rst && !ctrl_decode_rename_regs.pauseReq)  begin
+        regs_decode0.inst.valid <= 1;
+        regs_decode1.inst.valid <= 1;
         count <= $fscanf(fp,"%h" ,regs_decode0.inst.inst);
         regs_decode0.inst.pc <= regs_decode0.inst.pc+8;
         count <= $fscanf(fp,"%h" ,regs_decode1.inst.inst);
@@ -97,6 +100,9 @@ always @(posedge clk)   begin
                 decode_regs1.uOP0.pc
         );
         end
+    end else begin
+        regs_decode0.inst.valid <= 1;
+        regs_decode1.inst.valid <= 1;
     end
 end
 

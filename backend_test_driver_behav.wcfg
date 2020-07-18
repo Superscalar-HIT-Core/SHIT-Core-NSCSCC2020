@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="backend_test_driver_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="\$unit_decode_sv " />
+            <top_module name="backend_test_driver" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="141501fs"></ZoomEndTime>
+      <Cursor1Time time="105800fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="178"></NameColumnWidth>
+      <ValueColumnWidth column_width="145"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="39" />
+   <wvobject fp_name="/backend_test_driver/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/fp" type="array">
+      <obj_property name="ElementShortName">fp[31:0]</obj_property>
+      <obj_property name="ObjectShortName">fp[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/count" type="array">
+      <obj_property name="ElementShortName">count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">count[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/full" type="logic">
+      <obj_property name="ElementShortName">full</obj_property>
+      <obj_property name="ObjectShortName">full</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/lastIsFull" type="logic">
+      <obj_property name="ElementShortName">lastIsFull</obj_property>
+      <obj_property name="ObjectShortName">lastIsFull</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec0/inst_raw" type="array">
+      <obj_property name="ElementShortName">inst_raw[31:0]</obj_property>
+      <obj_property name="ObjectShortName">inst_raw[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec0/inst.valid" type="logic">
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec0/uOP0.uOP" type="array">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+      <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+      <obj_property name="label">dec0uop0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec0/uOP0.valid" type="logic">
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec0/uOP1.uOP" type="array">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+      <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+      <obj_property name="label">dec0uop1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec0/uOP1.valid" type="logic">
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider241">
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec1/inst_raw" type="array">
+      <obj_property name="ElementShortName">inst_raw[31:0]</obj_property>
+      <obj_property name="ObjectShortName">inst_raw[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec1/inst.valid" type="logic">
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec1/uOP0.uOP" type="array">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+      <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+      <obj_property name="label">dec1uop0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec1/uOP0.valid" type="logic">
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec1/uOP1.uOP" type="array">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+      <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+      <obj_property name="label">dec1uop1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec1/uOP1.valid" type="logic">
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider258">
+      <obj_property name="label">Decode_Rename_Regs</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/uOP0.uOP" type="array">
+      <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+      <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/uOP0.valid" type="logic">
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/uOP1.uOP" type="array">
+      <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+      <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/uOP1.valid" type="logic">
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider267">
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/uOP2.uOP" type="array">
+      <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+      <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/uOP2.valid" type="logic">
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/uOP3.uOP" type="array">
+      <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+      <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/uOP3.valid" type="logic">
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/full" type="logic">
+      <obj_property name="ElementShortName">full</obj_property>
+      <obj_property name="ObjectShortName">full</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/lastIsFull" type="logic">
+      <obj_property name="ElementShortName">lastIsFull</obj_property>
+      <obj_property name="ObjectShortName">lastIsFull</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider272">
+      <obj_property name="label">Regs_Rename_Output</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/regs_rename/uOP0.uOP" type="array">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+      <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+      <obj_property name="label">uop0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/regs_rename/uOP0.valid" type="logic">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+      <obj_property name="label">valid_0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/regs_rename/uOP1.uOP" type="array">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+      <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+      <obj_property name="label">uop1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/regs_rename/uOP1.valid" type="logic">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">.valid</obj_property>
+      <obj_property name="ObjectShortName">.valid</obj_property>
+      <obj_property name="label">valid_1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/dec_rename/ctrl_decode_rename_regs/pauseReq" type="logic">
+      <obj_property name="ElementShortName">pauseReq</obj_property>
+      <obj_property name="ObjectShortName">pauseReq</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+</wave_config>
