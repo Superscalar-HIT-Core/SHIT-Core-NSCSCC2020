@@ -28,8 +28,8 @@ register_rename rr(
     .clk(clk), 
     .rst(rst),
     .recover(recover), 
-    .inst0_ops_in(decode_regs0.uOP0), 
-    .inst1_ops_in(decode_regs1.uOP1),
+    .inst0_ops_in(regs_rename.uOP0), 
+    .inst1_ops_in(regs_rename.uOP1),
     .inst0_ops_out(rename_dispatch_0), 
     .inst1_ops_out(rename_dispatch_1),
 
@@ -59,8 +59,14 @@ end
 // Insturction Generator
 always @(posedge clk)   begin
     if(!rst && !ctrl_decode_rename_regs.pauseReq)  begin
-        regs_decode0.inst.valid <= 1;
-        regs_decode1.inst.valid <= 1;
+        if(!$feof(fp))   begin
+            regs_decode0.inst.valid <= 1;
+            regs_decode1.inst.valid <= 1;
+        end else begin
+            regs_decode0.inst.valid <= 0;
+            regs_decode1.inst.valid <= 0;
+            $finish;
+        end
         count <= $fscanf(fp,"%h" ,regs_decode0.inst.inst);
         regs_decode0.inst.pc <= regs_decode0.inst.pc+8;
         count <= $fscanf(fp,"%h" ,regs_decode1.inst.inst);

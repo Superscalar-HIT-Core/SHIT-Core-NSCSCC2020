@@ -12,15 +12,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="141501fs"></ZoomEndTime>
-      <Cursor1Time time="105800fs"></Cursor1Time>
+      <ZoomStartTime time="72083fs"></ZoomStartTime>
+      <ZoomEndTime time="213584fs"></ZoomEndTime>
+      <Cursor1Time time="190000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="178"></NameColumnWidth>
       <ValueColumnWidth column_width="145"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="39" />
+   <WVObjectSize size="43" />
    <wvobject fp_name="/backend_test_driver/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -53,6 +53,10 @@
       <obj_property name="ElementShortName">lastIsFull</obj_property>
       <obj_property name="ObjectShortName">lastIsFull</obj_property>
    </wvobject>
+   <wvobject type="divider" fp_name="divider277">
+      <obj_property name="label">Decoder0_Out</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
    <wvobject fp_name="/backend_test_driver/dec0/inst_raw" type="array">
       <obj_property name="ElementShortName">inst_raw[31:0]</obj_property>
       <obj_property name="ObjectShortName">inst_raw[31:0]</obj_property>
@@ -82,6 +86,8 @@
       <obj_property name="ObjectShortName">.valid</obj_property>
    </wvobject>
    <wvobject type="divider" fp_name="divider241">
+      <obj_property name="label">Decoder1_Out</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
    </wvobject>
    <wvobject fp_name="/backend_test_driver/dec1/inst_raw" type="array">
       <obj_property name="ElementShortName">inst_raw[31:0]</obj_property>
@@ -190,5 +196,97 @@
       <obj_property name="ObjectShortName">pauseReq</obj_property>
       <obj_property name="CustomSignalColor">#00FFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="divider" fp_name="divider278">
+      <obj_property name="label">After Rename</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject fp_name="group279" type="group">
+      <obj_property name="label">inst0</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/backend_test_driver/rr/inst0_ops_out.op0LAddr" type="array">
+         <obj_property name="ElementShortName">.op0LAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.op0LAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst0_ops_out.op0PAddr" type="array">
+         <obj_property name="ElementShortName">.op0PAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.op0PAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst0_ops_out.op0re" type="logic">
+         <obj_property name="ElementShortName">.op0re</obj_property>
+         <obj_property name="ObjectShortName">.op0re</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst0_ops_out.op1LAddr" type="array">
+         <obj_property name="ElementShortName">.op1LAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.op1LAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst0_ops_out.op1PAddr" type="array">
+         <obj_property name="ElementShortName">.op1PAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.op1PAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst0_ops_out.op1re" type="logic">
+         <obj_property name="ElementShortName">.op1re</obj_property>
+         <obj_property name="ObjectShortName">.op1re</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst0_ops_out.dstLAddr" type="array">
+         <obj_property name="ElementShortName">.dstLAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.dstLAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst0_ops_out.dstPAddr" type="array">
+         <obj_property name="ElementShortName">.dstPAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.dstPAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst0_ops_out.dstPStale" type="array">
+         <obj_property name="ElementShortName">.dstPStale[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.dstPStale[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst0_ops_out.dstwe" type="logic">
+         <obj_property name="ElementShortName">.dstwe</obj_property>
+         <obj_property name="ObjectShortName">.dstwe</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group290" type="group">
+      <obj_property name="label">Inst1</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/backend_test_driver/rr/inst1_ops_out.op0LAddr" type="array">
+         <obj_property name="ElementShortName">.op0LAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.op0LAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst1_ops_out.op0PAddr" type="array">
+         <obj_property name="ElementShortName">.op0PAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.op0PAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst1_ops_out.op0re" type="logic">
+         <obj_property name="ElementShortName">.op0re</obj_property>
+         <obj_property name="ObjectShortName">.op0re</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst1_ops_out.op1LAddr" type="array">
+         <obj_property name="ElementShortName">.op1LAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.op1LAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst1_ops_out.op1PAddr" type="array">
+         <obj_property name="ElementShortName">.op1PAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.op1PAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst1_ops_out.op1re" type="logic">
+         <obj_property name="ElementShortName">.op1re</obj_property>
+         <obj_property name="ObjectShortName">.op1re</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst1_ops_out.dstLAddr" type="array">
+         <obj_property name="ElementShortName">.dstLAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.dstLAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst1_ops_out.dstPAddr" type="array">
+         <obj_property name="ElementShortName">.dstPAddr[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.dstPAddr[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst1_ops_out.dstPStale" type="array">
+         <obj_property name="ElementShortName">.dstPStale[5:0]</obj_property>
+         <obj_property name="ObjectShortName">.dstPStale[5:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/rr/inst1_ops_out.dstwe" type="logic">
+         <obj_property name="ElementShortName">.dstwe</obj_property>
+         <obj_property name="ObjectShortName">.dstwe</obj_property>
+      </wvobject>
    </wvobject>
 </wave_config>
