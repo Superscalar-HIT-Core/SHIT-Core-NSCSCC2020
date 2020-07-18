@@ -33,7 +33,7 @@ freelist_enc64 enc0(
     .free_num(free_num_0)
 );
 
-assign free_list_2 = inst_0_req ? (free_list_1 | (1'b1 << free_num_0)) : free_list_1;   // 第一条指令分配之后
+assign free_list_2 = free_list_1 | (inst_0_req << free_num_0);   // 第一条指令分配之后
 // assign free_list_2 = free_list_1;   // 第一条指令分配之后
 
 freelist_enc64 enc1(
@@ -42,7 +42,7 @@ freelist_enc64 enc1(
     .free_num(free_num_1)
 );
 
-assign free_list_3 = inst_1_req ? (free_list_2 | (1'b1 << free_num_1)) : free_list_2;   // 第二条指令分配之后
+assign free_list_3 = free_list_2 | (inst_1_req << free_num_1);   // 第二条指令分配之后
 
 assign allocatable =  (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req) ||
                     (free_valid_0 && inst_0_req && ~inst_1_req) ||
