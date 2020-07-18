@@ -10,7 +10,11 @@ module register_rename(
     output UOPBundle inst0_ops_out, inst1_ops_out,
     input commit_valid_0, commit_valid_1,
     input commit_info commit_req_0, commit_req_1,
-    output allocatable
+    output allocatable,
+    output PRFNum set_busy_num_0,
+    output PRFNum set_busy_num_1,
+    output set_busy_0,
+    output set_busy_1
     );
 wire PRFNum free_prf_0, free_prf_1;
 
@@ -74,6 +78,8 @@ always_comb begin
     inst0_ops_out.dstPAddr = free_prf_0;
     inst0_ops_out.dstPStale = rnamet_output_inst0.prf_rd_stale;
 end
+assign set_busy_num_0  = free_prf_0;
+assign set_busy_0      = inst0_ops_in.dstwe;
 
 always_comb begin
     inst1_ops_out = inst1_ops_in;
@@ -82,6 +88,8 @@ always_comb begin
     inst1_ops_out.dstPAddr = free_prf_1;
     inst1_ops_out.dstPStale = rnamet_output_inst1.prf_rd_stale;
 end
+assign set_busy_num_1  = free_prf_1;
+assign set_busy_1      = inst1_ops_in.dstwe;
 
 `ifdef DEBUG
 always @(posedge clk) begin
