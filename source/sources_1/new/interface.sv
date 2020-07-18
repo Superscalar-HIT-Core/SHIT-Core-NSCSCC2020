@@ -329,11 +329,10 @@ interface ICache_Regs;
 endinterface //ICache_Regs
 
 interface NLPUpdate;
-    NLPUpdateInfo   update0;
-    NLPUpdateInfo   update1;
+    NLPUpdateInfo   update;
 
-    modport if3(output update0, update1);
-    modport nlp(input update0, update1);
+    modport if3(output update);
+    modport nlp(input update);
 endinterface
 
 interface Regs_IF3;

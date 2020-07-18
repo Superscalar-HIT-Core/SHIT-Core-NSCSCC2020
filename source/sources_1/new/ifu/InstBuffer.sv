@@ -66,12 +66,15 @@ module InstBuffer(
     logic                   isFull;
     logic                   oSlot0Loaded;
     logic                   oSlot1Loaded;
+    logic                   waitForDS;
 
     logic   [1+`IB_ADDR]    vHead;
     logic   [1+`IB_ADDR]    vTail;
 
     logic   [31:0]          debug_inst_count;
+
     assign debug_inst_count = vTail - head;
+    assign waitForDS        = !oSlot1Loaded && (data[oSlot0].isJ || data[oSlot0].isBr);
 
     InstBundle  data [`IB_SIZE-1:0];
 
@@ -138,7 +141,7 @@ module InstBuffer(
             instBuffer_backend.valid <= `TRUE;
             if(passThrough || !instBuffer_backend.ready) begin
                 head    <= head;
-            end else if(data[oSlot1].isJ || data[oSlot1].isBr || !oSlot1Loaded) begin
+            end else if(data[oSlot1].isJ || data[oSlot1].isBr || !waitForDS) begin
                 head    <= head + 1'b1;
             end else if(oSlot0Loaded && oSlot1Loaded) begin
                 head    <= head + 2'h2;
@@ -149,19 +152,24 @@ module InstBuffer(
     always_comb begin
         if(rst || instBuffer_backend.flushReq) begin
             instBuffer_backend.valid    = `FALSE;
-        end else if(empty && !passThrough) begin // avoid X
+        end else if((empty && !passThrough) || waitForDS) begin
             instBuffer_backend.valid    = `FALSE;
         end else begin
             instBuffer_backend.valid    = `TRUE;
             if(passThrough) begin
                 instBuffer_backend.inst0        = ifu_instBuffer.inst0;
                 instBuffer_backend.inst1        = ifu_instBuffer.inst1;
-            end else if(data[oSlot1].isJ || data[oSlot1].isBr || !oSlot1Loaded) begin
+                instBuffer_backend.inst0.isDs   = `FALSE;
+                instBuffer_backend.inst1.isDs   = instBuffer_backend.inst0.isBr || instBuffer_backend.inst0.isJ;
+            end else if((data[oSlot1].isJ || data[oSlot1].isBr || !oSlot1Loaded) && !waitForDS) begin
                 instBuffer_backend.inst0        = data[oSlot0];
+                instBuffer_backend.inst0.isDs   = `FALSE;
                 instBuffer_backend.inst1.valid  = `FALSE;
             end else begin
                 instBuffer_backend.inst0        = data[oSlot0];
                 instBuffer_backend.inst1        = data[oSlot1];
+                instBuffer_backend.inst0.isDs   = `FALSE;
+                instBuffer_backend.inst1.isDs   = data[oSlot0].isBr || data[oSlot0].isJ;
             end
         end
     end

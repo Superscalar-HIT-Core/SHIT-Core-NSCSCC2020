@@ -1,158 +1,188 @@
 `timescale 1ns / 1ps
-`include "../../sources_1/new/defines/defines.svh"
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2020/07/11 00:16:14
+// Design Name: 
+// Module Name: PlayGround
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
 module PlayGround(
 
     );
-reg clk,rst;
-reg recover;
+    AXIReadAddr     axiReadAddr();
+    AXIReadData     axiReadData();
+    AXIWriteAddr    axiWriteAddr();
+    AXIWriteData    axiWriteData();
+    AXIWriteResp    axiWriteResp();
 
-IFU_InstBuffer      ifu_instBuffer();
-InstBuffer_Backend  instBuffer_backend();
-Regs_Decode         regs_decode0();
-Regs_Decode         regs_decode1();
-Decode_Regs         decode_regs0();
-Decode_Regs         decode_regs1();
-Regs_Rename         regs_rename();
+    InstReq         instReq();
+    InstResp        instResp();
+    DataReq         dataReq();
+    DataResp        dataResp();
 
-Ctrl     ctrl_instBuffer_decode_regs();
-Ctrl     ctrl_decode_rename_regs();
-Ctrl     ctrl_rob();
-Ctrl     ctrl_iq_alu0();
-Ctrl     ctrl_iq_alu1();
-Ctrl     ctrl_iq_lsu();
-Ctrl     ctrl_iq_mdu();
-Ctrl     ctrl_commit();
-Ctrl     ctrl_instBuffer();
+    DCacheReq       dCacheReq();
+    DCacheResp      dCacheResp();
 
-CtrlUnitBackend ctrl(.*);
+    Ctrl                ctrl_if0_1_regs();
+    Ctrl                ctrl_nlp();
+    Ctrl                ctrl_if2_3_regs();
+    Ctrl                ctrl_iCache();
+    Ctrl                ctrl_if3();
+    Ctrl                ctrl_if3_output_regs();
+    Ctrl                ctrl_instBuffer();
 
-InstBuffer  instBuffer(.*);
-InstBuffer_decode_regs  instBuffer_decode_regs(.*);
-decode dec0(.regs_decode(regs_decode0), .decode_regs(decode_regs0));
-decode dec1(.regs_decode(regs_decode1), .decode_regs(decode_regs1));
-decode_rename_regs dec_rename(
-    .clk(clk),
-    .rst(rst),
-    .ctrl_decode_rename_regs(ctrl_decode_rename_regs),
-    .decode0_regs(decode_regs0),
-    .decode1_regs(decode_regs1),
-    .regs_rename(regs_rename)
-);
+    ICache_TLB          iCache_tlb();
 
-UOPBundle rename_dispatch_0, rename_dispatch_1;
-wire allocatable_rename;
-register_rename rr(
-    .clk(clk), 
-    .rst(rst),
-    .recover(recover), 
-    .inst0_ops_in(regs_rename.uOP0), 
-    .inst1_ops_in(regs_rename.uOP1),
-    .inst0_ops_out(rename_dispatch_0), 
-    .inst1_ops_out(rename_dispatch_1),
+    BackendRedirect     backend_if0();
+    BPDUpdate           backend_bpd();
+    NLPUpdate           backend_nlp();
 
-    .commit_valid_0(0), 
-    .commit_valid_1(0),
-    .commit_req_0(0), 
-    .commit_req_1(0),
-    .allocatable(allocatable_rename)
-    );
+    IFU_InstBuffer      ifu_instBuffer();
+    InstBuffer_Backend  instBuffer_backend();
 
-integer fp;
-integer count;
-initial begin
-    #0 fp = $fopen("../../../../source/instr.hex","r");
-    ifu_instBuffer.inst0.isJ    = `FALSE;
-    ifu_instBuffer.inst0.isBr   = `FALSE;
-    ifu_instBuffer.inst0.isDs   = `FALSE;
-    ifu_instBuffer.inst1.isJ    = `FALSE;
-    ifu_instBuffer.inst1.isBr   = `FALSE;
-    ifu_instBuffer.inst1.isDs   = `FALSE;
-    ctrl_decode_rename_regs.pause = 0;
-    ctrl_decode_rename_regs.flush = 0;
-    
-    ctrl_rob.pauseReq = `FALSE;
-    ctrl_iq_alu0.pauseReq = `FALSE;
-    ctrl_iq_alu1.pauseReq = `FALSE;
-    ctrl_iq_lsu.pauseReq = `FALSE;
-    ctrl_iq_mdu.pauseReq = `FALSE;
-    ctrl_commit.pauseReq = `FALSE;
-    
-    ctrl_rob.flushReq = `FALSE;
-    ctrl_iq_alu0.flushReq = `FALSE;
-    ctrl_iq_alu1.flushReq = `FALSE;
-    ctrl_iq_lsu.flushReq = `FALSE;
-    ctrl_iq_mdu.flushReq = `FALSE;
-    ctrl_commit.flushReq = `FALSE;
 
-    ifu_instBuffer.inst0.inst = 0; 
-    ifu_instBuffer.inst1.inst = 0; 
-    ifu_instBuffer.inst0.pc = 0;
-    ifu_instBuffer.inst1.pc = 4;
-    recover = 0;
-    #0 clk = 0;rst = 1;
-    #22 rst = 0;
-end
+    logic clk;
+    logic rst;
 
-// Insturction Generator
-always @(posedge clk)   begin
-    if(!rst && !ctrl_decode_rename_regs.pauseReq)  begin
-        if(!$feof(fp))   begin
-            ifu_instBuffer.inst0.valid <= 1;
-            ifu_instBuffer.inst1.valid <= 1;
-        end else begin
-            ifu_instBuffer.inst0.valid <= 0;
-            ifu_instBuffer.inst1.valid <= 0;
-            $finish;
-        end
-        count <= $fscanf(fp,"%h" ,ifu_instBuffer.inst0.inst);
-        ifu_instBuffer.inst0.pc <= ifu_instBuffer.inst0.pc+8;
-        count <= $fscanf(fp,"%h" ,ifu_instBuffer.inst1.inst);
-        ifu_instBuffer.inst1.pc <= ifu_instBuffer.inst1.pc+8;
-        #2
-        if (decode_regs0.uOP0.op1re)     begin
-            $display("Decode0: %4s %2d,%2d,%2d @ PC %h", 
-                decode_regs0.uOP0.uOP.name,
-                decode_regs0.uOP0.dstLAddr,
-                decode_regs0.uOP0.op0LAddr,
-                decode_regs0.uOP0.op1LAddr,
-                decode_regs0.uOP0.pc
-        );
-        end else begin
-            $display("Decode0: %4s %2d,%2d,(IMM)%2d @ PC %h", 
-                decode_regs0.uOP0.uOP.name,
-                decode_regs0.uOP0.dstLAddr,
-                decode_regs0.uOP0.op0LAddr,
-                decode_regs0.uOP0.imm,
-                decode_regs0.uOP0.pc
-        );
-        end
-        if (decode_regs1.uOP0.op1re)     begin
-            $display("Decode1: %4s %2d,%2d,%2d @ PC %h", 
-                decode_regs1.uOP0.uOP.name,
-                decode_regs1.uOP0.dstLAddr,
-                decode_regs1.uOP0.op0LAddr,
-                decode_regs1.uOP0.op1LAddr,
-                decode_regs1.uOP0.pc
-        );
-        end else begin
-            $display("Decode1: %4s %2d,%2d,(IMM)%2d @ PC %h", 
-                decode_regs1.uOP0.uOP.name,
-                decode_regs1.uOP0.dstLAddr,
-                decode_regs1.uOP0.op0LAddr,
-                decode_regs1.uOP0.imm,
-                decode_regs1.uOP0.pc
-        );
-        end
-    end else begin
-        ifu_instBuffer.inst0.valid <= 1;
-        ifu_instBuffer.inst1.valid <= 1;
+    wire          rsta_busy      ;
+    wire          rstb_busy      ;
+    wire          s_aclk         ;
+    wire          s_aresetn      ;
+    wire  [ 3:0]  s_axi_awid     ;
+    wire  [31:0]  s_axi_awaddr   ;
+    wire  [ 7:0]  s_axi_awlen    ;
+    wire  [ 2:0]  s_axi_awsize   ;
+    wire  [ 1:0]  s_axi_awburst  ;
+    wire          s_axi_awvalid  ;
+    wire          s_axi_awready  ;
+    wire  [31:0]  s_axi_wdata    ;
+    wire  [ 3:0]  s_axi_wstrb    ;
+    wire          s_axi_wlast    ;
+    wire          s_axi_wvalid   ;
+    wire          s_axi_wready   ;
+    wire  [ 3:0]  s_axi_bid      ;
+    wire  [ 1:0]  s_axi_bresp    ;
+    wire          s_axi_bvalid   ;
+    wire          s_axi_bready   ;
+    wire  [ 3:0]  s_axi_arid     ;
+    wire  [31:0]  s_axi_araddr   ;
+    wire  [ 7:0]  s_axi_arlen    ;
+    wire  [ 2:0]  s_axi_arsize   ;
+    wire  [ 1:0]  s_axi_arburst  ;
+    wire          s_axi_arvalid  ;
+    wire          s_axi_arready  ;
+    wire  [ 3:0]  s_axi_rid      ;
+    wire  [31:0]  s_axi_rdata    ;
+    wire  [ 1:0]  s_axi_rresp    ;
+    wire          s_axi_rlast    ;
+    wire          s_axi_rvalid   ;
+    wire          s_axi_rready   ;
+
+    AXIInterface        axiInterface(.*);
+    AXIWarp             AXIWarp(.*);
+    // axi_test_blk_mem    axi_mem(.*);
+    CtrlUnit            ctrlUnit(.*);
+    IFU                 ifu(.*);
+    InstBuffer          instBuffer(.*);
+
+    always #10 clk = ~clk;
+
+    initial begin
+        clk = 1'b0;
+        rst = 1'b1;
+        #25
+        rst = 1'b0;
+
+        // dataReq.sendWReq(32'h00000110, 32'h0, clk);
+        // dataReq.sendWReq(32'h00000114, 32'h1, clk);
+        // dataReq.sendWReq(32'h00000118, 32'h2, clk);
+        // dataReq.sendWReq(32'h0000011C, 32'h3, clk);
+        // dataReq.sendWReq(32'h00000120, 32'h4, clk);
+        // dataReq.sendWReq(32'h00000124, 32'h5, clk);
+        // dataReq.sendWReq(32'h00000128, 32'h6, clk);
+        // dataReq.sendWReq(32'h0000012C, 32'h7, clk);
+        // dataReq.sendWReq(32'h00000130, 32'h8, clk);
+        // dataReq.sendWReq(32'h00000134, 32'h9, clk);
+        // dataReq.sendWReq(32'h00000138, 32'ha, clk);
+        // dataReq.sendWReq(32'h0000013C, 32'hb, clk);
+        // dataReq.sendWReq(32'h00000140, 32'hc, clk);
+        // dataReq.sendWReq(32'h00000144, 32'hd, clk);
+        // dataReq.sendWReq(32'h00000148, 32'he, clk);
+        // dataReq.sendWReq(32'h0000014C, 32'hf, clk);
+        #5000
+        // backend_if0.redirectReq(32'h00000114, clk);
+        // #1000
+        $stop(1);
     end
-end
 
+    initial begin
+        forever iCache_tlb.autoReply(clk);
+    end
 
+    initial begin
+        #9;
+        forever begin
+            integer b = $random % 4;
+            while (b --> 0) #20;
+            instBuffer_backend.getResp(clk);
+        end
+    end
 
-always begin
-    #10 clk = ~clk;
-end
+    initial begin
+        //if0_regs.fakeIF0(32'h00000000, clk);
+        //if0_regs.fakeIF0(32'h00000010, clk);
+        //if0_regs.fakeIF0(32'h00000018, clk);
+        //if0_regs.fakeIF0(32'h00000020, clk);
+        //if0_regs.fakeIF0(32'h00000028, clk);
+    end
 
+    axi_test_blk_mem axi_mem (
+        .rsta_busy(rsta_busy),          // output wire rsta_busy
+        .rstb_busy(rstb_busy),          // output wire rstb_busy
+        .s_aclk(s_aclk),                // input wire s_aclk
+        .s_aresetn(s_aresetn),          // input wire s_aresetn
+        .s_axi_awid(s_axi_awid),        // input wire [3 : 0] s_axi_awid
+        .s_axi_awaddr(s_axi_awaddr),    // input wire [31 : 0] s_axi_awaddr
+        .s_axi_awlen(s_axi_awlen),      // input wire [7 : 0] s_axi_awlen
+        .s_axi_awsize(s_axi_awsize),    // input wire [2 : 0] s_axi_awsize
+        .s_axi_awburst(s_axi_awburst),  // input wire [1 : 0] s_axi_awburst
+        .s_axi_awvalid(s_axi_awvalid),  // input wire s_axi_awvalid
+        .s_axi_awready(s_axi_awready),  // output wire s_axi_awready
+        .s_axi_wdata(s_axi_wdata),      // input wire [31 : 0] s_axi_wdata
+        .s_axi_wstrb(s_axi_wstrb),      // input wire [3 : 0] s_axi_wstrb
+        .s_axi_wlast(s_axi_wlast),      // input wire s_axi_wlast
+        .s_axi_wvalid(s_axi_wvalid),    // input wire s_axi_wvalid
+        .s_axi_wready(s_axi_wready),    // output wire s_axi_wready
+        .s_axi_bid(s_axi_bid),          // output wire [3 : 0] s_axi_bid
+        .s_axi_bresp(s_axi_bresp),      // output wire [1 : 0] s_axi_bresp
+        .s_axi_bvalid(s_axi_bvalid),    // output wire s_axi_bvalid
+        .s_axi_bready(s_axi_bready),    // input wire s_axi_bready
+        .s_axi_arid(s_axi_arid),        // input wire [3 : 0] s_axi_arid
+        .s_axi_araddr(s_axi_araddr),    // input wire [31 : 0] s_axi_araddr
+        .s_axi_arlen(s_axi_arlen),      // input wire [7 : 0] s_axi_arlen
+        .s_axi_arsize(s_axi_arsize),    // input wire [2 : 0] s_axi_arsize
+        .s_axi_arburst(s_axi_arburst),  // input wire [1 : 0] s_axi_arburst
+        .s_axi_arvalid(s_axi_arvalid),  // input wire s_axi_arvalid
+        .s_axi_arready(s_axi_arready),  // output wire s_axi_arready
+        .s_axi_rid(s_axi_rid),          // output wire [3 : 0] s_axi_rid
+        .s_axi_rdata(s_axi_rdata),      // output wire [31 : 0] s_axi_rdata
+        .s_axi_rresp(s_axi_rresp),      // output wire [1 : 0] s_axi_rresp
+        .s_axi_rlast(s_axi_rlast),      // output wire s_axi_rlast
+        .s_axi_rvalid(s_axi_rvalid),    // output wire s_axi_rvalid
+        .s_axi_rready(s_axi_rready)    // input wire s_axi_rready
+    );
 endmodule

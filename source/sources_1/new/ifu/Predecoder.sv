@@ -19,6 +19,7 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 `include "../defs.sv"
+`include "../defines/defines.svh"
 
 module Predecoder(
     input   logic [31:0]    pc,
@@ -32,7 +33,7 @@ module Predecoder(
 
     always_comb begin
         if(valid) begin
-            priority casex (inst)
+            priority casez (inst)
                 // quick redirect
                 32'b000010??_????????_????????_????????,        // J
                 32'b000011??_????????_????????_????????: begin  // JAL
@@ -60,8 +61,8 @@ module Predecoder(
                     isBr    = `TRUE;
                     target  = pc + {{14{inst[15]}}, inst[15:0] << 2};
                 end
-             // 32'b000000??_???00000_00000???_??001000,        // JR
-                32'b000000??_???00000_????????_??001001: begin  // JALR
+                32'b000000??_???00000_00000000_00001000,        // JR
+                32'b000000??_???00000_?????000_00001001: begin  // JALR
                     isJ     = `TRUE;
                     isBr    = `FALSE;
                     jr      = `TRUE;    // must redirect, unless unknown target info

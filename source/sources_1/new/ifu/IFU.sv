@@ -32,6 +32,7 @@ module IFU(
     Ctrl                ctrl_iCache,
     Ctrl                ctrl_if3,
     Ctrl                ctrl_if3_output_regs,
+    Ctrl                ctrl_nlp,
 
     ICache_TLB          iCache_tlb,
     BackendRedirect     backend_if0,

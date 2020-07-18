@@ -140,23 +140,19 @@ module IF_3(
 
     always_comb begin
         if(inst0.bpdInfo.valid || (inst0.isJ && (!inst0Jr || (inst0Jr && inst0.nlpInfo.valid)))) begin
-            if3_nlp.update0.target      = inst0.predAddr;
-            if3_nlp.update0.bimState    = inst0.nlpInfo.valid ? inst0.nlpInfo.bimState : 2'b01;
-            if3_nlp.update0.shouldTake  = inst0.predTaken;
-            if3_nlp.update0.valid       = `TRUE;
+            if3_nlp.update.pc          = inst0.pc;
+            if3_nlp.update.target      = inst0.predAddr;
+            if3_nlp.update.bimState    = inst0.nlpInfo.valid ? inst0.nlpInfo.bimState : 2'b01;
+            if3_nlp.update.shouldTake  = inst0.predTaken;
+            if3_nlp.update.valid       = `TRUE;
+        end else if(inst1.bpdInfo.valid || (inst1.isJ && (!inst1Jr || (inst1Jr && inst1.nlpInfo.valid)))) begin
+            if3_nlp.update.pc          = inst1.pc;
+            if3_nlp.update.target      = inst1.predAddr;
+            if3_nlp.update.bimState    = inst1.nlpInfo.valid ? inst1.nlpInfo.bimState : 2'b01;
+            if3_nlp.update.shouldTake  = inst1.predTaken;
+            if3_nlp.update.valid       = `TRUE;
         end else begin
-            if3_nlp.update0.valid       = `FALSE;
-        end
-    end
-
-    always_comb begin
-        if(inst1.bpdInfo.valid || (inst1.isJ && (!inst1Jr || (inst1Jr && inst1.nlpInfo.valid)))) begin
-            if3_nlp.update1.target      = inst1.predAddr;
-            if3_nlp.update1.bimState    = inst1.nlpInfo.valid ? inst1.nlpInfo.bimState : 2'b01;
-            if3_nlp.update1.shouldTake  = inst1.predTaken;
-            if3_nlp.update1.valid       = `TRUE;
-        end else begin
-            if3_nlp.update1.valid       = `FALSE;
+            if3_nlp.update.valid       = `FALSE;
         end
     end
 

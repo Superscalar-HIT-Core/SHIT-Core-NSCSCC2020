@@ -56,6 +56,8 @@ module ROB(
     UOPBundle   data0[`ROB_SIZE-1 : 0];
     UOPBundle   data1[`ROB_SIZE-1 : 0];
 
+    assign dispatch_rob.robID = tail;
+
     assign unpopulatedCrossBoundry  = tail >= head;
     assign populatedCrossBoundry    = tail <  head;
     

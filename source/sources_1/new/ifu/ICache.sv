@@ -55,8 +55,8 @@ module ICache(
         logic           clk;
         logic           writeEn;
         logic   [ 5:0]  address;
-        logic   [21:0]  dataIn;
-        logic   [21:0]  dataOut;
+        logic   [20:0]  dataIn;
+        logic   [20:0]  dataOut;
     } TagRamIO;
 
     typedef struct packed {

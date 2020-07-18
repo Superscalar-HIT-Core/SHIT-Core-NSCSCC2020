@@ -310,7 +310,8 @@ typedef enum bit[7:0] {
     //misc_U,
     CACHE_U     ,
     NOP_U       ,
-    WAIT_U      
+    WAIT_U      ,
+    MDBUBBLE_U
 } uOP;
 
 typedef enum bit [1:0] {
@@ -502,9 +503,10 @@ interface Dispatch_ROB;
     logic       ready;
     logic       valid;
     logic       empty;
+    logic [`ROB_ID_W] robID;
 
-    modport dispatch(output uOP0, uOP1, valid, input ready, empty);
-    modport rob(input uOP0, uOP1, valid, output ready, empty);
+    modport dispatch(output uOP0, uOP1, valid, input ready, empty, robID);
+    modport rob(input uOP0, uOP1, valid, output ready, empty, robID);
 
     task automatic sendUOP(logic [31:0] pc0, logic valid0, logic [31:0] pc1, logic valid1, ref logic clk);
         #1
