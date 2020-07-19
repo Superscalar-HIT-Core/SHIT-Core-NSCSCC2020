@@ -14,13 +14,13 @@
    <zoom_setting>
       <ZoomStartTime time="0fs"></ZoomStartTime>
       <ZoomEndTime time="310001fs"></ZoomEndTime>
-      <Cursor1Time time="255186fs"></Cursor1Time>
+      <Cursor1Time time="193271fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="178"></NameColumnWidth>
       <ValueColumnWidth column_width="145"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="59" />
+   <WVObjectSize size="60" />
    <wvobject fp_name="/backend_test_driver/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -583,6 +583,111 @@
       <wvobject fp_name="/backend_test_driver/issue_alu/issue_en_1" type="logic">
          <obj_property name="ElementShortName">issue_en_1</obj_property>
          <obj_property name="ObjectShortName">issue_en_1</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group704" type="group">
+      <obj_property name="label">LSU Queue</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="group722" type="group">
+         <obj_property name="label">Slot0</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[0].u_iq_entry_LSU /dout.ops.pc" type="array">
+            <obj_property name="ElementShortName">.pc[31:0]</obj_property>
+            <obj_property name="ObjectShortName">.pc[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[0].u_iq_entry_LSU /dout.ops.uOP" type="array">
+            <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+            <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group723" type="group">
+         <obj_property name="label">Slot1</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[1].u_iq_entry_LSU /dout.ops.uOP" type="array">
+            <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+            <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[1].u_iq_entry_LSU /dout.ops.pc" type="array">
+            <obj_property name="ElementShortName">.pc[31:0]</obj_property>
+            <obj_property name="ObjectShortName">.pc[31:0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group724" type="group">
+         <obj_property name="label">Slot2</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[2].u_iq_entry_LSU /dout.ops.pc" type="array">
+            <obj_property name="ElementShortName">.pc[31:0]</obj_property>
+            <obj_property name="ObjectShortName">.pc[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[2].u_iq_entry_LSU /dout.ops.uOP" type="array">
+            <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+            <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group725" type="group">
+         <obj_property name="label">Slot3</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[3].u_iq_entry_LSU /dout.ops.pc" type="array">
+            <obj_property name="ElementShortName">.pc[31:0]</obj_property>
+            <obj_property name="ObjectShortName">.pc[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[3].u_iq_entry_LSU /dout.ops.uOP" type="array">
+            <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+            <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group726" type="group">
+         <obj_property name="label">Slot4</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[4].u_iq_entry_LSU /dout.ops.pc" type="array">
+            <obj_property name="ElementShortName">.pc[31:0]</obj_property>
+            <obj_property name="ObjectShortName">.pc[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[4].u_iq_entry_LSU /dout.ops.uOP" type="array">
+            <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+            <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group727" type="group">
+         <obj_property name="label">Slot5</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[5].u_iq_entry_LSU /dout.ops.pc" type="array">
+            <obj_property name="ElementShortName">.pc[31:0]</obj_property>
+            <obj_property name="ObjectShortName">.pc[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[5].u_iq_entry_LSU /dout.ops.uOP" type="array">
+            <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+            <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group728" type="group">
+         <obj_property name="label">Slot6</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[6].u_iq_entry_LSU /dout.ops.pc" type="array">
+            <obj_property name="ElementShortName">.pc[31:0]</obj_property>
+            <obj_property name="ObjectShortName">.pc[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[6].u_iq_entry_LSU /dout.ops.uOP" type="array">
+            <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+            <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group729" type="group">
+         <obj_property name="label">Slot7</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[7].u_iq_entry_LSU /dout.ops.pc" type="array">
+            <obj_property name="ElementShortName">.pc[31:0]</obj_property>
+            <obj_property name="ObjectShortName">.pc[31:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[7].u_iq_entry_LSU /dout.ops.uOP" type="array">
+            <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+            <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+         </wvobject>
+         <wvobject fp_name="/backend_test_driver/wake_u/wake_info_dly_1cyc" type="array">
+            <obj_property name="ElementShortName">wake_info_dly_1cyc</obj_property>
+            <obj_property name="ObjectShortName">wake_info_dly_1cyc</obj_property>
+         </wvobject>
       </wvobject>
    </wvobject>
 </wave_config>

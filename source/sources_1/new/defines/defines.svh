@@ -254,6 +254,8 @@ typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
 `define WAIT_U      8'b01000101
 
 typedef enum bit[7:0] {
+    //     NOP_U  移到第一个，为了方便观察
+    NOP_U       ,
     //arithmetic
     ADD_U       ,
     ADDI_U      ,
@@ -332,7 +334,6 @@ typedef enum bit[7:0] {
     TLBWI_U     ,
     //misc_U,
     CACHE_U     ,
-    NOP_U       ,
     WAIT_U      ,
     MDBUBBLE_U
 } uOP;

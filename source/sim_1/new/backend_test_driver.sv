@@ -105,6 +105,8 @@ wire rs_mdu_wen_0;
 wire rs_lsu_wen_0;
 wire rs_lsu_wen_1;
 
+wire alu_queue_ready, lsu_queue_ready, mdu_queue_ready;
+
 ALU_Queue_Meta dispatch_alu_0, dispatch_alu_1;
 LSU_Queue_Meta dispatch_lsu_0, dispatch_lsu_1;
 MDU_Queue_Meta dispatch_mdu_0;
@@ -135,15 +137,20 @@ dispatch u_dispatch(
 // Register wake //////////////////////////////////////////
 PRFNum wake_reg_0, wake_reg_1, wake_reg_2, wake_reg_3;
 wire wake_reg_0_en, wake_reg_1_en, wake_reg_2_en, wake_reg_3_en;
-Wake_Info wake_info;
+Wake_Info wake_info, wake_info_dly_1cyc, wake_info_dly_2cyc;
 ///////////////////////////////////////////////////////////
 
 // TODO:FOR debug///////////////////
 assign wake_reg_2_en = 0;
 assign wake_reg_3_en = 0;
+assign wake_reg_2 = 0;
+assign wake_reg_3 = 0;
 ////////////////////////////////////
 
 wake_unit wake_u(
+    .clk                                (clk),
+    .rst                                (rst),
+    .flush                              (0),
     .wake_reg_0                         (wake_reg_0),
     .wake_reg_1                         (wake_reg_1),
     .wake_reg_2                         (wake_reg_2),
@@ -152,7 +159,9 @@ wake_unit wake_u(
     .wake_reg_1_en                      (wake_reg_1_en),
     .wake_reg_2_en                      (wake_reg_2_en),
     .wake_reg_3_en                      (wake_reg_3_en),
-    .wake_info                          (wake_info)
+    .wake_info                          (wake_info),
+    .wake_info_dly_1cyc                 (wake_info_dly_1cyc),
+    .wake_info_dly_2cyc                 (wake_info_dly_2cyc)
 );
 
 // Dispatch to queue
@@ -182,7 +191,28 @@ issue_unit_ALU issue_alu(
     .wake_reg_0_en                      (wake_reg_0_en),
     .wake_reg_1_en                      (wake_reg_1_en),
     .ready                              (alu_queue_ready)
-    );
+);
+
+wire lsu_busy;
+
+// TODO: For DEBUG
+assign lsu_busy = 0;
+///////////////////////////////
+
+issue_unit_LSU issue_lsu(
+    .clk                                (clk),
+    .rst                                (rst),
+    .flush                              (0),
+    .wake_Info                          (wake_info_dly_1cyc),
+    .inst_Ops_0                         (dispatch_lsu_0),
+    .inst_Ops_1                         (dispatch_lsu_0),
+    .enq_req_0                          (rs_lsu_wen_0),
+    .enq_req_1                          (rs_lsu_wen_1),
+    .lsu_busy                           (lsu_busy),
+    .issue_info_0                       (issue_lsu_inst),
+    .issue_en_0                         (issue_lsu_en),
+    .ready                              (lsu_queue_ready)
+);
 
 integer fp;
 integer count;
