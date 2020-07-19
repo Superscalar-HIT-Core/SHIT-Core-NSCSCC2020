@@ -454,7 +454,7 @@ typedef struct packed { // TODO
 } PRFrData;
 
 typedef enum bit[2:0] {
-    ALU_LOGIC, ALU_SHIFT, ALU_ARITH, ALU_MOVE, ALU_BRANCH, ALU_MISC
+    ALU_LOGIC, ALU_SHIFT, ALU_ARITH, ALU_MOVE, ALU_BRANCH, ALU_COUNT, ALU_MISC
 } ALUType;
 
 typedef struct packed {

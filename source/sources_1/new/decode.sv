@@ -330,6 +330,7 @@ module decode(
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `TRUE;
+                    uOP0.imm        = imm_lui;
                 end
                 `SLL: begin
                     uOP0.uOP        = SLL_U;
@@ -395,6 +396,26 @@ module decode(
                     uOP0.dstLAddr   = rd;
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `TRUE;
+                    uOP0.dstwe      = `TRUE;
+                end
+                `CLO: begin
+                    uOP0.uOP        = CLO_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_COUNT;
+                    uOP0.op0LAddr   = rs;
+                    uOP1.dstLAddr   = rd;
+                    uOP0.op0re      = `TRUE;
+                    uOP0.op1re      = `FALSE;
+                    uOP0.dstwe      = `TRUE;
+                end
+                `CLZ: begin
+                    uOP0.uOP        = CLZ_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_COUNT;
+                    uOP0.op0LAddr   = rs;
+                    uOP1.dstLAddr   = rd;
+                    uOP0.op0re      = `TRUE;
+                    uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `TRUE;
                 end
                 `BEQ: begin
