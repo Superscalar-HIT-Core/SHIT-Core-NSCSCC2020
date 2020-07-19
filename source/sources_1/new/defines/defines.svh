@@ -693,7 +693,8 @@ typedef struct packed {
 } ALU_Queue_Meta;
 
 typedef struct packed {
-    UOPBundle ops;
+    UOPBundle ops_hi;
+    UOPBundle ops_lo;
     Arbitration_Info rdys;
     logic isMul;
 } MDU_Queue_Meta;

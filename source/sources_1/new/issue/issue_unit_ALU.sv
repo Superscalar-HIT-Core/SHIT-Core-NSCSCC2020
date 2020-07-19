@@ -154,7 +154,7 @@ module issue_unit_ALU(
     input clk,
     input rst,
     input flush,        // 清除请求
-    input Wake_Info wake_Info,      // TODO,外部输入唤醒信号,连接到队列中
+    input Wake_Info wake_Info,      // 外部输入唤醒信号,连接到队列中
     input ALU_Queue_Meta inst_Ops_0, inst_Ops_1,      // 从译码模块来的，指令的译码信息
     input enq_req_0, enq_req_1,                     // 指令入队请求
     output UOPBundle issue_info_0, issue_info_1,         // 输出给执行单元流水线的

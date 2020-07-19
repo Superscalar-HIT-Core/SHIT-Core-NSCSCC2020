@@ -40,7 +40,8 @@ module iq_entry_MDU(
     assign rdys.prs2_rdy = new_prs2_rdy;
 
     MDU_Queue_Meta next_data_with_wake;
-    assign next_data_with_wake.ops = next_data.ops;
+    assign next_data_with_wake.ops_hi = next_data.ops_hi;
+    assign next_data_with_wake.ops_lo = next_data.ops_lo;
     assign next_data_with_wake.rdys = rdys;
     assign next_data_with_wake.isMul = next_data.isMul;
 

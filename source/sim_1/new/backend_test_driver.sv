@@ -102,33 +102,86 @@ rename_dispatch_reg r_d_reg(
 wire rs_alu_wen_0;
 wire rs_alu_wen_1;
 wire rs_mdu_wen_0;
-wire rs_mdu_wen_1;
 wire rs_lsu_wen_0;
 wire rs_lsu_wen_1;
 
+ALU_Queue_Meta dispatch_alu_0, dispatch_alu_1;
+LSU_Queue_Meta dispatch_lsu_0, dispatch_lsu_1;
+MDU_Queue_Meta dispatch_mdu_0;
+
 dispatch u_dispatch(
-    .inst_0_ops(dispatch_inst0_in), 
-    .inst_1_ops(dispatch_inst1_in),
-    .busy_dispatch_inst0_r0(busy_dispatch_inst0_r0),
-    .busy_dispatch_inst0_r1(busy_dispatch_inst0_r1),
-    .busy_dispatch_inst1_r0(busy_dispatch_inst1_r0),
-    .busy_dispatch_inst1_r1(busy_dispatch_inst1_r1),
-    .dispatch_inst0_r0(dispatch_inst0_r0),
-    .dispatch_inst0_r1(dispatch_inst0_r1),
-    .dispatch_inst1_r0(dispatch_inst1_r0),
-    .dispatch_inst1_r1(dispatch_inst1_r1),
-    .rs_alu_wen_0(rs_alu_wen_0), 
-    .rs_alu_wen_1(rs_alu_wen_1), 
-    .rs_mdu_wen_0(rs_mdu_wen_0), 
-    .rs_mdu_wen_1(rs_mdu_wen_1), 
-    .rs_lsu_wen_0(rs_lsu_wen_0), 
-    .rs_lsu_wen_1(rs_lsu_wen_1),
-    .rs_alu_dout_0(), 
-    .rs_alu_dout_1(),
-    .rs_mdu_dout_0(), 
-    .rs_mdu_dout_1(),
-    .rs_lsu_dout_0(), 
-    .rs_lsu_dout_1()
+    .inst_0_ops                         (dispatch_inst0_in), 
+    .inst_1_ops                         (dispatch_inst1_in),
+    .busy_dispatch_inst0_r0             (busy_dispatch_inst0_r0),
+    .busy_dispatch_inst0_r1             (busy_dispatch_inst0_r1),
+    .busy_dispatch_inst1_r0             (busy_dispatch_inst1_r0),
+    .busy_dispatch_inst1_r1             (busy_dispatch_inst1_r1),
+    .dispatch_inst0_r0                  (dispatch_inst0_r0),
+    .dispatch_inst0_r1                  (dispatch_inst0_r1),
+    .dispatch_inst1_r0                  (dispatch_inst1_r0),
+    .dispatch_inst1_r1                  (dispatch_inst1_r1),
+    .rs_alu_wen_0                       (rs_alu_wen_0), 
+    .rs_alu_wen_1                       (rs_alu_wen_1), 
+    .rs_mdu_wen_0                       (rs_mdu_wen_0), 
+    .rs_lsu_wen_0                       (rs_lsu_wen_0), 
+    .rs_lsu_wen_1                       (rs_lsu_wen_1),
+    .rs_alu_dout_0                      (dispatch_alu_0), 
+    .rs_alu_dout_1                      (dispatch_alu_1),
+    .rs_mdu_dout_0                      (dispatch_mdu_0), 
+    .rs_lsu_dout_0                      (dispatch_lsu_0), 
+    .rs_lsu_dout_1                      (dispatch_lsu_1)
+    );
+
+// Register wake //////////////////////////////////////////
+PRFNum wake_reg_0, wake_reg_1, wake_reg_2, wake_reg_3;
+wire wake_reg_0_en, wake_reg_1_en, wake_reg_2_en, wake_reg_3_en;
+Wake_Info wake_info;
+///////////////////////////////////////////////////////////
+
+// TODO:FOR debug///////////////////
+assign wake_reg_2_en = 0;
+assign wake_reg_3_en = 0;
+////////////////////////////////////
+
+wake_unit wake_u(
+    .wake_reg_0                         (wake_reg_0),
+    .wake_reg_1                         (wake_reg_1),
+    .wake_reg_2                         (wake_reg_2),
+    .wake_reg_3                         (wake_reg_3),
+    .wake_reg_0_en                      (wake_reg_0_en),
+    .wake_reg_1_en                      (wake_reg_1_en),
+    .wake_reg_2_en                      (wake_reg_2_en),
+    .wake_reg_3_en                      (wake_reg_3_en),
+    .wake_info                          (wake_info)
+);
+
+// Dispatch to queue
+
+UOPBundle issue_alu_inst_0, issue_alu_inst_1;
+wire issue_alu_0_en, issue_alu_1_en;
+UOPBundle issue_mdu_hi, issue_mdu_lo;
+wire issue_mdu_en;
+UOPBundle issue_lsu_inst;
+wire issue_lsu_en;
+
+issue_unit_ALU issue_alu(
+    .clk                                (clk),
+    .rst                                (rst),
+    .flush                              (0),
+    .wake_Info                          (wake_info),
+    .inst_Ops_0                         (dispatch_alu_0),
+    .inst_Ops_1                         (dispatch_alu_1),
+    .enq_req_0                          (rs_alu_wen_0),
+    .enq_req_1                          (rs_alu_wen_1),
+    .issue_info_0                       (issue_alu_inst_0),
+    .issue_info_1                       (issue_alu_inst_1),
+    .issue_en_0                         (issue_alu_0_en),
+    .issue_en_1                         (issue_alu_1_en),
+    .wake_reg_0                         (wake_reg_0),
+    .wake_reg_1                         (wake_reg_1),
+    .wake_reg_0_en                      (wake_reg_0_en),
+    .wake_reg_1_en                      (wake_reg_1_en),
+    .ready                              (alu_queue_ready)
     );
 
 integer fp;

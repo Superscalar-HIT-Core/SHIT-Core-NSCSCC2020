@@ -9,10 +9,10 @@ module dispatch(
     input busy_dispatch_inst1_r0,
     input busy_dispatch_inst1_r1,
     output rs_alu_wen_0, rs_alu_wen_1, 
-    output rs_mdu_wen_0, rs_mdu_wen_1, 
+    output rs_mdu_wen_0, 
     output rs_lsu_wen_0, rs_lsu_wen_1,
     output ALU_Queue_Meta rs_alu_dout_0, rs_alu_dout_1,
-    output MDU_Queue_Meta rs_mdu_dout_0, rs_mdu_dout_1,
+    output MDU_Queue_Meta rs_mdu_dout_0,
     output LSU_Queue_Meta rs_lsu_dout_0, rs_lsu_dout_1,
     output PRFNum dispatch_inst0_r0,
     output PRFNum dispatch_inst0_r1,
@@ -23,7 +23,7 @@ module dispatch(
 wire inst_0_is_alu = (inst_0_ops.rs_type == RS_ALU) && inst_0_ops.valid;
 wire inst_1_is_alu = (inst_1_ops.rs_type == RS_ALU) && inst_1_ops.valid;
 wire inst_0_is_mdu = (inst_0_ops.rs_type == RS_MDU) && inst_0_ops.valid;
-wire inst_1_is_mdu = (inst_1_ops.rs_type == RS_MDU) && inst_1_ops.valid;
+// wire inst_1_is_mdu = (inst_1_ops.rs_type == RS_MDU) && inst_1_ops.valid;
 wire inst_0_is_lsu = (inst_0_ops.rs_type == RS_LSU) && inst_0_ops.valid;
 wire inst_1_is_lsu = (inst_1_ops.rs_type == RS_LSU) && inst_1_ops.valid;
 
@@ -68,10 +68,10 @@ assign inst0_isMul =    (inst_0_ops.uOP == MULTHI_U ) ||
                         (inst_0_ops.uOP == MULTUHI_U) || 
                         (inst_0_ops.uOP == MULTULO_U);
 
-assign inst1_isMul =    (inst_1_ops.uOP == MULTHI_U ) || 
-                        (inst_1_ops.uOP == MULTLO_U ) || 
-                        (inst_1_ops.uOP == MULTUHI_U) || 
-                        (inst_1_ops.uOP == MULTULO_U);
+// assign inst1_isMul =    (inst_1_ops.uOP == MULTHI_U ) || 
+//                         (inst_1_ops.uOP == MULTLO_U ) || 
+//                         (inst_1_ops.uOP == MULTUHI_U) || 
+//                         (inst_1_ops.uOP == MULTULO_U);
 
 assign inst0_isStore =  (inst_0_ops.uOP == SB_U ) || 
                         (inst_0_ops.uOP == SH_U ) || 
@@ -91,14 +91,20 @@ assign rs_alu_dout_1.ops = inst_1_ops;
 assign rs_alu_dout_0.rdys =  ( (inst_0_is_alu && ~inst_1_is_alu) || (inst_0_is_alu && inst_1_is_alu) ) ? inst0_rdy : inst1_rdy;
 assign rs_alu_dout_1.rdys = inst1_rdy;
 
-assign rs_mdu_wen_0 = (inst_0_is_mdu || inst_1_is_mdu);
-assign rs_mdu_wen_1 = inst_0_is_mdu && inst_1_is_mdu;
-assign rs_mdu_dout_0.ops =  ( (inst_0_is_mdu && ~inst_1_is_mdu) || (inst_0_is_mdu && inst_1_is_mdu) ) ? inst_0_ops : inst_1_ops;
-assign rs_mdu_dout_1.ops = inst_1_ops;
-assign rs_mdu_dout_0.rdys =  ( (inst_0_is_mdu && ~inst_1_is_mdu) || (inst_0_is_mdu && inst_1_is_mdu) ) ? inst0_rdy : inst1_rdy;
-assign rs_mdu_dout_1.rdys = inst1_rdy;
-assign rs_mdu_dout_0.isMul =  ( (inst_0_is_mdu && ~inst_1_is_mdu) || (inst_0_is_mdu && inst_1_is_mdu) ) ? inst0_isMul : inst1_isMul;
-assign rs_mdu_dout_1.isMul = inst1_isMul;
+// assign rs_mdu_wen_0 = (inst_0_is_mdu || inst_1_is_mdu);
+// assign rs_mdu_wen_1 = inst_0_is_mdu && inst_1_is_mdu;
+// assign rs_mdu_dout_0.ops =  ( (inst_0_is_mdu && ~inst_1_is_mdu) || (inst_0_is_mdu && inst_1_is_mdu) ) ? inst_0_ops : inst_1_ops;
+// assign rs_mdu_dout_1.ops = inst_1_ops;
+// assign rs_mdu_dout_0.rdys =  ( (inst_0_is_mdu && ~inst_1_is_mdu) || (inst_0_is_mdu && inst_1_is_mdu) ) ? inst0_rdy : inst1_rdy;
+// assign rs_mdu_dout_1.rdys = inst1_rdy;
+// assign rs_mdu_dout_0.isMul =  ( (inst_0_is_mdu && ~inst_1_is_mdu) || (inst_0_is_mdu && inst_1_is_mdu) ) ? inst0_isMul : inst1_isMul;
+// assign rs_mdu_dout_1.isMul = inst1_isMul;
+
+assign rs_mdu_wen_0 = inst_0_is_mdu;
+assign rs_mdu_dout_0.ops_hi =  inst_0_ops;
+assign rs_mdu_dout_0.ops_lo =  inst_1_ops;
+assign rs_mdu_dout_0.rdys =  inst0_rdy;
+assign rs_mdu_dout_0.isMul =  inst0_isMul;
 
 assign rs_lsu_wen_0 = (inst_0_is_lsu || inst_1_is_lsu);
 assign rs_lsu_wen_1 = inst_0_is_lsu && inst_1_is_lsu;
