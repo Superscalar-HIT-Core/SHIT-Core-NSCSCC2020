@@ -43,6 +43,7 @@ module iq_entry_LSU(
     LSU_Queue_Meta next_data_with_wake;
     assign next_data_with_wake.ops = next_data.ops;
     assign next_data_with_wake.rdys = rdys;
+    assign next_data_with_wake.isStore = next_data.isStore;
 
     assign rdy = dout.rdys.prs1_rdy && dout.rdys.prs2_rdy;
     assign isStore = dout.isStore;
