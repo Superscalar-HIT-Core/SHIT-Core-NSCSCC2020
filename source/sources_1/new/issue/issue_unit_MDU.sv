@@ -20,7 +20,7 @@ module iq_entry_MDU(
     assign next_data =  ( queue_ctrl.enq_en && ~(queue_ctrl.freeze)) ? enq_data :
                         ( queue_ctrl.cmp_en ) ? up_data : dout;
     UOPBundle ops;
-    assign ops = next_data.ops;
+    assign ops = next_data.ops_hi;
 
     assign rs1waked =   (wake_Info.wen_0 && (wake_Info.wb_num0_i == ops.op0PAddr)) || 
                         (wake_Info.wen_1 && (wake_Info.wb_num1_i == ops.op0PAddr)) || 
@@ -147,7 +147,8 @@ module issue_unit_MDU(
     // 乘除法部件正忙，不能发射
     input mul_busy,
     input div_busy,
-    output UOPBundle issue_info_0,         // 输出给执行单元流水线的
+    output UOPBundle issue_info_hi,         // 输出给执行单元流水线的
+    output UOPBundle issue_info_lo,         // 输出给执行单元流水线的
     output issue_en_0,
     output ready
     );
@@ -157,9 +158,8 @@ module issue_unit_MDU(
     wire [`MDU_QUEUE_IDX_LEN-2:0]   sel0;
     wire                            sel0_valid;
     MDU_Queue_Meta                  mdu_queue_dout0;
-    UOPBundle                       uops0;
-    assign uops0                    = mdu_queue_dout0.ops;
-    assign issue_info_0             = uops0;
+    assign issue_info_hi            = mdu_queue_dout0.ops_hi;
+    assign issue_info_lo            = mdu_queue_dout0.ops_lo;
     assign issue_en_0               = sel0_valid;
 
     iq_mdu u_iq_mdu(

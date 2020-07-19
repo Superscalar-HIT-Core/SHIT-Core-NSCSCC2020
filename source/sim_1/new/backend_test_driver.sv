@@ -135,40 +135,40 @@ dispatch u_dispatch(
     );
 
 // Register wake //////////////////////////////////////////
-PRFNum wake_reg_0, wake_reg_1, wake_reg_2, wake_reg_3;
-wire wake_reg_0_en, wake_reg_1_en, wake_reg_2_en, wake_reg_3_en;
-Wake_Info wake_info, wake_info_dly_1cyc, wake_info_dly_2cyc;
+PRFNum wake_reg_ALU_0, wake_reg_ALU_1, wake_reg_LSU, wake_reg_MDU;
+wire wake_reg_ALU_0_en, wake_reg_ALU_1_en, wake_reg_LSU_en, wake_reg_MDU_en;
+Wake_Info wake_info_to_ALU, wake_info_to_LSU, wake_info_to_MDU;
 ///////////////////////////////////////////////////////////
 
 // TODO:FOR debug///////////////////
-assign wake_reg_2_en = 0;
-assign wake_reg_3_en = 0;
-assign wake_reg_2 = 0;
-assign wake_reg_3 = 0;
+assign wake_reg_LSU_en = 0;
+assign wake_reg_MDU_en = 0;
+assign wake_reg_LSU = 0;
+assign wake_reg_MDU = 0;
 ////////////////////////////////////
 
 wake_unit wake_u(
     .clk                                (clk),
     .rst                                (rst),
     .flush                              (0),
-    .wake_reg_0                         (wake_reg_0),
-    .wake_reg_1                         (wake_reg_1),
-    .wake_reg_2                         (wake_reg_2),
-    .wake_reg_3                         (wake_reg_3),
-    .wake_reg_0_en                      (wake_reg_0_en),
-    .wake_reg_1_en                      (wake_reg_1_en),
-    .wake_reg_2_en                      (wake_reg_2_en),
-    .wake_reg_3_en                      (wake_reg_3_en),
-    .wake_info                          (wake_info),
-    .wake_info_dly_1cyc                 (wake_info_dly_1cyc),
-    .wake_info_dly_2cyc                 (wake_info_dly_2cyc)
+    .wake_reg_ALU_0                     (wake_reg_ALU_0),
+    .wake_reg_ALU_1                     (wake_reg_ALU_1),
+    .wake_reg_LSU                       (wake_reg_LSU),
+    .wake_reg_MDU                       (wake_reg_MDU),
+    .wake_reg_ALU_0_en                  (wake_reg_ALU_0_en),
+    .wake_reg_ALU_1_en                  (wake_reg_ALU_1_en),
+    .wake_reg_LSU_en                    (wake_reg_LSU_en),
+    .wake_reg_MDU_en                    (wake_reg_MDU_en),
+    .wake_info_to_ALU                   (wake_info_to_ALU),
+    .wake_info_to_LSU                   (wake_info_to_LSU),
+    .wake_info_to_MDU                   (wake_info_to_MDU)
 );
 
 // Dispatch to queue
 
 UOPBundle issue_alu_inst_0, issue_alu_inst_1;
 wire issue_alu_0_en, issue_alu_1_en;
-UOPBundle issue_mdu_hi, issue_mdu_lo;
+UOPBundle issue_mdu_inst_hi, issue_mdu_inst_lo;
 wire issue_mdu_en;
 UOPBundle issue_lsu_inst;
 wire issue_lsu_en;
@@ -177,7 +177,7 @@ issue_unit_ALU issue_alu(
     .clk                                (clk),
     .rst                                (rst),
     .flush                              (0),
-    .wake_Info                          (wake_info),
+    .wake_Info                          (wake_info_to_ALU),
     .inst_Ops_0                         (dispatch_alu_0),
     .inst_Ops_1                         (dispatch_alu_1),
     .enq_req_0                          (rs_alu_wen_0),
@@ -186,10 +186,10 @@ issue_unit_ALU issue_alu(
     .issue_info_1                       (issue_alu_inst_1),
     .issue_en_0                         (issue_alu_0_en),
     .issue_en_1                         (issue_alu_1_en),
-    .wake_reg_0                         (wake_reg_0),
-    .wake_reg_1                         (wake_reg_1),
-    .wake_reg_0_en                      (wake_reg_0_en),
-    .wake_reg_1_en                      (wake_reg_1_en),
+    .wake_reg_0                         (wake_reg_ALU_0),
+    .wake_reg_1                         (wake_reg_ALU_1),
+    .wake_reg_0_en                      (wake_reg_ALU_0_en),
+    .wake_reg_1_en                      (wake_reg_ALU_1_en),
     .ready                              (alu_queue_ready)
 );
 
@@ -203,7 +203,7 @@ issue_unit_LSU issue_lsu(
     .clk                                (clk),
     .rst                                (rst),
     .flush                              (0),
-    .wake_Info                          (wake_info_dly_1cyc),
+    .wake_Info                          (wake_info_to_LSU),
     .inst_Ops_0                         (dispatch_lsu_0),
     .inst_Ops_1                         (dispatch_lsu_0),
     .enq_req_0                          (rs_lsu_wen_0),
@@ -213,6 +213,25 @@ issue_unit_LSU issue_lsu(
     .issue_en_0                         (issue_lsu_en),
     .ready                              (lsu_queue_ready)
 );
+
+wire mul_busy, div_busy;
+assign mul_busy = 0;
+assign div_busy = 0;
+issue_unit_MDU issue_mdu(
+    .clk                                (clk),
+    .rst                                (rst),
+    .flush                              (0),
+    .wake_Info                          (wake_info_to_MDU),
+    .inst_Ops_0                         (dispatch_mdu_0),
+    .enq_req_0                          (rs_lsu_wen_0),
+    .mul_busy                           (mul_busy),
+    .div_busy                           (div_busy),
+    .issue_info_hi                      (issue_mdu_inst_hi),
+    .issue_info_lo                      (issue_mdu_inst_lo),
+    .issue_en_0                         (issue_mdu_en),
+    .ready                              (mdu_queue_ready)
+    );
+
 
 integer fp;
 integer count;

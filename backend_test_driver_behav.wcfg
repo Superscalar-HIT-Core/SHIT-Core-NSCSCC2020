@@ -13,14 +13,14 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="310001fs"></ZoomEndTime>
-      <Cursor1Time time="193271fs"></Cursor1Time>
+      <ZoomEndTime time="310285fs"></ZoomEndTime>
+      <Cursor1Time time="232322fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="178"></NameColumnWidth>
       <ValueColumnWidth column_width="145"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="60" />
+   <WVObjectSize size="62" />
    <wvobject fp_name="/backend_test_driver/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -588,7 +588,6 @@
    <wvobject fp_name="group704" type="group">
       <obj_property name="label">LSU Queue</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="group722" type="group">
          <obj_property name="label">Slot0</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -684,10 +683,64 @@
             <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
             <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
          </wvobject>
-         <wvobject fp_name="/backend_test_driver/wake_u/wake_info_dly_1cyc" type="array">
-            <obj_property name="ElementShortName">wake_info_dly_1cyc</obj_property>
-            <obj_property name="ObjectShortName">wake_info_dly_1cyc</obj_property>
-         </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group751" type="group">
+      <obj_property name="label">LSU Issue</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/backend_test_driver/issue_lsu/lsu_queue_dout0.ops.pc" type="array">
+         <obj_property name="ElementShortName">.pc[31:0]</obj_property>
+         <obj_property name="ObjectShortName">.pc[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/issue_lsu/lsu_queue_dout0.ops.uOP" type="array">
+         <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
+         <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/issue_lsu/issue_en_0" type="logic">
+         <obj_property name="ElementShortName">issue_en_0</obj_property>
+         <obj_property name="ObjectShortName">issue_en_0</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/issue_mdu/u_iq_mdu/dout" type="array">
+      <obj_property name="ElementShortName">dout[8:0]</obj_property>
+      <obj_property name="ObjectShortName">dout[8:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/backend_test_driver/issue_mdu/u_iq_mdu/dout[8]" type="array">
+         <obj_property name="ElementShortName">[8]</obj_property>
+         <obj_property name="ObjectShortName">[8]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/issue_mdu/u_iq_mdu/dout[7]" type="array">
+         <obj_property name="ElementShortName">[7]</obj_property>
+         <obj_property name="ObjectShortName">[7]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/issue_mdu/u_iq_mdu/dout[6]" type="array">
+         <obj_property name="ElementShortName">[6]</obj_property>
+         <obj_property name="ObjectShortName">[6]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/issue_mdu/u_iq_mdu/dout[5]" type="array">
+         <obj_property name="ElementShortName">[5]</obj_property>
+         <obj_property name="ObjectShortName">[5]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/issue_mdu/u_iq_mdu/dout[4]" type="array">
+         <obj_property name="ElementShortName">[4]</obj_property>
+         <obj_property name="ObjectShortName">[4]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/issue_mdu/u_iq_mdu/dout[3]" type="array">
+         <obj_property name="ElementShortName">[3]</obj_property>
+         <obj_property name="ObjectShortName">[3]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/issue_mdu/u_iq_mdu/dout[2]" type="array">
+         <obj_property name="ElementShortName">[2]</obj_property>
+         <obj_property name="ObjectShortName">[2]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/issue_mdu/u_iq_mdu/dout[1]" type="array">
+         <obj_property name="ElementShortName">[1]</obj_property>
+         <obj_property name="ObjectShortName">[1]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/backend_test_driver/issue_mdu/u_iq_mdu/dout[0]" type="array">
+         <obj_property name="ElementShortName">[0]</obj_property>
+         <obj_property name="ObjectShortName">[0]</obj_property>
+         <obj_property name="isExpanded"></obj_property>
       </wvobject>
    </wvobject>
 </wave_config>
