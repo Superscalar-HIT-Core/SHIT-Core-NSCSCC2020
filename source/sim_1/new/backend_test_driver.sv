@@ -223,7 +223,7 @@ issue_unit_MDU issue_mdu(
     .flush                              (0),
     .wake_Info                          (wake_info_to_MDU),
     .inst_Ops_0                         (dispatch_mdu_0),
-    .enq_req_0                          (rs_lsu_wen_0),
+    .enq_req_0                          (rs_mdu_wen_0),
     .mul_busy                           (mul_busy),
     .div_busy                           (div_busy),
     .issue_info_hi                      (issue_mdu_inst_hi),
