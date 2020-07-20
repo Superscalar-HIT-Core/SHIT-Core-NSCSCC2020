@@ -157,10 +157,10 @@ wire [`PRF_NUM-1:0] clr_busy_vec =  (~( clr_busy_0 << clr_busy_num_0 )) &
 
 // if 1 of the 2 is zero, it can be inferred that the register will be not busy
 // So, bypass logic is no longer needed, the circuit can be simplified
-assign busy0 = clr_busy_vec[rd_port0] & busytable_bank0[rd_port0];
-assign busy1 = clr_busy_vec[rd_port1] & busytable_bank0[rd_port1];
-assign busy2 = clr_busy_vec[rd_port2] & busytable_bank1[rd_port2];
-assign busy3 = clr_busy_vec[rd_port3] & busytable_bank1[rd_port3];
+assign busy0 = ( clr_busy_vec[rd_port0] & busytable_bank0[rd_port0] ) | (set_busy_vec[rd_port0]);
+assign busy1 = ( clr_busy_vec[rd_port1] & busytable_bank0[rd_port1] ) | (set_busy_vec[rd_port1]);
+assign busy2 = ( clr_busy_vec[rd_port2] & busytable_bank1[rd_port2] ) | (set_busy_vec[rd_port2]);
+assign busy3 = ( clr_busy_vec[rd_port3] & busytable_bank1[rd_port3] ) | (set_busy_vec[rd_port3]);
 
 
 always @(posedge clk)   begin
@@ -168,8 +168,8 @@ always @(posedge clk)   begin
         busytable_bank0 <= `PRF_NUM'b0;
         busytable_bank1 <= `PRF_NUM'b0;
     end else begin
-        busytable_bank0 <= busytable_bank0 | set_busy_vec & clr_busy_vec;
-        busytable_bank1 <= busytable_bank1 | set_busy_vec & clr_busy_vec;
+        busytable_bank0 <= (busytable_bank0 | set_busy_vec) & clr_busy_vec;
+        busytable_bank1 <= (busytable_bank1 | set_busy_vec) & clr_busy_vec;
     end
 end
 

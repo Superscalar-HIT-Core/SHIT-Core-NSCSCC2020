@@ -24,8 +24,6 @@ decode_rename_regs dec_rename(
 
 UOPBundle rename_dispatch_0, rename_dispatch_1;
 wire allocatable_rename;
-PRFNum rr_bs_set_busy0,rr_bs_set_busy1;
-wire set_busy_0, set_busy_1;
 register_rename rr(
     .clk(clk), 
     .rst(rst),
@@ -39,53 +37,7 @@ register_rename rr(
     .commit_valid_1(0),
     .commit_req_0(0), 
     .commit_req_1(0),
-    .allocatable(allocatable_rename),
-    .set_busy_num_0(rr_bs_set_busy0),
-    .set_busy_num_1(rr_bs_set_busy1),
-    .set_busy_0(set_busy_0),
-    .set_busy_1(set_busy_1)
-    );
-
-wire busy_dispatch_inst0_r0;
-wire busy_dispatch_inst0_r1;
-wire busy_dispatch_inst1_r0;
-wire busy_dispatch_inst1_r1;
-PRFNum dispatch_inst0_r0;
-PRFNum dispatch_inst0_r1;
-PRFNum dispatch_inst1_r0;
-PRFNum dispatch_inst1_r1;
-
-busy_table u_bt( 
-    // Handle the bypass logic in busy table instead of in the iq
-    .clk(clk),
-    .rst(rst),
-    .flush(0),
-    // 4 read ports for dispatching, handles bypass logic 
-    .rd_port0(dispatch_inst0_r0),
-    .rd_port1(dispatch_inst0_r1),
-    .rd_port2(dispatch_inst1_r0),
-    .rd_port3(dispatch_inst1_r1),
-    // At most 2 instructions dispatched at one time 
-    .set_busy_0(set_busy_0),
-    .set_busy_1(set_busy_1),
-    .set_busy_num_0(rr_bs_set_busy0),
-    .set_busy_num_1(rr_bs_set_busy1),
-
-    // At most 4 instructions finish at one time 
-    .clr_busy_0(0),
-    .clr_busy_1(0),
-    .clr_busy_2(0),
-    .clr_busy_3(0),
-
-    .clr_busy_num_0(0),
-    .clr_busy_num_1(0),
-    .clr_busy_num_2(0),
-    .clr_busy_num_3(0),
-    
-    .busy0(busy_dispatch_inst0_r0),
-    .busy1(busy_dispatch_inst0_r1),
-    .busy2(busy_dispatch_inst1_r0),
-    .busy3(busy_dispatch_inst1_r1)
+    .allocatable(allocatable_rename)
     );
 
 UOPBundle dispatch_inst0_in, dispatch_inst1_in;
@@ -111,17 +63,33 @@ ALU_Queue_Meta dispatch_alu_0, dispatch_alu_1;
 LSU_Queue_Meta dispatch_lsu_0, dispatch_lsu_1;
 MDU_Queue_Meta dispatch_mdu_0;
 
+
+// wire busy_dispatch_inst0_r0;
+// wire busy_dispatch_inst0_r1;
+// wire busy_dispatch_inst1_r0;
+// wire busy_dispatch_inst1_r1;
+// PRFNum dispatch_inst0_r0;
+// PRFNum dispatch_inst0_r1;
+// PRFNum dispatch_inst1_r0;
+// PRFNum dispatch_inst1_r1;
+
+// Common Data /////////////////////////////
+wire set_busy_0, set_busy_1;
+PRFNum set_busy_num_0, set_busy_num_1;
+/////////////////////////////////////////////
 dispatch u_dispatch(
     .inst_0_ops                         (dispatch_inst0_in), 
     .inst_1_ops                         (dispatch_inst1_in),
-    .busy_dispatch_inst0_r0             (busy_dispatch_inst0_r0),
-    .busy_dispatch_inst0_r1             (busy_dispatch_inst0_r1),
-    .busy_dispatch_inst1_r0             (busy_dispatch_inst1_r0),
-    .busy_dispatch_inst1_r1             (busy_dispatch_inst1_r1),
-    .dispatch_inst0_r0                  (dispatch_inst0_r0),
-    .dispatch_inst0_r1                  (dispatch_inst0_r1),
-    .dispatch_inst1_r0                  (dispatch_inst1_r0),
-    .dispatch_inst1_r1                  (dispatch_inst1_r1),
+    // To Scoreboards
+    // .busy_dispatch_inst0_r0             (busy_dispatch_inst0_r0),
+    // .busy_dispatch_inst0_r1             (busy_dispatch_inst0_r1),
+    // .busy_dispatch_inst1_r0             (busy_dispatch_inst1_r0),
+    // .busy_dispatch_inst1_r1             (busy_dispatch_inst1_r1),
+    // .dispatch_inst0_r0                  (dispatch_inst0_r0),
+    // .dispatch_inst0_r1                  (dispatch_inst0_r1),
+    // .dispatch_inst1_r0                  (dispatch_inst1_r0),
+    // .dispatch_inst1_r1                  (dispatch_inst1_r1),
+    // To Issue Queues
     .rs_alu_wen_0                       (rs_alu_wen_0), 
     .rs_alu_wen_1                       (rs_alu_wen_1), 
     .rs_mdu_wen_0                       (rs_mdu_wen_0), 
@@ -131,7 +99,11 @@ dispatch u_dispatch(
     .rs_alu_dout_1                      (dispatch_alu_1),
     .rs_mdu_dout_0                      (dispatch_mdu_0), 
     .rs_lsu_dout_0                      (dispatch_lsu_0), 
-    .rs_lsu_dout_1                      (dispatch_lsu_1)
+    .rs_lsu_dout_1                      (dispatch_lsu_1),
+    .dispatch_inst0_wnum                (set_busy_num_0),
+    .dispatch_inst1_wnum                (set_busy_num_1),
+    .dispatch_inst0_wen                 (set_busy_0),
+    .dispatch_inst1_wen                 (set_busy_1)
     );
 
 // Register wake //////////////////////////////////////////
@@ -147,23 +119,6 @@ assign wake_reg_LSU = 0;
 assign wake_reg_MDU = 0;
 ////////////////////////////////////
 
-wake_unit wake_u(
-    .clk                                (clk),
-    .rst                                (rst),
-    .flush                              (0),
-    .wake_reg_ALU_0                     (wake_reg_ALU_0),
-    .wake_reg_ALU_1                     (wake_reg_ALU_1),
-    .wake_reg_LSU                       (wake_reg_LSU),
-    .wake_reg_MDU                       (wake_reg_MDU),
-    .wake_reg_ALU_0_en                  (wake_reg_ALU_0_en),
-    .wake_reg_ALU_1_en                  (wake_reg_ALU_1_en),
-    .wake_reg_LSU_en                    (wake_reg_LSU_en),
-    .wake_reg_MDU_en                    (wake_reg_MDU_en),
-    .wake_info_to_ALU                   (wake_info_to_ALU),
-    .wake_info_to_LSU                   (wake_info_to_LSU),
-    .wake_info_to_MDU                   (wake_info_to_MDU)
-);
-
 // Dispatch to queue
 
 UOPBundle issue_alu_inst_0, issue_alu_inst_1;
@@ -173,11 +128,39 @@ wire issue_mdu_en;
 UOPBundle issue_lsu_inst;
 wire issue_lsu_en;
 
+// ALU Queue Scoreboard
+PRFNum [9:0] scoreboard_rd_num_l_aluiq2sb;
+PRFNum [9:0] scoreboard_rd_num_r_aluiq2sb;
+wire [9:0] busyvec_l_sb2aluiq;
+wire [9:0] busyvec_r_sb2aluiq;
+scoreboard_20r6w scoreboard_alu(
+    .clk                                (clk),
+    .rst                                (rst),
+    .flush                              (flush),
+    // dispatched instructions
+    .set_busy_0                         (set_busy_0),
+    .set_busy_1                         (set_busy_1),
+    .set_busy_num_0                     (set_busy_num_0),
+    .set_busy_num_1                     (set_busy_num_1),
+    // issued instructions(at most 4 instructions issue at a time)
+    .clr_busy_ALU0                      (wake_reg_ALU_0_en),
+    .clr_busy_ALU1                      (wake_reg_ALU_1_en),
+    .clr_busy_LSU                       (wake_reg_LSU_en),
+    .clr_busy_MDU                       (wake_reg_MDU_en),
+    .clr_busy_num_ALU0                  (wake_reg_ALU_0),
+    .clr_busy_num_ALU1                  (wake_reg_ALU_1),
+    .clr_busy_num_LSU                   (wake_reg_LSU),
+    .clr_busy_num_MDU                   (wake_reg_MDU),
+    .rd_num_l                           (scoreboard_rd_num_l_aluiq2sb),
+    .rd_num_r                           (scoreboard_rd_num_r_aluiq2sb),
+    .busyvec_l                          (busyvec_l_sb2aluiq),
+    .busyvec_r                          (busyvec_r_sb2aluiq)
+);
+
 issue_unit_ALU issue_alu(
     .clk                                (clk),
     .rst                                (rst),
     .flush                              (0),
-    .wake_Info                          (wake_info_to_ALU),
     .inst_Ops_0                         (dispatch_alu_0),
     .inst_Ops_1                         (dispatch_alu_1),
     .enq_req_0                          (rs_alu_wen_0),
@@ -190,7 +173,12 @@ issue_unit_ALU issue_alu(
     .wake_reg_1                         (wake_reg_ALU_1),
     .wake_reg_0_en                      (wake_reg_ALU_0_en),
     .wake_reg_1_en                      (wake_reg_ALU_1_en),
-    .ready                              (alu_queue_ready)
+    .ready                              (alu_queue_ready),
+    // To scoreboard
+    .scoreboard_rd_num_l                (scoreboard_rd_num_l_aluiq2sb),
+    .scoreboard_rd_num_r                (scoreboard_rd_num_r_aluiq2sb),
+    .busyvec_l                          (busyvec_l_sb2aluiq),
+    .busyvec_r                          (busyvec_r_sb2aluiq)
 );
 
 wire lsu_busy;
@@ -300,12 +288,12 @@ always @(posedge clk)   begin
                 decode_regs1.uOP0.pc
         );
         end
-        $display("Busy:");
-        for(i=0;i<64;i++)   begin
-            if(u_bt.busytable_bank0[i] == 1) begin
-                $display(i);
-            end
-        end
+        // $display("Busy:");
+        // for(i=0;i<64;i++)   begin
+        //     if(u_bt.busytable_bank0[i] == 1) begin
+        //         $display(i);
+        //     end
+        // end
     end else begin
         regs_decode0.inst.valid <= 1;
         regs_decode1.inst.valid <= 1;

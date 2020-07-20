@@ -34,7 +34,8 @@ module iq_entry_ALU(
                         ( queue_ctrl.cmp_en ) ? up_rdy : rdy_next_state;
     assign rdy_next_state.prs1_rdy = ~busy_rs0;
     assign rdy_next_state.prs2_rdy = ~busy_rs1;
-
+    assign rs0 = dout.ops.op0PAddr;
+    assign rs1 = dout.ops.op1PAddr;
     ALU_Queue_Meta next_data_with_wake;
     assign next_data_with_wake.ops = next_data.ops;
     assign next_data_with_wake.rdys = next_rdy;
@@ -70,10 +71,10 @@ module iq_alu(
     output almost_empty,
     output [`ALU_QUEUE_LEN-1:0] ready_vec,
     output [`ALU_QUEUE_LEN-1:0] valid_vec,
-    output PRFNum [7:0] scoreboard_rd_num_l,
-    output PRFNum [7:0] scoreboard_rd_num_r,
-    input [7:0] busyvec_l,
-    input [7:0] busyvec_r
+    output PRFNum [9:0] scoreboard_rd_num_l,
+    output PRFNum [9:0] scoreboard_rd_num_r,
+    input [9:0] busyvec_l,
+    input [9:0] busyvec_r
     );
     reg [`ALU_QUEUE_IDX_LEN-1:0] tail;
     assign almost_full = (tail == `ALU_QUEUE_IDX_LEN'h`ALU_QUEUE_LEN_MINUS1);  // 差1位满，也不能写入
@@ -117,7 +118,13 @@ module iq_alu(
                         ( tail == `ALU_QUEUE_IDX_LEN'd6 ) ? `ALU_QUEUE_LEN'b0011_1111 : 
                         ( tail == `ALU_QUEUE_IDX_LEN'd7 ) ? `ALU_QUEUE_LEN'b0111_1111 : 
                         ( tail == `ALU_QUEUE_IDX_LEN'd8 ) ? `ALU_QUEUE_LEN'b1111_1111 : `ALU_QUEUE_LEN'b0000_0000;
-
+    ALU_Queue_Meta din_0_with_rdy, din_1_with_rdy;
+    assign din_0_with_rdy.rdys.prs1_rdy = ~busyvec_l[8] | din_0.rdys.prs1_rdy;
+    assign din_0_with_rdy.rdys.prs2_rdy = ~busyvec_r[8] | din_0.rdys.prs2_rdy;
+    assign din_1_with_rdy.rdys.prs1_rdy = ~busyvec_l[9] | din_1.rdys.prs1_rdy;
+    assign din_1_with_rdy.rdys.prs2_rdy = ~busyvec_r[9] | din_1.rdys.prs2_rdy;
+    assign din_0_with_rdy.ops = din_0.ops;
+    assign din_1_with_rdy.ops = din_1.ops;
     genvar i;
     generate 
         for(i=0;i<`ALU_QUEUE_LEN;i++)   begin
@@ -126,8 +133,8 @@ module iq_alu(
                 .rst                (rst             ),
                 .flush              (flush           ),
                 .queue_ctrl         (queue_ctrl[i]   ),
-                .din0               (din_0           ),
-                .din1               (din_1           ),
+                .din0               (din_0_with_rdy  ),
+                .din1               (din_1_with_rdy  ),
                 .up0                (dout[i+1]       ),
                 .up0_rdy            (rdy_next_state[i+1]),
                 .up1                (dout[i+2]       ),
@@ -175,11 +182,16 @@ module issue_unit_ALU(
     output PRFNum wake_reg_0, wake_reg_1,
     output wake_reg_0_en, wake_reg_1_en,
     output ready,
-    output PRFNum [7:0] scoreboard_rd_num_l,
-    output PRFNum [7:0] scoreboard_rd_num_r,
-    input [7:0] busyvec_l,
-    input [7:0] busyvec_r
+    output PRFNum [9:0] scoreboard_rd_num_l,
+    output PRFNum [9:0] scoreboard_rd_num_r,
+    input [9:0] busyvec_l,
+    input [9:0] busyvec_r
     );
+    assign scoreboard_rd_num_l[8] = inst_Ops_0.ops.op0PAddr;
+    assign scoreboard_rd_num_l[9] = inst_Ops_1.ops.op0PAddr;
+    assign scoreboard_rd_num_r[8] = inst_Ops_0.ops.op1PAddr;
+    assign scoreboard_rd_num_r[9] = inst_Ops_1.ops.op1PAddr;
+
 
     wire [`ALU_QUEUE_LEN-1:0] ready_vec, valid_vec;
 
