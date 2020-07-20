@@ -26,9 +26,9 @@ logic bypass_alu1_src0_en = bypass_alu1.wen && (bypass_alu1.wrNum == uops.op0PAd
 logic bypass_alu1_src1_en = bypass_alu1.wen && (bypass_alu1.wrNum == uops.op1PAddr);
 
 Word src0, src1;
-assign src0 = uops.op0re ? ( bypass_alu0_src0_en ?  bypass_alu0.wData : 
+assign src0 = uops.op0re ?  ( bypass_alu0_src0_en ? bypass_alu0.wData : 
                             ( bypass_alu1_src0_en ? bypass_alu1.wData : rdata.rs0_data ) ) : rdata.rs0_data;
-assign src1 = uops.op1re ? ( bypass_alu0_src1_en ?  bypass_alu0.wData : 
+assign src1 = uops.op1re ?  ( bypass_alu0_src1_en ? bypass_alu0.wData : 
                             ( bypass_alu1_src1_en ? bypass_alu1.wData : rdata.rs0_data ) ) : uops.imm ;
 
 uOP uop;
