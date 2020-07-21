@@ -33,7 +33,6 @@ assign src1 = uops.op1re ?  ( bypass_alu0_src1_en ? bypass_alu0.wData :
 
 uOP uop;
 assign uop = uops.uOP;
-assign uops_o = uops;
 
 // 逻辑运算结果
 assign logic_res =  ( uop == OR_U   || uop == ORI_U || uop == LUI_U )   ? src0 | src1       :
@@ -66,7 +65,22 @@ assign arithmetic_res = ( uop == SLT_U || uop == SLTI_U || uop == SLTU_U || uop 
 assign move_res = src0; // HILO寄存器被重命名，无论是MF还是MT，都是第一个操作数
 
 // 分支指令结果
-assign branch_res = uops.pc + 32'd8;
+Word branch_target;
+Word branch_target;
+assign branch_taken =   ( uop == BEQ_U ) ? ( src0 == src1 ) :
+                        ( uop == BNE_U ) ? ( src0 != src1 ) :
+                        ( uop == BGEZ_U || uop == BGEZAL_U ) ? ( ~src0[31] ):
+                        ( uop == BGTZ_U || uop == BLTZAL_U ) ? ( ~src0[31] & (|src0[30:0]) ) :
+                        ( uop == BLEZ_U ) ? ~( ~src0[31] & (|src0[30:0]) ) :
+                        ( uop == BLTZ_U ) ? ( src0[31] ) : 
+                        ( uop == J_U || uop == JAL_U || uop == JR_U || uop == JALR_U ) ? 1 : 0;
+assign branch_target = ( uop == JR_U || uop == JALR_U ) ? src0 : uop.branchAddr;
+
+always_comb begin
+    uops_o = uops;
+    uops_o.branchAddr = branch_target;
+    uops_o.branchTaken = branch_taken;
+end
 
 always_comb begin
     casex(src0)
