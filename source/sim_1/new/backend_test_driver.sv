@@ -108,8 +108,23 @@ dispatch u_dispatch(
     .dispatch_inst1_wen                 (set_busy_1),
     .dispatch_rob                       (dispatch_rob)
     );
-
-
+ROB_Commit          rob_commit();
+Ctrl                ctrl_rob();
+FU_ROB              alu0_rob();
+FU_ROB              alu1_rob();
+FU_ROB              mdu_rob();
+FU_ROB              lsu_rob();
+ROB rob(
+    .clk(clk),
+    .rst(rst),    
+    .ctrl_rob(ctrl_rob),
+    .dispatch_rob(dispatch_rob),
+    .alu0_rob(alu0_rob),
+    .alu1_rob(alu1_rob),
+    .mdu_rob (mdu_rob),
+    .lsu_rob (lsu_rob),
+    .rob_commit(rob_commit)
+);
 
 
 // Register wake //////////////////////////////////////////

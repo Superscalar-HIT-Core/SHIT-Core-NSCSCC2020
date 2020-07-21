@@ -30,7 +30,7 @@ wire [`ROB_ID_W] robID_0, rob_ID_1;
 assign robID_0 = { (dispatch_rob.robID << 1), 0 } ;
 assign robID_1 = { (dispatch_rob.robID << 1), 1 } ;
 UOPBundle inst_0_ops_dispatch, inst_1_ops_dispatch;
-always_ff begin
+always_comb begin
     inst_0_ops_dispatch = inst_0_ops;
     inst_0_ops_dispatch.id = robID_0;
     inst_1_ops_dispatch = inst_1_ops;

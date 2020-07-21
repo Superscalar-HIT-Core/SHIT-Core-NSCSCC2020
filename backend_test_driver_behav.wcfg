@@ -13,14 +13,14 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="783765fs"></ZoomEndTime>
-      <Cursor1Time time="163911fs"></Cursor1Time>
+      <ZoomEndTime time="438001fs"></ZoomEndTime>
+      <Cursor1Time time="259000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="178"></NameColumnWidth>
       <ValueColumnWidth column_width="140"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="56" />
+   <WVObjectSize size="77" />
    <wvobject fp_name="/backend_test_driver/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -436,7 +436,6 @@
    <wvobject fp_name="group695" type="group">
       <obj_property name="label">ALU Queue</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="group687" type="group">
          <obj_property name="label">Slot0</obj_property>
          <obj_property name="DisplayName">label</obj_property>
@@ -540,7 +539,6 @@
    <wvobject fp_name="group702" type="group">
       <obj_property name="label">ALU Issue 0</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/backend_test_driver/issue_alu/issue_info_0.uOP" type="array">
          <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
          <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
@@ -557,7 +555,6 @@
    <wvobject fp_name="group703" type="group">
       <obj_property name="label">ALU Issue 1</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/backend_test_driver/issue_alu/issue_info_1.uOP" type="array">
          <obj_property name="ElementShortName">.uOP[7:0]</obj_property>
          <obj_property name="ObjectShortName">.uOP[7:0]</obj_property>
@@ -577,6 +574,7 @@
       <wvobject fp_name="group722" type="group">
          <obj_property name="label">Slot0</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/\genblk1[0].u_iq_entry_LSU /dout.ops.pc" type="array">
             <obj_property name="ElementShortName">.pc[31:0]</obj_property>
             <obj_property name="ObjectShortName">.pc[31:0]</obj_property>
@@ -686,5 +684,95 @@
          <obj_property name="ElementShortName">issue_en_0</obj_property>
          <obj_property name="ObjectShortName">issue_en_0</obj_property>
       </wvobject>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/issue_alu/u_iq_alu/dout" type="array">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">dout[9:0]</obj_property>
+      <obj_property name="ObjectShortName">dout[9:0]</obj_property>
+      <obj_property name="label">ALU_Queue_dout</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/issue_lsu/u_iq_lsu/dout" type="array">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">dout[9:0]</obj_property>
+      <obj_property name="ObjectShortName">dout[9:0]</obj_property>
+      <obj_property name="label">LSU_Queue_dout</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/issue_mdu/u_iq_mdu/dout" type="array">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">dout[8:0]</obj_property>
+      <obj_property name="ObjectShortName">dout[8:0]</obj_property>
+      <obj_property name="label">MDU Queue_dout</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data0[0]" type="array">
+      <obj_property name="ElementShortName">[0]</obj_property>
+      <obj_property name="ObjectShortName">[0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data1[0]" type="array">
+      <obj_property name="ElementShortName">[0]</obj_property>
+      <obj_property name="ObjectShortName">[0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data0[1]" type="array">
+      <obj_property name="ElementShortName">[1]</obj_property>
+      <obj_property name="ObjectShortName">[1]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data1[1]" type="array">
+      <obj_property name="ElementShortName">[1]</obj_property>
+      <obj_property name="ObjectShortName">[1]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data0[2]" type="array">
+      <obj_property name="ElementShortName">[2]</obj_property>
+      <obj_property name="ObjectShortName">[2]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data1[2]" type="array">
+      <obj_property name="ElementShortName">[2]</obj_property>
+      <obj_property name="ObjectShortName">[2]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data0[3]" type="array">
+      <obj_property name="ElementShortName">[3]</obj_property>
+      <obj_property name="ObjectShortName">[3]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data1[3]" type="array">
+      <obj_property name="ElementShortName">[3]</obj_property>
+      <obj_property name="ObjectShortName">[3]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data0[4]" type="array">
+      <obj_property name="ElementShortName">[4]</obj_property>
+      <obj_property name="ObjectShortName">[4]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data1[4]" type="array">
+      <obj_property name="ElementShortName">[4]</obj_property>
+      <obj_property name="ObjectShortName">[4]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data0[5]" type="array">
+      <obj_property name="ElementShortName">[5]</obj_property>
+      <obj_property name="ObjectShortName">[5]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data1[5]" type="array">
+      <obj_property name="ElementShortName">[5]</obj_property>
+      <obj_property name="ObjectShortName">[5]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data0[6]" type="array">
+      <obj_property name="ElementShortName">[6]</obj_property>
+      <obj_property name="ObjectShortName">[6]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data1[6]" type="array">
+      <obj_property name="ElementShortName">[6]</obj_property>
+      <obj_property name="ObjectShortName">[6]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data0[7]" type="array">
+      <obj_property name="ElementShortName">[7]</obj_property>
+      <obj_property name="ObjectShortName">[7]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data1[7]" type="array">
+      <obj_property name="ElementShortName">[7]</obj_property>
+      <obj_property name="ObjectShortName">[7]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data0[8]" type="array">
+      <obj_property name="ElementShortName">[8]</obj_property>
+      <obj_property name="ObjectShortName">[8]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/backend_test_driver/rob/data1[8]" type="array">
+      <obj_property name="ElementShortName">[8]</obj_property>
+      <obj_property name="ObjectShortName">[8]</obj_property>
    </wvobject>
 </wave_config>
