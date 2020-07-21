@@ -797,6 +797,6 @@ typedef struct packed {
     logic wen;
 } BypassInfo;
 
-`define DEBUG
+// `define DEBUG
 
 `endif

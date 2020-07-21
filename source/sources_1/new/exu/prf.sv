@@ -110,7 +110,7 @@ always_ff @ (posedge clk) begin
     if(wb_ALU_0.wen) $display("WB info from alu0: %d <= %d", wb_ALU_0.rd, wb_ALU_0.wdata);
     if(wb_ALU_1.wen) $display("WB info from alu1: %d <= %d", wb_ALU_1.rd, wb_ALU_1.wdata);
     if(wb_LSU.wen) $display("WB info from lsu: %d <= %d", wb_LSU.rd, wb_LSU.wdata);
-    if(wb_MDU.wen) $display("WB info from msu: %d <= %d", wb_MDU.rd, wb_MDU.wdata);
+    if(wb_MDU.wen) $display("WB info from mdu: %d <= %d", wb_MDU.rd, wb_MDU.wdata);
 end
 // synopsys translate_on
 

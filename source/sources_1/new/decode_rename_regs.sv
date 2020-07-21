@@ -10,7 +10,7 @@ module decode_rename_regs(
     Decode_Regs.regs    decode0_regs,
     Decode_Regs.regs    decode1_regs,
 
-    Regs_Rename.regs  regs_rename
+    Regs_Rename.regs    regs_rename
 );
 
     logic       full;

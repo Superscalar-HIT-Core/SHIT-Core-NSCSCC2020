@@ -38,8 +38,10 @@ module MDU(
     logic [31:0]    mulLo;
     PRFNum          mulLoAddr;
     UOPBundle       dummy;
-    UOPBundle       mulPipe [`MDU_MUL_CYCLE:0];
-    UOPBundle       divPipe [`MDU_DIV_CYCLE:0];
+    UOPBundle       mulPipeHi [`MDU_MUL_CYCLE:0];
+    UOPBundle       mulPipeLo [`MDU_MUL_CYCLE:0];
+    UOPBundle       divPipeHi [`MDU_DIV_CYCLE:0];
+    UOPBundle       divPipeLo [`MDU_DIV_CYCLE:0];
 
     typedef enum logic[2:0] { idle, divOutputHi, divOutputLo, mulOutputHi, mulOutputLo } MDUFSMState;
 
@@ -67,22 +69,25 @@ module MDU(
     always_ff @ (posedge clk) begin
         if(rst) begin
             for(integer i = 0; i <= `MDU_MUL_CYCLE + 1; i++) begin
-                mulPipe[i].valid <= `FALSE;
+                mulPipeHi[i].valid <= `FALSE;
+                mulPipeLo[i].valid <= `FALSE;
             end
             for(integer i = 0; i <= `MDU_DIV_CYCLE + 1; i++) begin
-                divPipe[i].valid <= `FALSE;
+                divPipeHi[i].valid <= `FALSE;
+                divPipeLo[i].valid <= `FALSE;
             end
         end else begin
             for(integer i = 0; i < `MDU_MUL_CYCLE; i++) begin
-                mulPipe[i] <= mulPipe[i + 1];
+                mulPipeHi[i] <= mulPipeHi[i + 1];
+                mulPipeLo[i] <= mulPipeLo[i + 1];
             end
-            mulPipe[`MDU_MUL_CYCLE - 1] <= (uopHi.uOP == MULTHI_U || uopHi.uOP == MULTUHI_U) ? uopHi : dummy;
-            mulPipe[`MDU_MUL_CYCLE - 0] <= (uopLo.uOP == MULTLO_U || uopLo.uOP == MULTULO_U) ? uopLo : dummy;
+            mulPipeHi[`MDU_MUL_CYCLE - 1] <= (uopHi.uOP == MULTHI_U || uopHi.uOP == MULTUHI_U) ? uopHi : dummy;
+            mulPipeLo[`MDU_MUL_CYCLE - 0] <= (uopLo.uOP == MULTLO_U || uopLo.uOP == MULTULO_U) ? uopLo : dummy;
             for(integer i = 0; i < `MDU_DIV_CYCLE; i++) begin
-                divPipe[i] <= divPipe[i + 1];
+                divPipeHi[i] <= divPipeHi[i + 1];
             end
-            divPipe[`MDU_DIV_CYCLE - 1] <= (uopHi.uOP ==  DIVHI_U || uopHi.uOP ==  DIVUHI_U) ? uopHi : dummy;
-            divPipe[`MDU_DIV_CYCLE - 0] <= (uopLo.uOP ==  DIVLO_U || uopLo.uOP ==  DIVULO_U) ? uopLo : dummy;
+            divPipeHi[`MDU_DIV_CYCLE - 1] <= (uopHi.uOP ==  DIVHI_U || uopHi.uOP ==  DIVUHI_U) ? uopHi : dummy;
+            divPipeLo[`MDU_DIV_CYCLE - 0] <= (uopLo.uOP ==  DIVLO_U || uopLo.uOP ==  DIVULO_U) ? uopLo : dummy;
         end
     end
 
@@ -107,9 +112,9 @@ module MDU(
             idle        : begin
                 if(rst) begin
                     nxtState = idle;
-                end else if(mulPipe[1].valid) begin
+                end else if(mulPipeHi[1].valid) begin
                     nxtState = mulOutputHi;
-                end else if(divPipe[1].valid) begin
+                end else if(divPipeHi[1].valid) begin
                     nxtState = divOutputHi;
                 end else begin
                     nxtState = idle;
@@ -122,9 +127,9 @@ module MDU(
     end
 
     always_ff @ (posedge clk) begin
-        state <= nxtState;
-        divLo <= state == divOutputHi ? quotient     : divLo;
-        mulLo <= state == mulOutputHi ? mulRes[31:0] : mulLo;
+        state       <= nxtState;
+        divLo       <= state == divOutputHi ? quotient     : divLo;
+        mulLo       <= state == mulOutputHi ? mulRes[31:0] : mulLo;
     end
 
     always_comb begin
@@ -137,31 +142,31 @@ module MDU(
             end
             mulOutputHi: begin
                 wbData.wen          = `TRUE;
-                wbData.rd           = mulPipe[0].dstPAddr;
+                wbData.rd           = mulPipeHi[0].dstPAddr;
                 wbData.wdata        = mulRes[63:32];
                 mdu_rob.setFinish   = `TRUE;
-                mdu_rob.id          = mulPipe[0].id;
+                mdu_rob.id          = mulPipeHi[0].id;
             end
             mulOutputLo: begin
                 wbData.wen          = `TRUE;
-                wbData.rd           = mulPipe[0].dstPAddr;
+                wbData.rd           = mulPipeLo[0].dstPAddr;
                 wbData.wdata        = mulLo;
                 mdu_rob.setFinish   = `TRUE;
-                mdu_rob.id          = mulPipe[0].id;
+                mdu_rob.id          = mulPipeLo[0].id;
             end
             divOutputHi: begin
                 wbData.wen          = `TRUE;
-                wbData.rd           = divPipe[0].dstPAddr;
+                wbData.rd           = divPipeHi[0].dstPAddr;
                 wbData.wdata        = remainder;
                 mdu_rob.setFinish   = `TRUE;
-                mdu_rob.id          = divPipe[0].id;
+                mdu_rob.id          = divPipeHi[0].id;
             end
             divOutputLo: begin
                 wbData.wen          = `TRUE;
-                wbData.rd           = divPipe[0].dstPAddr;
+                wbData.rd           = divPipeLo[0].dstPAddr;
                 wbData.wdata        = divLo;
                 mdu_rob.setFinish   = `TRUE;
-                mdu_rob.id          = divPipe[0].id;
+                mdu_rob.id          = divPipeLo[0].id;
             end
             default: begin
                 wbData.wen          = `FALSE;
