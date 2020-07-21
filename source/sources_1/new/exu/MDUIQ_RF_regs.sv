@@ -46,10 +46,10 @@ module MDUIQ_RF_regs(
     
 
     always_comb begin
-        if(!mulBusy && (issueBundleHi.uOP == MULTHI_U || issueBundleHi.uOP == MULTUHI_U)) begin
+        if(!mulBusy && (issueBundleHi.uOP == MULTHI_U || issueBundleHi.uOP == MULTUHI_U) && issueBundleHi.valid) begin
             nxtMulTimeLine = (mulTimeLine >> 1) | 32'b00000000_00000000_00000000_00000001;
             nxtDivTimeLine = (divTimeLine >> 1);
-        end else if(!divBusy && (issueBundleHi.uOP ==  DIVHI_U || issueBundleHi.uOP ==  DIVUHI_U)) begin
+        end else if(!divBusy && (issueBundleHi.uOP ==  DIVHI_U || issueBundleHi.uOP ==  DIVUHI_U) && issueBundleHi.valid) begin
             nxtMulTimeLine = (mulTimeLine >> 1) | 32'b00000000_00000000_01110000_00000000;
             nxtDivTimeLine = (divTimeLine >> 1) | 32'b00000000_00000000_00000000_00000001;
         end else begin

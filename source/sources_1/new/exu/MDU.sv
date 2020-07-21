@@ -38,8 +38,8 @@ module MDU(
     logic [31:0]    mulLo;
     PRFNum          mulLoAddr;
     UOPBundle       dummy;
-    UOPBundle       mulPipe [2 + `MDU_MUL_CYCLE:0];
-    UOPBundle       divPipe [2 + `MDU_DIV_CYCLE:0];
+    UOPBundle       mulPipe [`MDU_MUL_CYCLE:0];
+    UOPBundle       divPipe [`MDU_DIV_CYCLE:0];
 
     typedef enum logic[2:0] { idle, divOutputHi, divOutputLo, mulOutputHi, mulOutputLo } MDUFSMState;
 
@@ -73,12 +73,12 @@ module MDU(
                 divPipe[i].valid <= `FALSE;
             end
         end else begin
-            for(integer i = 0; i <= `MDU_MUL_CYCLE; i++) begin
+            for(integer i = 0; i < `MDU_MUL_CYCLE; i++) begin
                 mulPipe[i] <= mulPipe[i + 1];
             end
             mulPipe[`MDU_MUL_CYCLE - 1] <= (uopHi.uOP == MULTHI_U || uopHi.uOP == MULTUHI_U) ? uopHi : dummy;
             mulPipe[`MDU_MUL_CYCLE - 0] <= (uopLo.uOP == MULTLO_U || uopLo.uOP == MULTULO_U) ? uopLo : dummy;
-            for(integer i = 0; i <= `MDU_DIV_CYCLE; i++) begin
+            for(integer i = 0; i < `MDU_DIV_CYCLE; i++) begin
                 divPipe[i] <= divPipe[i + 1];
             end
             divPipe[`MDU_DIV_CYCLE - 1] <= (uopHi.uOP ==  DIVHI_U || uopHi.uOP ==  DIVUHI_U) ? uopHi : dummy;
@@ -131,6 +131,8 @@ module MDU(
         case(state)
             idle: begin
                 wbData.wen          = `FALSE;
+                wbData.rd           = 32'h0;
+                wbData.wdata        = 32'h0;
                 mdu_rob.setFinish   = `FALSE;
             end
             mulOutputHi: begin
