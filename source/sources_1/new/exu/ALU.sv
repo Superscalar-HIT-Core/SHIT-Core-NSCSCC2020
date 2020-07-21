@@ -4,7 +4,7 @@
 module ALU(
     input UOPBundle uops,       // 输入的微操作
     input PRFrData rdata,       // 寄存器读入的数据
-    input BypassInfo bypass_alu0, bypass_alu1,  // 从下一级和下面的ALU旁路回来
+    input PRFwInfo bypass_alu0, bypass_alu1,  // 从下一级和下面的ALU旁路回来
     output PRFwInfo wbData,     // 计算回写的数据
     output UOPBundle uops_o,              // 传递给下一级的
     FU_ROB.fu   alu_rob
@@ -22,16 +22,16 @@ Word shift_res;
 Word clz_res;
 Word clo_res;
 Word count_res;
-logic bypass_alu0_src0_en = bypass_alu0.wen && (bypass_alu0.wrNum == uops.op0PAddr);
-logic bypass_alu0_src1_en = bypass_alu0.wen && (bypass_alu0.wrNum == uops.op1PAddr);
-logic bypass_alu1_src0_en = bypass_alu1.wen && (bypass_alu1.wrNum == uops.op0PAddr);
-logic bypass_alu1_src1_en = bypass_alu1.wen && (bypass_alu1.wrNum == uops.op1PAddr);
+wire bypass_alu0_src0_en = bypass_alu0.wen && (bypass_alu0.rd == uops.op0PAddr);
+wire bypass_alu0_src1_en = bypass_alu0.wen && (bypass_alu0.rd == uops.op1PAddr);
+wire bypass_alu1_src0_en = bypass_alu1.wen && (bypass_alu1.rd == uops.op0PAddr);
+wire bypass_alu1_src1_en = bypass_alu1.wen && (bypass_alu1.rd == uops.op1PAddr);
 
 Word src0, src1;
-assign src0 = uops.op0re ?  ( bypass_alu0_src0_en ? bypass_alu0.wData : 
-                            ( bypass_alu1_src0_en ? bypass_alu1.wData : rdata.rs0_data ) ) : rdata.rs0_data;
-assign src1 = uops.op1re ?  ( bypass_alu0_src1_en ? bypass_alu0.wData : 
-                            ( bypass_alu1_src1_en ? bypass_alu1.wData : rdata.rs0_data ) ) : uops.imm ;
+assign src0 = uops.op0re ?  ( bypass_alu0_src0_en ? bypass_alu0.wdata : 
+                            ( bypass_alu1_src0_en ? bypass_alu1.wdata : rdata.rs0_data ) ) : rdata.rs0_data;
+assign src1 = uops.op1re ?  ( bypass_alu0_src1_en ? bypass_alu0.wdata : 
+                            ( bypass_alu1_src1_en ? bypass_alu1.wdata : rdata.rs0_data ) ) : uops.imm ;
 
 uOP uop;
 assign uop = uops.uOP;
@@ -68,7 +68,7 @@ assign move_res = src0; // HILO寄存器被重命名，无论是MF还是MT，都
 
 // 分支指令结果
 Word branch_target;
-Word branch_target;
+// Word branch_target;
 assign branch_taken =   ( uop == BEQ_U ) ? ( src0 == src1 ) :
                         ( uop == BNE_U ) ? ( src0 != src1 ) :
                         ( uop == BGEZ_U || uop == BGEZAL_U ) ? ( ~src0[31] ):
@@ -76,7 +76,7 @@ assign branch_taken =   ( uop == BEQ_U ) ? ( src0 == src1 ) :
                         ( uop == BLEZ_U ) ? ~( ~src0[31] & (|src0[30:0]) ) :
                         ( uop == BLTZ_U ) ? ( src0[31] ) : 
                         ( uop == J_U || uop == JAL_U || uop == JR_U || uop == JALR_U ) ? 1 : 0;
-assign branch_target = ( uop == JR_U || uop == JALR_U ) ? src0 : uop.branchAddr;
+assign branch_target = ( uop == JR_U || uop == JALR_U ) ? src0 : uops.branchAddr;
 
 always_comb begin
     uops_o = uops;

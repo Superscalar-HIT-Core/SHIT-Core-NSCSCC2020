@@ -112,28 +112,28 @@ module ROB(
         if(alu0_rob.setFinish && alu0_rob.id[0] == 1'b0) begin
             data0[alu0_rob.id >> 1'b1].busy <= `FALSE;
             if(alu0_rob.setBranchStatus) begin
-                data0[alu0_rpb.id >> 1'b1].branchTaken = alu0_rob.branchTaken;
-                data0[alu0_rpb.id >> 1'b1].branchAddr  = alu0_rob.branchTaken;
+                data0[alu0_rob.id >> 1'b1].branchTaken = alu0_rob.branchTaken;
+                data0[alu0_rob.id >> 1'b1].branchAddr  = alu0_rob.branchTaken;
             end
         end else if(alu0_rob.setFinish && alu0_rob.id[0] == 1'b1) begin
             data1[alu0_rob.id >> 1'b1].busy <= `FALSE;
             if(alu0_rob.setBranchStatus) begin
-                data1[alu0_rpb.id >> 1'b1].branchTaken = alu0_rob.branchTaken;
-                data1[alu0_rpb.id >> 1'b1].branchAddr  = alu0_rob.branchTaken;
+                data1[alu0_rob.id >> 1'b1].branchTaken = alu0_rob.branchTaken;
+                data1[alu0_rob.id >> 1'b1].branchAddr  = alu0_rob.branchTaken;
             end
         end
         
         if(alu1_rob.setFinish && alu1_rob.id[0] == 1'b0) begin
             data0[alu1_rob.id >> 1'b1].busy <= `FALSE;
             if(alu1_rob.setBranchStatus) begin
-                data0[alu1_rpb.id >> 1'b1].branchTaken = alu1_rob.branchTaken;
-                data0[alu1_rpb.id >> 1'b1].branchAddr  = alu1_rob.branchTaken;
+                data0[alu1_rob.id >> 1'b1].branchTaken = alu1_rob.branchTaken;
+                data0[alu1_rob.id >> 1'b1].branchAddr  = alu1_rob.branchTaken;
             end
         end else if(alu1_rob.setFinish && alu1_rob.id[0] == 1'b1) begin
             data1[alu1_rob.id >> 1'b1].busy <= `FALSE;
             if(alu1_rob.setBranchStatus) begin
-                data1[alu1_rpb.id >> 1'b1].branchTaken = alu1_rob.branchTaken;
-                data1[alu1_rpb.id >> 1'b1].branchAddr  = alu1_rob.branchTaken;
+                data1[alu1_rob.id >> 1'b1].branchTaken = alu1_rob.branchTaken;
+                data1[alu1_rob.id >> 1'b1].branchAddr  = alu1_rob.branchTaken;
             end
         end
         

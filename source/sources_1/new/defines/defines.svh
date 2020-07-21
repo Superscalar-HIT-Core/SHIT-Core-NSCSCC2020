@@ -559,7 +559,7 @@ interface FU_ROB;
     logic               setFinish;
     logic [`ROB_ID_W]   id;
 
-    logic               setBranckStatus;
+    logic               setBranchStatus;
     logic               branchTaken;
     logic [31:0]        branchAddr;
 
@@ -571,8 +571,8 @@ interface FU_ROB;
         end
     endtask //automatic
 
-    modport fu(output setFinish, id, setBranckStatus, branchTaken, branchAddr);
-    modport rob(input setFinish, id, setBranckStatus, branchTaken, branchAddr);
+    modport fu(output setFinish, id, setBranchStatus, branchTaken, branchAddr);
+    modport rob(input setFinish, id, setBranchStatus, branchTaken, branchAddr);
 endinterface //FU_ROB
 
 interface ROB_Commit;

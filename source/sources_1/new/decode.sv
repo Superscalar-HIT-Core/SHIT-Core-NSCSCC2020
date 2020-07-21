@@ -13,6 +13,7 @@ module decode(
     logic   [ 5:0]  funct;
     logic   [31:0]  imm;
     logic   [31:0]  imm2;
+    logic   [31:0]  imm_ze;
     logic   [31:0]  imm_lui;
     logic   [25:0]  address;
     logic   [31:0]  inst_raw;
@@ -32,6 +33,7 @@ module decode(
     assign rd       = {1'b0, inst_raw[15:11]};
     assign funct    = inst_raw[5: 0];
     assign imm      = {{16{inst_raw[15]}}, inst_raw[15: 0]};
+    assign imm_ze   = {{16'h0000}, inst_raw[15: 0]};
     assign imm2     = {27'h0, inst_raw[10: 6]};
     assign imm_lui  = { inst_raw[15:0] , 16'b0 };
     assign address  = inst_raw[25: 0];
@@ -267,6 +269,7 @@ module decode(
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `TRUE;
+                    uOP0.imm        = imm_ze;
                 end
                 `OR: begin
                     uOP0.uOP        = OR_U;
@@ -288,6 +291,7 @@ module decode(
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `TRUE;
+                    uOP0.imm        = imm_ze;
                 end
                 `XOR: begin
                     uOP0.uOP        = XOR_U;
@@ -309,6 +313,7 @@ module decode(
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `TRUE;
+                    uOP0.imm        = imm_ze;
                 end
                 `NOR: begin
                     uOP0.uOP        = NOR_U;
