@@ -223,7 +223,7 @@ assign ready = ~full;   // 如果满了，则不能继续接受
 wire [`MDU_QUEUE_LEN-1:0] mul_valid_mask = mul_busy ? ~isMul_vec : isMul_vec;
 wire [`MDU_QUEUE_LEN-1:0] div_valid_mask = div_busy ? isMul_vec : ~isMul_vec;
 
-wire [`MDU_QUEUE_LEN-1:0] arbit_vec = ready_vec & valid_vec & mul_valid_mask & div_valid_mask;
+wire [`MDU_QUEUE_LEN-1:0] arbit_vec = ready_vec & valid_vec & (mul_valid_mask | div_valid_mask);
 
 // 发射仲裁逻辑
 issue_arbiter_8_sel1 arbit(
