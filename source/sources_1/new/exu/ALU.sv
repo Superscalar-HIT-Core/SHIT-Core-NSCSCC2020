@@ -17,6 +17,8 @@ assign alu_rob.id = uops.id;
 Word move_res;
 Word arithmetic_res;
 Word branch_res;
+Word logic_res;
+Word shift_res;
 Word clz_res;
 Word clo_res;
 Word count_res;

@@ -91,11 +91,11 @@ always_ff @(posedge clk)    begin
             prfs_bank2[wb_ALU_1.rd] <= wb_ALU_1.wdata;
             prfs_bank3[wb_ALU_1.rd] <= wb_ALU_1.wdata;
         end
-        if(wrnum_MDU.wen) begin
-            prfs_bank0[wrnum_MDU.rd] <= wrnum_MDU.wdata;
-            prfs_bank1[wrnum_MDU.rd] <= wrnum_MDU.wdata;
-            prfs_bank2[wrnum_MDU.rd] <= wrnum_MDU.wdata;
-            prfs_bank3[wrnum_MDU.rd] <= wrnum_MDU.wdata;
+        if(wb_MDU.wen) begin
+            prfs_bank0[wb_MDU.rd] <= wb_MDU.wdata;
+            prfs_bank1[wb_MDU.rd] <= wb_MDU.wdata;
+            prfs_bank2[wb_MDU.rd] <= wb_MDU.wdata;
+            prfs_bank3[wb_MDU.rd] <= wb_MDU.wdata;
         end
         if(wb_LSU.wen) begin
             prfs_bank0[wb_LSU.rd] <= wb_LSU.wdata;
@@ -105,5 +105,13 @@ always_ff @(posedge clk)    begin
         end
     end
 end
+// synopsys translate_off
+always_ff @ (posedge clk) begin
+    if(wb_ALU_0.wen) $display("WB info from alu0: %d <= %d", wb_ALU_0.rd, wb_ALU_0.wdata);
+    if(wb_ALU_1.wen) $display("WB info from alu1: %d <= %d", wb_ALU_1.rd, wb_ALU_1.wdata);
+    if(wb_LSU.wen) $display("WB info from lsu: %d <= %d", wb_LSU.rd, wb_LSU.wdata);
+    if(wb_MDU.wen) $display("WB info from msu: %d <= %d", wb_MDU.rd, wb_MDU.wdata);
+end
+// synopsys translate_on
 
 endmodule

@@ -39,7 +39,8 @@ module FU_Output_regs(
             commitInfo.setFinish    <= `FALSE;
         end else begin  // no pause
             prfWReq                 <= fuWbData;
-            commitInfo              <= fuCommitInfo;
+            commitInfo.setFinish    <= fuCommitInfo.setFinish;
+            commitInfo.id           <= fuCommitInfo.id;
         end
     end
 

@@ -3,36 +3,36 @@
 module PlayGround(
 
     );
-    AXIReadAddr     axiReadAddr();
-    AXIReadData     axiReadData();
-    AXIWriteAddr    axiWriteAddr();
-    AXIWriteData    axiWriteData();
-    AXIWriteResp    axiWriteResp();
+    // AXIReadAddr     axiReadAddr();
+    // AXIReadData     axiReadData();
+    // AXIWriteAddr    axiWriteAddr();
+    // AXIWriteData    axiWriteData();
+    // AXIWriteResp    axiWriteResp();
 
-    InstReq         instReq();
-    InstResp        instResp();
-    DataReq         dataReq();
-    DataResp        dataResp();
+    // InstReq         instReq();
+    // InstResp        instResp();
+    // DataReq         dataReq();
+    // DataResp        dataResp();
 
-    DCacheReq       dCacheReq();
-    DCacheResp      dCacheResp();
+    // DCacheReq       dCacheReq();
+    // DCacheResp      dCacheResp();
 
-    Ctrl                ctrl_if0_1_regs();
-    Ctrl                ctrl_nlp();
-    Ctrl                ctrl_if2_3_regs();
-    Ctrl                ctrl_iCache();
-    Ctrl                ctrl_if3();
-    Ctrl                ctrl_if3_output_regs();
-    Ctrl                ctrl_instBuffer();
+    // Ctrl                ctrl_if0_1_regs();
+    // Ctrl                ctrl_nlp();
+    // Ctrl                ctrl_if2_3_regs();
+    // Ctrl                ctrl_iCache();
+    // Ctrl                ctrl_if3();
+    // Ctrl                ctrl_if3_output_regs();
+    // Ctrl                ctrl_instBuffer();
 
-    ICache_TLB          iCache_tlb();
+    // ICache_TLB          iCache_tlb();
 
-    BackendRedirect     backend_if0();
-    BPDUpdate           backend_bpd();
-    NLPUpdate           backend_nlp();
+    // BackendRedirect     backend_if0();
+    // BPDUpdate           backend_bpd();
+    // NLPUpdate           backend_nlp();
 
-    IFU_InstBuffer      ifu_instBuffer();
-    InstBuffer_Backend  instBuffer_backend();
+    // IFU_InstBuffer      ifu_instBuffer();
+    // InstBuffer_Backend  instBuffer_backend();
 
 
     logic clk;
@@ -72,12 +72,14 @@ module PlayGround(
     wire          s_axi_rvalid   ;
     wire          s_axi_rready   ;
 
-    AXIInterface        axiInterface(.*);
-    AXIWarp             AXIWarp(.*);
-    // axi_test_blk_mem    axi_mem(.*);
-    CtrlUnit            ctrlUnit(.*);
-    IFU                 ifu(.*);
-    InstBuffer          instBuffer(.*);
+    // AXIInterface        axiInterface(.*);
+    // AXIWarp             AXIWarp(.*);
+    // // axi_test_blk_mem    axi_mem(.*);
+    // CtrlUnit            ctrlUnit(.*);
+    // IFU                 ifu(.*);
+    // InstBuffer          instBuffer(.*);
+
+    MyCPU cpu(.*);
 
     always #10 clk = ~clk;
 
@@ -110,7 +112,7 @@ module PlayGround(
     end
 
     initial begin
-        forever iCache_tlb.autoReply(clk);
+        forever cpu.iCache_tlb.autoReply(clk);
     end
 
     initial begin
@@ -118,7 +120,7 @@ module PlayGround(
         forever begin
             integer b = $random % 4;
             while (b --> 0) #20;
-            instBuffer_backend.getResp(clk);
+            cpu.instBuffer_backend.getResp(clk);
         end
     end
 

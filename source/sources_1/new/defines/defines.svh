@@ -483,6 +483,7 @@ typedef struct packed {
     logic   [31:0]          imm;
 
     BranchType              branchType;
+    logic                   branchTaken;
     logic   [31:0]          branchAddr;
 
     logic                   predTaken;
@@ -558,6 +559,10 @@ interface FU_ROB;
     logic               setFinish;
     logic [`ROB_ID_W]   id;
 
+    logic               setBranckStatus;
+    logic               branchTaken;
+    logic [31:0]        branchAddr;
+
     task automatic sendFinish(logic [`ROB_ID_W] idIn, ref logic clk);
         id          = idIn;
         setFinish   = `TRUE;
@@ -566,8 +571,8 @@ interface FU_ROB;
         end
     endtask //automatic
 
-    modport fu(output setFinish, id);
-    modport rob(input setFinish, id);
+    modport fu(output setFinish, id, setBranckStatus, branchTaken, branchAddr);
+    modport rob(input setFinish, id, setBranckStatus, branchTaken, branchAddr);
 endinterface //FU_ROB
 
 interface ROB_Commit;

@@ -226,7 +226,7 @@ module MyCPU(
     dispatch u_dispatch(
         .inst_0_ops                         (dispatch_inst0_in), 
         .inst_1_ops                         (dispatch_inst1_in),
-        
+        // To Issue Queues
         .rs_alu_wen_0                       (rs_alu_wen_0), 
         .rs_alu_wen_1                       (rs_alu_wen_1), 
         .rs_mdu_wen_0                       (rs_mdu_wen_0), 
@@ -240,7 +240,8 @@ module MyCPU(
         .dispatch_inst0_wnum                (set_busy_num_0),
         .dispatch_inst1_wnum                (set_busy_num_1),
         .dispatch_inst0_wen                 (set_busy_0),
-        .dispatch_inst1_wen                 (set_busy_1)
+        .dispatch_inst1_wen                 (set_busy_1),
+        .dispatch_rob                       (dispatch_rob)
     );
     ROB rob(.*);
     scoreboard_20r6w scoreboard_alu(
@@ -293,7 +294,6 @@ module MyCPU(
         .clk                                (clk),
         .rst                                (rst),
         .flush                              (0),
-        .wake_Info                          (wake_info_to_LSU),
         .inst_Ops_0                         (dispatch_lsu_0),
         .inst_Ops_1                         (dispatch_lsu_0),
         .enq_req_0                          (rs_lsu_wen_0),
@@ -301,13 +301,17 @@ module MyCPU(
         .lsu_busy                           (lsu_busy),
         .issue_info_0                       (issue_lsu_inst),
         .issue_en_0                         (issue_lsu_en),
-        .ready                              (lsu_queue_ready)
+        .ready                              (lsu_queue_ready),
+        // Scoreboard
+        .scoreboard_rd_num_l                (scoreboard_rd_num_l_lsuiq2sb),
+        .scoreboard_rd_num_r                (scoreboard_rd_num_r_lsuiq2sb),
+        .busyvec_l                          (busyvec_l_sb2lsuiq),
+        .busyvec_r                          (busyvec_r_sb2lsuiq)
     );
     issue_unit_MDU issue_mdu(
         .clk                                (clk),
         .rst                                (rst),
         .flush                              (0),
-        .wake_Info                          (wake_info_to_MDU),
         .inst_Ops_0                         (dispatch_mdu_0),
         .enq_req_0                          (rs_mdu_wen_0),
         .mul_busy                           (mul_busy),
@@ -315,7 +319,12 @@ module MyCPU(
         .issue_info_hi                      (issue_mdu_inst_hi),
         .issue_info_lo                      (issue_mdu_inst_lo),
         .issue_en_0                         (issue_mdu_en),
-        .ready                              (mdu_queue_ready)
+        .ready                              (mdu_queue_ready),
+        // Scoreboard
+        .scoreboard_rd_num_l                (scoreboard_rd_num_l_mduiq2sb),
+        .scoreboard_rd_num_r                (scoreboard_rd_num_r_mduiq2sb),
+        .busyvec_l                          (busyvec_l_sb2mduiq),
+        .busyvec_r                          (busyvec_r_sb2mduiq)
     );
     Issue_RF_regs issue_alu0_regs(
         .*,
@@ -343,14 +352,16 @@ module MyCPU(
     );
     MDUIQ_RF_regs  issue_mdu_regs(
         .*,
-        .issueBundle                        (issue_alu_inst_0),
+        .issueBundleHi                      (issue_mdu_inst_hi),
+        .issueBundleLo                      (issue_mdu_inst_lo),
         .primPauseReq                       (`FALSE),
-        .rfBundle                           (mduRFBundleHi),
+        .rfBundleHi                         (mduRFBundleHi),
+        .rfBundleLo                         (mduRFBundleLo),
         .prfRequest                         (mduRFReq),
         .mulBusy                            (mul_busy),
         .divBusy                            (div_busy)
     );
-    PRF prf(
+    prf prf_u(
         .*,
         .rnum_ALU_0                         (alu0RFReq),
         .rnum_ALU_1                         (alu1RFReq),
@@ -407,7 +418,7 @@ module MyCPU(
         .uops                               (alu0UOPBundle),
         .rdata                              (alu0Oprands),
         .bypass_alu0                        (alu0WBReq),
-        .bypass_alu0                        (alu1WBReq),
+        .bypass_alu1                        (alu1WBReq),
         .wbData                             (alu0WBOut),
         .alu_rob                            (alu0_commit_reg)
     );
@@ -415,15 +426,15 @@ module MyCPU(
         .uops                               (alu1UOPBundle),
         .rdata                              (alu1Oprands),
         .bypass_alu0                        (alu0WBReq),
-        .bypass_alu0                        (alu1WBReq),
+        .bypass_alu1                        (alu1WBReq),
         .wbData                             (alu1WBOut),
         .alu_rob                            (alu1_commit_reg)
     );
     // lsu?
     MDU mdu(
         .*,
-        .uOPHi                              (mduUOPBundleHi),
-        .uOPLo                              (mduUOPBundleLo),
+        .uopHi                              (mduUOPBundleHi),
+        .uopLo                              (mduUOPBundleLo),
         .rdata                              (mduOprands),
         .wbData                             (mduWBOut),
         .mdu_rob                            (mdu_commit_reg)
