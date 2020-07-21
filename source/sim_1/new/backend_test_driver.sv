@@ -187,11 +187,39 @@ wire lsu_busy;
 assign lsu_busy = 0;
 ///////////////////////////////
 
+// ALU Queue Scoreboard
+PRFNum [9:0] scoreboard_rd_num_l_lsuiq2sb;
+PRFNum [9:0] scoreboard_rd_num_r_lsuiq2sb;
+wire [9:0] busyvec_l_sb2lsuiq;
+wire [9:0] busyvec_r_sb2lsuiq;
+scoreboard_20r6w scoreboard_lsu(
+    .clk                                (clk),
+    .rst                                (rst),
+    .flush                              (flush),
+    // dispatched instructions
+    .set_busy_0                         (set_busy_0),
+    .set_busy_1                         (set_busy_1),
+    .set_busy_num_0                     (set_busy_num_0),
+    .set_busy_num_1                     (set_busy_num_1),
+    // issued instructions(at most 4 instructions issue at a time)
+    .clr_busy_ALU0                      (wake_reg_ALU_0_en),
+    .clr_busy_ALU1                      (wake_reg_ALU_1_en),
+    .clr_busy_LSU                       (wake_reg_LSU_en),
+    .clr_busy_MDU                       (wake_reg_MDU_en),
+    .clr_busy_num_ALU0                  (wake_reg_ALU_0),
+    .clr_busy_num_ALU1                  (wake_reg_ALU_1),
+    .clr_busy_num_LSU                   (wake_reg_LSU),
+    .clr_busy_num_MDU                   (wake_reg_MDU),
+    .rd_num_l                           (scoreboard_rd_num_l_lsuiq2sb),
+    .rd_num_r                           (scoreboard_rd_num_r_lsuiq2sb),
+    .busyvec_l                          (busyvec_l_sb2lsuiq),
+    .busyvec_r                          (busyvec_r_sb2lsuiq)
+);
+
 issue_unit_LSU issue_lsu(
     .clk                                (clk),
     .rst                                (rst),
     .flush                              (0),
-    .wake_Info                          (wake_info_to_LSU),
     .inst_Ops_0                         (dispatch_lsu_0),
     .inst_Ops_1                         (dispatch_lsu_0),
     .enq_req_0                          (rs_lsu_wen_0),
@@ -199,7 +227,12 @@ issue_unit_LSU issue_lsu(
     .lsu_busy                           (lsu_busy),
     .issue_info_0                       (issue_lsu_inst),
     .issue_en_0                         (issue_lsu_en),
-    .ready                              (lsu_queue_ready)
+    .ready                              (lsu_queue_ready),
+    // Scoreboard
+    .scoreboard_rd_num_l                (scoreboard_rd_num_l_aluiq2sb),
+    .scoreboard_rd_num_r                (scoreboard_rd_num_r_aluiq2sb),
+    .busyvec_l                          (busyvec_l_sb2aluiq),
+    .busyvec_r                          (busyvec_r_sb2aluiq)
 );
 
 wire mul_busy, div_busy;
