@@ -12,6 +12,8 @@ module CP0(
     CP0StatusRegs.cp0   cp0Status
 );
 
+    logic           divClk;
+
     logic [31:0]    Index;
     logic [31:0]    Random;
     logic [31:0]    EntryLo0;
@@ -44,6 +46,7 @@ module CP0(
 
     always_ff @ (posedge clk) begin
         if(rst) begin
+            divClk          <= `FALSE;
             Random  [31: 5] <= 27'h0;
             Random  [ 4: 0] <= 5'b11111;
             EntryLo0[31:30] <= 2'b00;
@@ -87,6 +90,7 @@ module CP0(
             Config1 [    1] <= 1'b0;        // EJTAG impl
             Config1 [    0] <= 1'b0;
         end else begin
+            divClk <= ~divClk;
             if(alu0_cp0.writeEn) begin
                 case(alu_cp0.addr)
                     `CP0INDEX    : Index    <= (Index      & ~`CP0INDEXMASK     ) | (      alu_cp0.writeData & `CP0INDEXMASK    );
@@ -95,7 +99,6 @@ module CP0(
                     `CP0CONTEXT  : Context  <= (Context    & ~`CP0CONTEXTMASK   ) | (      alu_cp0.writeData & `CP0CONTEXTMASK  );
                     `CP0PAGEMASK : PageMask <= (PageMask   & ~`CP0PAGEMASKMASK  ) | (      alu_cp0.writeData & `CP0PAGEMASKMASK );
                     `CP0WIRED    : Wired    <= (Wired      & ~`CP0WIREDMASK     ) | (      alu_cp0.writeData & `CP0WIREDMASK    );
-                    `CP0COUNT    : Count    <= (Count      & ~`CP0COUNTMASK     ) | (      alu_cp0.writeData & `CP0COUNTMASK    );
                     `CP0ENTRYHI  : EntryHi  <= (EntryHi    & ~`CP0ENTRYHIMASK   ) | (      alu_cp0.writeData & `CP0ENTRYHIMASK  );
                     `CP0COMPARE  : Compare  <= (Compare    & ~`CP0COMPAREMASK   ) | (      alu_cp0.writeData & `CP0COMPAREMASK  );
                     `CP0STATUS   : Status   <= (Status     & ~`CP0STATUSMASK    ) | (      alu_cp0.writeData & `CP0STATUSMASK   );
@@ -105,6 +108,11 @@ module CP0(
                     `CP0CONFIG   : Config   <= (Config     & ~`CP0CONFIGMASK    ) | (      alu_cp0.writeData & `CP0CONFIGMASK   );
                     `CP0ERROREPC : ErrorEPC <= (ErrorEPC   & ~`CP0ERROREPCMASK  ) | (      alu_cp0.writeData & `CP0ERROREPCMASK );
                 endcase
+                if(alu_cp0.addr == `CP0COUNT) begin
+                    Count <= alu_cp0.writeData;
+                end else begin
+                    Count <= Count + divClk ? 1'b1 : 1'b0;
+                end
             end
             if(exception_cp0.writeEn) begin
                 case(exception_cp0.addr)
@@ -114,7 +122,6 @@ module CP0(
                     `CP0CONTEXT  : Context  <= (Context    & ~`CP0CONTEXTMASK   ) | (exception_cp0.writeData & `CP0CONTEXTMASK  );
                     `CP0PAGEMASK : PageMask <= (PageMask   & ~`CP0PAGEMASKMASK  ) | (exception_cp0.writeData & `CP0PAGEMASKMASK );
                     `CP0WIRED    : Wired    <= (Wired      & ~`CP0WIREDMASK     ) | (exception_cp0.writeData & `CP0WIREDMASK    );
-                    `CP0COUNT    : Count    <= (Count      & ~`CP0COUNTMASK     ) | (exception_cp0.writeData & `CP0COUNTMASK    );
                     `CP0ENTRYHI  : EntryHi  <= (EntryHi    & ~`CP0ENTRYHIMASK   ) | (exception_cp0.writeData & `CP0ENTRYHIMASK  );
                     `CP0COMPARE  : Compare  <= (Compare    & ~`CP0COMPAREMASK   ) | (exception_cp0.writeData & `CP0COMPAREMASK  );
                     `CP0STATUS   : Status   <= (Status     & ~`CP0STATUSMASK    ) | (exception_cp0.writeData & `CP0STATUSMASK   );

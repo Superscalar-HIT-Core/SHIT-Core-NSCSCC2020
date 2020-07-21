@@ -7,9 +7,9 @@
 module prf(
     input clk,
     input rst,
-    PRFrNums rnum_ALU_0, rnum_ALU_1, rnum_MDU, rnum_LSU,
-    PRFrData rdata_ALU_0, rdata_ALU_1, rdata_MDU, rdata_LSU,
-    PRFwInfo wb_ALU_0, wb_ALU_1, wb_MDU, wb_LSU
+    input PRFrNums rnum_ALU_0, rnum_ALU_1, rnum_MDU, rnum_LSU,
+    output PRFrData rdata_ALU_0, rdata_ALU_1, rdata_MDU, rdata_LSU,
+    input PRFwInfo wb_ALU_0, wb_ALU_1, wb_MDU, wb_LSU
     );
 // 4 Banks of prf
 reg [31:0] prfs_bank0[63:0];

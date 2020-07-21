@@ -130,18 +130,18 @@ module ICache(
         .douta  (data3IO.dataOut)
     );
 
-    assign iCache_tlb.virAddr0  = regs_iCache.PC & 32'hffff_fffc;
-    assign iCache_tlb.virAddr1  = regs_iCache.PC | 32'h0000_0004;
-    assign lineAddress          = regs_iCache.PC[9:4];
-    assign tag                  = iCache_tlb.phyAddr0[31:10];
-    assign hit                  = (tag == tag0IO.dataOut && valid[0][delayLineAddr]) ||
-                                  (tag == tag1IO.dataOut && valid[1][delayLineAddr]) ||
-                                  (tag == tag2IO.dataOut && valid[2][delayLineAddr]) ||
-                                  (tag == tag3IO.dataOut && valid[3][delayLineAddr]);
-    assign insts[0]             = hitLine[ 31: 0];
-    assign insts[1]             = hitLine[ 63:32];
-    assign insts[2]             = hitLine[ 95:64];
-    assign insts[3]             = hitLine[127:96];
+    assign iCache_tlb.virAddr0  =   regs_iCache.PC & 32'hffff_fffc;
+    assign iCache_tlb.virAddr1  =   regs_iCache.PC | 32'h0000_0004;
+    assign lineAddress          =   regs_iCache.PC[9:4];
+    assign tag                  =   iCache_tlb.phyAddr0[31:10];
+    assign hit                  =   (tag == tag0IO.dataOut && valid[0][delayLineAddr]) ||
+                                    (tag == tag1IO.dataOut && valid[1][delayLineAddr]) ||
+                                    (tag == tag2IO.dataOut && valid[2][delayLineAddr]) ||
+                                    (tag == tag3IO.dataOut && valid[3][delayLineAddr]);
+    assign insts[0]             =   hitLine[ 31: 0];
+    assign insts[1]             =   hitLine[ 63:32];
+    assign insts[2]             =   hitLine[ 95:64];
+    assign insts[3]             =   hitLine[127:96];
 
     assign tag0IO.clk   = clk;
     assign tag1IO.clk   = clk;
@@ -168,8 +168,10 @@ module ICache(
         else hitLine = 128'hffffffff_ffffffff_ffffffff_ffffffff;
     end
 
-    always_comb begin
-        if(lastState == sStartUp && state == sRunning) begin
+    always_ff @ (posedge clk) begin
+        if (rst || ctrl_iCache.flush) begin
+            delayTag <= 0;
+        end else if(lastState == sStartUp && state == sRunning) begin
             delayTag <= tag;
         end
     end
@@ -229,8 +231,12 @@ module ICache(
         end
     end
 
-    always_comb begin
-        if(tag == tag0IO.dataOut && valid[0][delayLineAddr]) begin
+    always_ff @ (posedge clk) begin
+        if(rst || ctrl_iCache.flush) begin
+            for(integer i = 0; i < 64; i++) begin
+                age[i]      = 3'b000;
+            end
+        end else if(tag == tag0IO.dataOut && valid[0][delayLineAddr]) begin
             age[delayLineAddr][2]   = 1'b1; 
             age[delayLineAddr][0]   = 1'b1; 
         end else if(tag == tag1IO.dataOut && valid[1][delayLineAddr]) begin
@@ -243,6 +249,9 @@ module ICache(
             age[delayLineAddr][2]   = 1'b0; 
             age[delayLineAddr][1]   = 1'b0; 
         end
+    end
+
+    always_comb begin
         iCache_regs.inst0                   = regs_iCache.inst0;
         iCache_regs.inst1                   = regs_iCache.inst1;
         case(state)
@@ -456,10 +465,6 @@ module ICache(
 
                 for(integer i = 0; i < 4; i++) begin
                     nxtvalid[i]    = 0;
-                end
-                
-                for(integer i = 0; i < 64; i++) begin
-                    age[i]      = 3'b000;
                 end
             end
         endcase

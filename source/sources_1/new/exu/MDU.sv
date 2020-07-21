@@ -29,13 +29,8 @@ module MDU(
     input  PRFrData     rdata,
     
     output PRFwInfo     wbData,
-    output logic        mulBusy,
-    output logic        divBusy,
     FU_ROB.fu           mdu_rob
 );
-
-    logic [31:0]    mulTimeLine, nxtMulTimeLine;
-    logic [31:0]    divTimeLine, nxtDivTimeLine;
     wire  [31:0]    quotient, remainder;
     wire  [63:0]    mulRes;
     logic [31:0]    divLo;
@@ -49,9 +44,6 @@ module MDU(
     typedef enum logic[2:0] { idle, divOutputHi, divOutputLo, mulOutputHi, mulOutputLo } MDUFSMState;
 
     MDUFSMState state, nxtState;
-
-    assign mulBusy      = mulTimeLine[0];
-    assign divBusy      = divTimeLine[0];
     assign dummy.uOP    = NOP_U;
     assign dummy.valid  = `FALSE;
 
@@ -72,23 +64,8 @@ module MDU(
         .P                      (mulRes                 )     
     );
 
-    always_comb begin
-        if(!mulBusy && (uopHi.uOP == MULTHI_U || uopHi.uOP == MULTUHI_U)) begin
-            nxtMulTimeLine = (mulTimeLine >> 1) | 32'b00000000_00000000_00000000_00000001;
-            nxtDivTimeLine = (divTimeLine >> 1);
-        end else if(!divBusy && (uopHi.uOP ==  DIVHI_U || uopHi.uOP ==  DIVUHI_U)) begin
-            nxtMulTimeLine = (mulTimeLine >> 1) | 32'b00000000_00000000_01110000_00000000;
-            nxtDivTimeLine = (divTimeLine >> 1) | 32'b00000000_00000000_00000000_00000001;
-        end else begin
-            nxtMulTimeLine = (mulTimeLine >> 1);
-            nxtDivTimeLine = (divTimeLine >> 1);
-        end
-    end
-
     always_ff @ (posedge clk) begin
         if(rst) begin
-            mulTimeLine <= 32'h0;
-            divTimeLine <= 32'h0;
             for(integer i = 0; i <= `MDU_MUL_CYCLE + 1; i++) begin
                 mulPipe[i].valid <= `FALSE;
             end
@@ -96,18 +73,16 @@ module MDU(
                 divPipe[i].valid <= `FALSE;
             end
         end else begin
-            mulTimeLine <= nxtMulTimeLine;
-            divTimeLine <= nxtDivTimeLine;
             for(integer i = 0; i <= `MDU_MUL_CYCLE; i++) begin
                 mulPipe[i] <= mulPipe[i + 1];
             end
-            mulPipe[`MDU_MUL_CYCLE - 1] <= (!mulBusy && (uopHi.uOP == MULTHI_U || uopHi.uOP == MULTUHI_U)) ? uopHi : dummy;
-            mulPipe[`MDU_MUL_CYCLE - 0] <= (!mulBusy && (uopLo.uOP == MULTLO_U || uopLo.uOP == MULTULO_U)) ? uopLo : dummy;
+            mulPipe[`MDU_MUL_CYCLE - 1] <= (uopHi.uOP == MULTHI_U || uopHi.uOP == MULTUHI_U) ? uopHi : dummy;
+            mulPipe[`MDU_MUL_CYCLE - 0] <= (uopLo.uOP == MULTLO_U || uopLo.uOP == MULTULO_U) ? uopLo : dummy;
             for(integer i = 0; i <= `MDU_DIV_CYCLE; i++) begin
                 divPipe[i] <= divPipe[i + 1];
             end
-            divPipe[`MDU_DIV_CYCLE - 1] <= (!divBusy && (uopHi.uOP ==  DIVHI_U || uopHi.uOP ==  DIVUHI_U)) ? uopHi : dummy;
-            divPipe[`MDU_DIV_CYCLE - 0] <= (!divBusy && (uopLo.uOP ==  DIVLO_U || uopLo.uOP ==  DIVULO_U)) ? uopLo : dummy;
+            divPipe[`MDU_DIV_CYCLE - 1] <= (uopHi.uOP ==  DIVHI_U || uopHi.uOP ==  DIVUHI_U) ? uopHi : dummy;
+            divPipe[`MDU_DIV_CYCLE - 0] <= (uopLo.uOP ==  DIVLO_U || uopLo.uOP ==  DIVULO_U) ? uopLo : dummy;
         end
     end
 

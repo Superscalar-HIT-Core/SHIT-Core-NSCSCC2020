@@ -466,6 +466,7 @@ typedef struct packed {
     ALUType                 aluType;
     logic   [4:0]           cacheOP;
     RS_Type                 rs_type;
+
     ARFNum                  op0LAddr;   // logical
     PRFNum                  op0PAddr;   // physical
     logic                   op0re;

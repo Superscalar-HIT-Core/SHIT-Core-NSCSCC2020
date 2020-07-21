@@ -7,11 +7,11 @@ module ALU(
     input BypassInfo bypass_alu0, bypass_alu1,  // 从下一级和下面的ALU旁路回来
     output PRFwInfo wbData,     // 计算回写的数据
     output UOPBundle uops_o,              // 传递给下一级的
-    FU_ROB.fu   alu0_rob
+    FU_ROB.fu   alu_rob
     );
 
-assign alu0_rob.setFinish = uops.valid && !uops.uOP == NOP_U && uops.dstwe;
-assign alu0_rob.id = uops.id;
+assign alu_rob.setFinish = uops.valid && !uops.uOP == NOP_U && uops.dstwe;
+assign alu_rob.id = uops.id;
 
 // Result Select
 Word move_res;
