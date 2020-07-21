@@ -36,6 +36,9 @@
 `define LSU_QUEUE_LEN_MINUS2 6
 `define LSU_QUEUE_IDX_LEN 4
 
+`define MDU_MUL_CYCLE 2
+`define MDU_DIV_CYCLE 16
+
 typedef logic [5:0] PRFNum; // 物理寄存器编号
 typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
 `define REGHI       6'd32
@@ -687,6 +690,82 @@ interface CP0_TLB;
         output writeEn, wEntryHi, wPageMask, wEntryLo0, wEntryLo1
     );
 endinterface //CP0_TLB
+
+interface MDUTestInterface_MUL;
+    wire         clk;
+    UOPBundle    uopHi;
+    UOPBundle    uopLo;
+    PRFrData     rdata;
+    logic        mulBusy;
+
+    task automatic init();
+        uopHi           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+        uopLo           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+        rdata.rs0_data  = 32'hZZZZZZZZ;
+        rdata.rs1_data  = 32'hZZZZZZZZ;
+    endtask //automatic
+
+    task automatic sendMul(logic [31:0] mul1, logic [31:0] mul2, logic[`ROB_ID_W] id);
+        while (mulBusy) @(posedge clk) #1 begin
+            uopHi           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+            uopLo           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+            rdata.rs0_data  = 32'hZZZZZZZZ;
+            rdata.rs1_data  = 32'hZZZZZZZZ;
+        end
+        uopHi.valid     = `TRUE;
+        uopLo.valid     = `TRUE;
+        uopHi.uOP       = MULTHI_U;
+        uopHi.id        = id;
+        uopLo.id        = id + 1;
+        uopLo.uOP       = MULTLO_U;
+        rdata.rs0_data  = mul1;
+        rdata.rs1_data  = mul2;
+        @ (posedge clk) #1 begin
+            uopHi           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+            uopLo           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+            rdata.rs0_data  = 32'hZZZZZZZZ;
+            rdata.rs1_data  = 32'hZZZZZZZZ;
+        end
+    endtask //automatic
+endinterface //MDUTestInterface_MUL
+
+interface MDUTestInterface_DIV;
+    wire         clk;
+    UOPBundle    uopHi;
+    UOPBundle    uopLo;
+    PRFrData     rdata;
+    logic        divBusy;
+
+    task automatic init();
+        uopHi           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+        uopLo           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+        rdata.rs0_data  = 32'hZZZZZZZZ;
+        rdata.rs1_data  = 32'hZZZZZZZZ;
+    endtask //automatic
+
+    task automatic sendDiv(logic [31:0] div1, logic [31:0] div2, logic[`ROB_ID_W] id, ref logic mulIsReq);
+        while (divBusy || mulIsReq) @(posedge clk) #1 begin
+            uopHi           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+            uopLo           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+            rdata.rs0_data  = 32'hZZZZZZZZ;
+            rdata.rs1_data  = 32'hZZZZZZZZ;
+        end
+        uopHi.valid     = `TRUE;
+        uopLo.valid     = `TRUE;
+        uopHi.uOP       = DIVHI_U;
+        uopLo.uOP       = DIVLO_U;
+        uopHi.id        = id;
+        uopLo.id        = id + 1;
+        rdata.rs0_data  = div2;
+        rdata.rs1_data  = div1;
+        @ (posedge clk) #1 begin
+            uopHi           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+            uopLo           = 300'hZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ;
+            rdata.rs0_data  = 32'hZZZZZZZZ;
+            rdata.rs1_data  = 32'hZZZZZZZZ;
+        end
+    endtask //automatic
+endinterface //MDUTestInterface_DIV
 
 typedef struct packed {
     UOPBundle ops;
