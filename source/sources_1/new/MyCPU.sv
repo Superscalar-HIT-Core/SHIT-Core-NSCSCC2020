@@ -38,7 +38,7 @@ module MyCPU(
     input  wire [ 1:0]  s_axi_rresp     ,
     input  wire         s_axi_rlast     ,
     input  wire         s_axi_rvalid    ,
-    output wire         s_axi_rready   
+    output wire         s_axi_rready    
 );
     
     AXIReadAddr         axiReadAddr();

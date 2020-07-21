@@ -6,6 +6,8 @@
 !*.xci
 !*.sv
 !*.svh
+!*.coe
+!ifuTest.txt
 SHIT-Core.cache
 SHIT-Core.hw
 SHIT-Core.sim

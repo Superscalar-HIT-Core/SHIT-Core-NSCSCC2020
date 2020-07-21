@@ -39,8 +39,8 @@ module IF_3(
         .jr     (inst1Jr                )
     );
 
-    assign inst0 = if3_regs.inst0;
-    assign inst1 = if3_regs.inst1;
+    assign if3_regs.inst0 = inst0;
+    assign if3_regs.inst1 = inst1;
 
     assign inst0NLPTaken = (inst0.nlpInfo.valid && inst0.nlpInfo.taken) ? `TRUE : `FALSE;   // eliminate X state
     assign inst1NLPTaken = (inst1.nlpInfo.valid && inst1.nlpInfo.taken) ? `TRUE : `FALSE;
