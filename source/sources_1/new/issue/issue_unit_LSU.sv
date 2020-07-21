@@ -63,7 +63,6 @@ module iq_lsu(
     input enq_req_0,
     input enq_req_1,
     input deq_req_0,
-    input Wake_Info wake_Info,
     input [`LSU_QUEUE_IDX_LEN-2:0] deq0_idx,
     input LSU_Queue_Meta din_0, din_1,
     output LSU_Queue_Meta dout_0,
@@ -79,6 +78,12 @@ module iq_lsu(
     input [9:0] busyvec_l,
     input [9:0] busyvec_r
     );
+
+assign scoreboard_rd_num_l[8] = din_0.ops.op0PAddr;
+assign scoreboard_rd_num_l[9] = din_1.ops.op0PAddr;
+assign scoreboard_rd_num_r[8] = din_0.ops.op1PAddr;
+assign scoreboard_rd_num_r[9] = din_1.ops.op1PAddr;
+
 reg [`LSU_QUEUE_IDX_LEN-1:0] tail;
 assign almost_full = (tail == `LSU_QUEUE_IDX_LEN'h`LSU_QUEUE_LEN_MINUS1);  // 差1位满，也不能写入
 assign empty = (tail == `LSU_QUEUE_IDX_LEN'h0);  // 差1位满，也不能写入
@@ -177,7 +182,6 @@ module issue_unit_LSU(
     input clk,
     input rst,
     input flush,        // 清除请求
-    input Wake_Info wake_Info,      // TODO,外部输入唤醒信号,连接到队列中
     input LSU_Queue_Meta inst_Ops_0, inst_Ops_1,      // 从译码模块来的，指令的译码信息
     input enq_req_0, enq_req_1,                     // 指令入队请求
     // 此处，LSU没有准备好，是不能发射的
@@ -190,10 +194,7 @@ module issue_unit_LSU(
     input [9:0] busyvec_l,
     input [9:0] busyvec_r
     );
-assign scoreboard_rd_num_l[8] = inst_Ops_0.ops.op0PAddr;
-assign scoreboard_rd_num_l[9] = inst_Ops_1.ops.op0PAddr;
-assign scoreboard_rd_num_r[8] = inst_Ops_0.ops.op1PAddr;
-assign scoreboard_rd_num_r[9] = inst_Ops_1.ops.op1PAddr;
+
 wire [`LSU_QUEUE_LEN-1:0] ready_vec, valid_vec, isStore_vec;
 reg [`LSU_QUEUE_LEN-1:0] store_mask;
 wire [`LSU_QUEUE_IDX_LEN-2:0]   sel0;

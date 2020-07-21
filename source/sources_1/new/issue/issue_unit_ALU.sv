@@ -76,6 +76,12 @@ module iq_alu(
     input [9:0] busyvec_l,
     input [9:0] busyvec_r
     );
+
+assign scoreboard_rd_num_l[8] = din_0.ops.op0PAddr;
+assign scoreboard_rd_num_l[9] = din_1.ops.op0PAddr;
+assign scoreboard_rd_num_r[8] = din_0.ops.op1PAddr;
+assign scoreboard_rd_num_r[9] = din_1.ops.op1PAddr;
+
 reg [`ALU_QUEUE_IDX_LEN-1:0] tail;
 assign almost_full = (tail == `ALU_QUEUE_IDX_LEN'h`ALU_QUEUE_LEN_MINUS1);  // 差1位满，也不能写入
 assign empty = (tail == `ALU_QUEUE_IDX_LEN'h0);  // 差1位满，也不能写入
@@ -187,11 +193,6 @@ module issue_unit_ALU(
     input [9:0] busyvec_l,
     input [9:0] busyvec_r
     );
-    assign scoreboard_rd_num_l[8] = inst_Ops_0.ops.op0PAddr;
-    assign scoreboard_rd_num_l[9] = inst_Ops_1.ops.op0PAddr;
-    assign scoreboard_rd_num_r[8] = inst_Ops_0.ops.op1PAddr;
-    assign scoreboard_rd_num_r[9] = inst_Ops_1.ops.op1PAddr;
-
 
 wire [`ALU_QUEUE_LEN-1:0] ready_vec, valid_vec;
 
