@@ -76,6 +76,8 @@ MDU_Queue_Meta dispatch_mdu_0;
 // Common Data /////////////////////////////
 wire set_busy_0, set_busy_1;
 PRFNum set_busy_num_0, set_busy_num_1;
+Dispatch_ROB dispatch_rob();
+
 /////////////////////////////////////////////
 dispatch u_dispatch(
     .inst_0_ops                         (dispatch_inst0_in), 
@@ -103,8 +105,12 @@ dispatch u_dispatch(
     .dispatch_inst0_wnum                (set_busy_num_0),
     .dispatch_inst1_wnum                (set_busy_num_1),
     .dispatch_inst0_wen                 (set_busy_0),
-    .dispatch_inst1_wen                 (set_busy_1)
+    .dispatch_inst1_wen                 (set_busy_1),
+    .dispatch_rob                       (dispatch_rob)
     );
+
+
+
 
 // Register wake //////////////////////////////////////////
 PRFNum wake_reg_ALU_0, wake_reg_ALU_1, wake_reg_LSU, wake_reg_MDU;
