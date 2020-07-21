@@ -229,20 +229,47 @@ issue_unit_LSU issue_lsu(
     .issue_en_0                         (issue_lsu_en),
     .ready                              (lsu_queue_ready),
     // Scoreboard
-    .scoreboard_rd_num_l                (scoreboard_rd_num_l_aluiq2sb),
-    .scoreboard_rd_num_r                (scoreboard_rd_num_r_aluiq2sb),
-    .busyvec_l                          (busyvec_l_sb2aluiq),
-    .busyvec_r                          (busyvec_r_sb2aluiq)
+    .scoreboard_rd_num_l                (scoreboard_rd_num_l_lsuiq2sb),
+    .scoreboard_rd_num_r                (scoreboard_rd_num_r_lsuiq2sb),
+    .busyvec_l                          (busyvec_l_sb2lsuiq),
+    .busyvec_r                          (busyvec_r_sb2lsuiq)
 );
 
 wire mul_busy, div_busy;
 assign mul_busy = 0;
 assign div_busy = 0;
+PRFNum [9:0] scoreboard_rd_num_l_mduiq2sb;
+PRFNum [9:0] scoreboard_rd_num_r_mduiq2sb;
+wire [9:0] busyvec_l_sb2mduiq;
+wire [9:0] busyvec_r_sb2mduiq;
+scoreboard_20r6w scoreboard_mdu(
+    .clk                                (clk),
+    .rst                                (rst),
+    .flush                              (flush),
+    // dispatched instructions
+    .set_busy_0                         (set_busy_0),
+    .set_busy_1                         (set_busy_1),
+    .set_busy_num_0                     (set_busy_num_0),
+    .set_busy_num_1                     (set_busy_num_1),
+    // issued instructions(at most 4 instructions issue at a time)
+    .clr_busy_ALU0                      (wake_reg_ALU_0_en),
+    .clr_busy_ALU1                      (wake_reg_ALU_1_en),
+    .clr_busy_LSU                       (wake_reg_LSU_en),
+    .clr_busy_MDU                       (wake_reg_MDU_en),
+    .clr_busy_num_ALU0                  (wake_reg_ALU_0),
+    .clr_busy_num_ALU1                  (wake_reg_ALU_1),
+    .clr_busy_num_LSU                   (wake_reg_LSU),
+    .clr_busy_num_MDU                   (wake_reg_MDU),
+    .rd_num_l                           (scoreboard_rd_num_l_mduiq2sb),
+    .rd_num_r                           (scoreboard_rd_num_r_mduiq2sb),
+    .busyvec_l                          (busyvec_l_sb2mduiq),
+    .busyvec_r                          (busyvec_r_sb2mduiq)
+);
+
 issue_unit_MDU issue_mdu(
     .clk                                (clk),
     .rst                                (rst),
     .flush                              (0),
-    .wake_Info                          (wake_info_to_MDU),
     .inst_Ops_0                         (dispatch_mdu_0),
     .enq_req_0                          (rs_mdu_wen_0),
     .mul_busy                           (mul_busy),
@@ -250,7 +277,12 @@ issue_unit_MDU issue_mdu(
     .issue_info_hi                      (issue_mdu_inst_hi),
     .issue_info_lo                      (issue_mdu_inst_lo),
     .issue_en_0                         (issue_mdu_en),
-    .ready                              (mdu_queue_ready)
+    .ready                              (mdu_queue_ready),
+    // Scoreboard
+    .scoreboard_rd_num_l                (scoreboard_rd_num_l_mduiq2sb),
+    .scoreboard_rd_num_r                (scoreboard_rd_num_r_mduiq2sb),
+    .busyvec_l                          (busyvec_l_sb2mduiq),
+    .busyvec_r                          (busyvec_r_sb2mduiq)
     );
 
 

@@ -4,15 +4,18 @@ module iq_entry_MDU(
     input clk,
     input rst,
     input flush,
-    input Wake_Info wake_Info,
     input Queue_Ctrl_Meta queue_ctrl,
     input MDU_Queue_Meta din0, up0,
+    input busy_rs0, busy_rs1,
+    input Arbitration_Info up0_rdy,  // 从上面输出的，下一个状态的ready
     output MDU_Queue_Meta dout,
-    output rdy
+    output PRFNum rs0, rs1,
+    output rdy,
+    output Arbitration_Info rdy_next_state,     // 当前Slot中，下一个状态（不考虑移动的ready)
+    output isMul
     );
 
 MDU_Queue_Meta up_data; 
-wire rs1waked, rs2waked, new_prs1_rdy, new_prs2_rdy;
 assign up_data = up0;
 MDU_Queue_Meta enq_data; 
 assign enq_data = din0;
@@ -22,31 +25,26 @@ assign next_data =  ( queue_ctrl.enq_en && ~(queue_ctrl.freeze)) ? enq_data :
 UOPBundle ops;
 assign ops = next_data.ops_hi;
 
-assign rs1waked =   (wake_Info.wen_0 && (wake_Info.wb_num0_i == ops.op0PAddr)) || 
-                    (wake_Info.wen_1 && (wake_Info.wb_num1_i == ops.op0PAddr)) || 
-                    (wake_Info.wen_2 && (wake_Info.wb_num2_i == ops.op0PAddr)) || 
-                    (wake_Info.wen_3 && (wake_Info.wb_num3_i == ops.op0PAddr));
-
-assign rs2waked =   (wake_Info.wen_0 && (wake_Info.wb_num0_i == ops.op1PAddr)) || 
-                    (wake_Info.wen_1 && (wake_Info.wb_num1_i == ops.op1PAddr)) || 
-                    (wake_Info.wen_2 && (wake_Info.wb_num2_i == ops.op1PAddr)) || 
-                    (wake_Info.wen_3 && (wake_Info.wb_num3_i == ops.op1PAddr));
-
-assign new_prs1_rdy = next_data.rdys.prs1_rdy || rs1waked;
-assign new_prs2_rdy = next_data.rdys.prs2_rdy || rs2waked;
-
-Arbitration_Info rdys;
-assign rdys.prs1_rdy = new_prs1_rdy;
-assign rdys.prs2_rdy = new_prs2_rdy;
+Arbitration_Info up_rdy; 
+assign up_rdy = up0_rdy;
+Arbitration_Info enq_rdy; 
+assign enq_rdy = din0.rdys;
+Arbitration_Info next_rdy;
+assign next_rdy =  ( queue_ctrl.enq_en && ~(queue_ctrl.freeze)) ? enq_rdy :
+                    ( queue_ctrl.cmp_en ) ? up_rdy : rdy_next_state;
+assign rdy_next_state.prs1_rdy = ~busy_rs0;
+assign rdy_next_state.prs2_rdy = ~busy_rs1;
+assign rs0 = dout.ops_hi.op0PAddr;
+assign rs1 = dout.ops_hi.op1PAddr;
 
 MDU_Queue_Meta next_data_with_wake;
 assign next_data_with_wake.ops_hi = next_data.ops_hi;
 assign next_data_with_wake.ops_lo = next_data.ops_lo;
-assign next_data_with_wake.rdys = rdys;
+assign next_data_with_wake.rdys = next_rdy;
 assign next_data_with_wake.isMul = next_data.isMul;
 
 assign rdy = dout.rdys.prs1_rdy && dout.rdys.prs2_rdy;
-
+assign isMul = dout.isMul;
 always_ff @(posedge clk)    begin
     if(rst || flush) begin
         dout <= 0;
@@ -63,19 +61,34 @@ module iq_mdu(
     input flush, 
     input enq_req_0,
     input deq_req_0,
-    input Wake_Info wake_Info,
     input [`MDU_QUEUE_IDX_LEN-2:0] deq0_idx,
     input MDU_Queue_Meta din_0, 
     output MDU_Queue_Meta dout_0,
     output full,
     output [`MDU_QUEUE_LEN-1:0] ready_vec,
-    output [`MDU_QUEUE_LEN-1:0] valid_vec
+    output [`MDU_QUEUE_LEN-1:0] valid_vec,
+    output [`MDU_QUEUE_LEN-1:0] isMul_vec,
+    output PRFNum [9:0] scoreboard_rd_num_l,
+    output PRFNum [9:0] scoreboard_rd_num_r,
+    input [9:0] busyvec_l,
+    input [9:0] busyvec_r
     );
+
+assign scoreboard_rd_num_l[8] = din_0.ops_hi.op0PAddr;
+assign scoreboard_rd_num_r[8] = din_0.ops_hi.op1PAddr;
+assign scoreboard_rd_num_l[9] = 0;
+assign scoreboard_rd_num_r[9] = 0;
+
 reg [`MDU_QUEUE_IDX_LEN-1:0] tail;
-assign empty = (tail == `MDU_QUEUE_IDX_LEN'h0);  // 差1位满，也不能写入
 assign full = (tail == `MDU_QUEUE_IDX_LEN'h`MDU_QUEUE_LEN);
-assign almost_empty = (tail == `MDU_QUEUE_IDX_LEN'h1);
 wire freeze = full;
+
+// 唤醒信息
+Arbitration_Info [`MDU_QUEUE_LEN+1:0] rdy_next_state;
+wire [`MDU_QUEUE_LEN-1:0] rs0_busy;
+wire [`MDU_QUEUE_LEN-1:0] rs1_busy;
+assign rdy_next_state[`MDU_QUEUE_LEN] = 0;
+assign rdy_next_state[`MDU_QUEUE_LEN+1] = 0;
 
 // 入队使能信号
 wire [`MDU_QUEUE_LEN-1:0] deq, enq;
@@ -99,7 +112,12 @@ assign valid_vec =  ( tail == `MDU_QUEUE_IDX_LEN'd0 ) ? `MDU_QUEUE_LEN'b0000_000
                     ( tail == `MDU_QUEUE_IDX_LEN'd6 ) ? `MDU_QUEUE_LEN'b0011_1111 : 
                     ( tail == `MDU_QUEUE_IDX_LEN'd7 ) ? `MDU_QUEUE_LEN'b0111_1111 : 
                     ( tail == `MDU_QUEUE_IDX_LEN'd8 ) ? `MDU_QUEUE_LEN'b1111_1111 : `MDU_QUEUE_LEN'b0000_0000;
-
+MDU_Queue_Meta din_0_with_rdy;
+assign din_0_with_rdy.rdys.prs1_rdy = ~busyvec_l[8] | din_0.rdys.prs1_rdy;
+assign din_0_with_rdy.rdys.prs2_rdy = ~busyvec_r[8] | din_0.rdys.prs2_rdy;
+assign din_0_with_rdy.ops_hi = din_0.ops_hi;
+assign din_0_with_rdy.ops_lo = din_0.ops_lo;
+assign din_0_with_rdy.isMul = din_0.isMul;
 genvar i;
 generate 
     for(i=0;i<`MDU_QUEUE_LEN;i++)   begin
@@ -108,11 +126,17 @@ generate
             .rst                (rst             ),
             .flush              (flush           ),
             .queue_ctrl         (queue_ctrl[i]   ),
-            .din0               (din_0           ),
+            .din0               (din_0_with_rdy  ),
             .up0                (dout[i+1]       ),
+            .up0_rdy            (rdy_next_state[i+1]),
             .dout               (dout[i]         ),
             .rdy                (ready_vec[i]    ),
-            .wake_Info          (wake_Info       )
+            .isMul              (isMul_vec[i]    ),
+            .rs0                (scoreboard_rd_num_l[i]     ),
+            .rs1                (scoreboard_rd_num_r[i]     ),
+            .busy_rs0           (busyvec_l[i]               ),
+            .busy_rs1           (busyvec_r[i]               ),
+            .rdy_next_state     (rdy_next_state[i]          )
         );
         assign queue_ctrl[i].enq_sel    =   ( new_tail_0 != i );
         assign queue_ctrl[i].cmp_en     =   ( deq_req_0 && i>= deq0_idx );
@@ -141,7 +165,6 @@ module issue_unit_MDU(
     input clk,
     input rst,
     input flush,        // 清除请求
-    input Wake_Info wake_Info,      // TODO,外部输入唤醒信号,连接到队列中
     input MDU_Queue_Meta inst_Ops_0,      // 从译码模块来的，指令的译码信息
     input enq_req_0,                     // 指令入队请求
     // 乘除法部件正忙，不能发射
@@ -150,10 +173,14 @@ module issue_unit_MDU(
     output UOPBundle issue_info_hi,         // 输出给执行单元流水线的
     output UOPBundle issue_info_lo,         // 输出给执行单元流水线的
     output issue_en_0,
-    output ready
+    output ready,
+    output PRFNum [9:0] scoreboard_rd_num_l,
+    output PRFNum [9:0] scoreboard_rd_num_r,
+    input [9:0] busyvec_l,
+    input [9:0] busyvec_r
     );
 
-wire [`MDU_QUEUE_LEN-1:0] ready_vec, valid_vec;
+wire [`MDU_QUEUE_LEN-1:0] ready_vec, valid_vec, isMul_vec;
 
 wire [`MDU_QUEUE_IDX_LEN-2:0]   sel0;
 wire                            sel0_valid;
@@ -176,17 +203,23 @@ iq_mdu u_iq_mdu(
     // To Arbiter
     .ready_vec      (ready_vec),
     .valid_vec      (valid_vec),
+    .isMul_vec      (isMul_vec),
     // To Exu
     .dout_0         (mdu_queue_dout0),
     // To Dispatch
     .full           (full           ),
     // Wake Info
-    .wake_Info      (wake_Info)
+    .scoreboard_rd_num_l(scoreboard_rd_num_l),
+    .scoreboard_rd_num_r(scoreboard_rd_num_r),
+    .busyvec_l(busyvec_l),
+    .busyvec_r(busyvec_r)
 );
 
 assign ready = ~full;   // 如果满了，则不能继续接受
+wire [`MDU_QUEUE_LEN-1:0] mul_valid_mask = mul_busy ? ~isMul_vec : isMul_vec;
+wire [`MDU_QUEUE_LEN-1:0] div_valid_mask = div_busy & isMul_vec : ~isMul_vec;
 
-wire [`MDU_QUEUE_LEN-1:0] arbit_vec = ready_vec & valid_vec;
+wire [`MDU_QUEUE_LEN-1:0] arbit_vec = ready_vec & valid_vec & mul_valid_mask & div_valid_mask;
 
 // 发射仲裁逻辑
 issue_arbiter_8_sel1 arbit(

@@ -16,7 +16,6 @@ module iq_entry_LSU(
     );
 
 LSU_Queue_Meta up_data; 
-wire rs1waked, rs2waked, new_prs1_rdy, new_prs2_rdy;
 assign up_data = up0;
 LSU_Queue_Meta enq_data; 
 assign enq_data = ( queue_ctrl.enq_sel == 1'b0 ) ? din0: din1;
@@ -68,8 +67,6 @@ module iq_lsu(
     output LSU_Queue_Meta dout_0,
     output almost_full,
     output full,
-    output empty,
-    output almost_empty,
     output [`LSU_QUEUE_LEN-1:0] valid_vec,
     output [`LSU_QUEUE_LEN-1:0] ready_vec,
     output [`LSU_QUEUE_LEN-1:0] isStore_vec,
@@ -86,19 +83,15 @@ assign scoreboard_rd_num_r[9] = din_1.ops.op1PAddr;
 
 reg [`LSU_QUEUE_IDX_LEN-1:0] tail;
 assign almost_full = (tail == `LSU_QUEUE_IDX_LEN'h`LSU_QUEUE_LEN_MINUS1);  // 差1位满，也不能写入
-assign empty = (tail == `LSU_QUEUE_IDX_LEN'h0);  // 差1位满，也不能写入
 assign full = (tail == `LSU_QUEUE_IDX_LEN'h`LSU_QUEUE_LEN);
-assign almost_empty = (tail == `LSU_QUEUE_IDX_LEN'h1);
 wire freeze = almost_full || full;
 
 // 唤醒信息
-PRFNum [`ALU_QUEUE_LEN-1:0] rs0_nums;
-PRFNum [`ALU_QUEUE_LEN-1:0] rs1_nums;
-Arbitration_Info [`ALU_QUEUE_LEN+1:0] rdy_next_state;
-wire [`ALU_QUEUE_LEN-1:0] rs0_busy;
-wire [`ALU_QUEUE_LEN-1:0] rs1_busy;
-assign rdy_next_state[`ALU_QUEUE_LEN] = 0;
-assign rdy_next_state[`ALU_QUEUE_LEN+1] = 0;
+Arbitration_Info [`LSU_QUEUE_LEN+1:0] rdy_next_state;
+wire [`LSU_QUEUE_LEN-1:0] rs0_busy;
+wire [`LSU_QUEUE_LEN-1:0] rs1_busy;
+assign rdy_next_state[`LSU_QUEUE_LEN] = 0;
+assign rdy_next_state[`LSU_QUEUE_LEN+1] = 0;
 
 // 入队使能信号
 wire [`LSU_QUEUE_LEN-1:0] deq, enq;
