@@ -3,6 +3,7 @@
 module PlayGround(
 
     );
+    assign cpu.lsuWBOut = 0;
     // AXIReadAddr     axiReadAddr();
     // AXIReadData     axiReadData();
     // AXIWriteAddr    axiWriteAddr();
