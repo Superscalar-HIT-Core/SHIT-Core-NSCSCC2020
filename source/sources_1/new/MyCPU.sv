@@ -257,11 +257,11 @@ module MyCPU(
         .clr_busy_ALU0                      (wake_reg_ALU_0_en),
         .clr_busy_ALU1                      (wake_reg_ALU_1_en),
         .clr_busy_LSU                       (wake_reg_LSU_en),
-        .clr_busy_MDU                       (wake_reg_MDU_en),
+        .clr_busy_MDU                       (mduWBReq.wen),
         .clr_busy_num_ALU0                  (wake_reg_ALU_0),
         .clr_busy_num_ALU1                  (wake_reg_ALU_1),
         .clr_busy_num_LSU                   (wake_reg_LSU),
-        .clr_busy_num_MDU                   (wake_reg_MDU),
+        .clr_busy_num_MDU                   (mduWBReq.rd), 
         .rd_num_l                           (scoreboard_rd_num_l_aluiq2sb),
         .rd_num_r                           (scoreboard_rd_num_r_aluiq2sb),
         .busyvec_l                          (busyvec_l_sb2aluiq),
@@ -290,6 +290,37 @@ module MyCPU(
         .busyvec_l                          (busyvec_l_sb2aluiq),
         .busyvec_r                          (busyvec_r_sb2aluiq)
     );
+
+    // LSU Queue Scoreboard
+    PRFNum [9:0] scoreboard_rd_num_l_lsuiq2sb;
+    PRFNum [9:0] scoreboard_rd_num_r_lsuiq2sb;
+    wire [9:0] busyvec_l_sb2lsuiq;
+    wire [9:0] busyvec_r_sb2lsuiq;
+    scoreboard_20r6w scoreboard_lsu(
+        .clk                                (clk),
+        .rst                                (rst),
+        .flush                              (flush),
+        // dispatched instructions
+        .set_busy_0                         (set_busy_0),
+        .set_busy_1                         (set_busy_1),
+        .set_busy_num_0                     (set_busy_num_0),
+        .set_busy_num_1                     (set_busy_num_1),
+        // issued instructions(at most 4 instructions issue at a time)
+        .clr_busy_ALU0                      (wake_reg_ALU_0_en),
+        .clr_busy_ALU1                      (wake_reg_ALU_1_en),
+        .clr_busy_LSU                       (wake_reg_LSU_en),
+        .clr_busy_MDU                       (wake_reg_MDU_en),
+        .clr_busy_num_ALU0                  (wake_reg_ALU_0),
+        .clr_busy_num_ALU1                  (wake_reg_ALU_1),
+        .clr_busy_num_LSU                   (wake_reg_LSU),
+        .clr_busy_num_MDU                   (wake_reg_MDU),
+        .rd_num_l                           (scoreboard_rd_num_l_lsuiq2sb),
+        .rd_num_r                           (scoreboard_rd_num_r_lsuiq2sb),
+        .busyvec_l                          (busyvec_l_sb2lsuiq),
+        .busyvec_r                          (busyvec_r_sb2lsuiq)
+    );
+
+
     issue_unit_LSU issue_lsu(
         .clk                                (clk),
         .rst                                (rst),
@@ -308,6 +339,35 @@ module MyCPU(
         .busyvec_l                          (busyvec_l_sb2lsuiq),
         .busyvec_r                          (busyvec_r_sb2lsuiq)
     );
+
+    PRFNum [9:0] scoreboard_rd_num_l_mduiq2sb;
+    PRFNum [9:0] scoreboard_rd_num_r_mduiq2sb;
+    wire [9:0] busyvec_l_sb2mduiq;
+    wire [9:0] busyvec_r_sb2mduiq;
+    scoreboard_20r6w scoreboard_mdu(
+        .clk                                (clk),
+        .rst                                (rst),
+        .flush                              (flush),
+        // dispatched instructions
+        .set_busy_0                         (set_busy_0),
+        .set_busy_1                         (set_busy_1),
+        .set_busy_num_0                     (set_busy_num_0),
+        .set_busy_num_1                     (set_busy_num_1),
+        // issued instructions(at most 4 instructions issue at a time)
+        .clr_busy_ALU0                      (alu0WBReq.wen),
+        .clr_busy_ALU1                      (alu1WBReq.wen),
+        .clr_busy_LSU                       (wake_reg_LSU_en),
+        .clr_busy_MDU                       (mduWBReq.wen),
+        .clr_busy_num_ALU0                  (alu0WBReq.rd),
+        .clr_busy_num_ALU1                  (alu1WBReq.rd),
+        .clr_busy_num_LSU                   (wake_reg_LSU),
+        .clr_busy_num_MDU                   (mduWBReq.rd),
+        .rd_num_l                           (scoreboard_rd_num_l_mduiq2sb),
+        .rd_num_r                           (scoreboard_rd_num_r_mduiq2sb),
+        .busyvec_l                          (busyvec_l_sb2mduiq),
+        .busyvec_r                          (busyvec_r_sb2mduiq)
+    );
+
     issue_unit_MDU issue_mdu(
         .clk                                (clk),
         .rst                                (rst),

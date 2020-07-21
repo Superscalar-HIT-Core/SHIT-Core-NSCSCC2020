@@ -206,8 +206,14 @@ assign wake_reg_0               = uops0.dstPAddr;
 assign wake_reg_1               = uops1.dstPAddr;
 assign wake_reg_0_en            = uops0.dstwe && sel0_valid;
 assign wake_reg_1_en            = uops1.dstwe && sel1_valid;
-assign issue_info_0             = uops0;
-assign issue_info_1             = uops1;
+
+always_comb begin
+    issue_info_0             = uops0;
+    issue_info_1             = uops1;
+    issue_info_0.valid       = issue_en_0;
+    issue_info_1.valid       = issue_en_1;
+end
+
 assign issue_en_0               = sel0_valid;
 assign issue_en_1               = sel1_valid;
 

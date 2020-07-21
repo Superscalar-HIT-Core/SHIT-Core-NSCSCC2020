@@ -31,7 +31,7 @@ Word src0, src1;
 assign src0 = uops.op0re ?  ( bypass_alu0_src0_en ? bypass_alu0.wdata : 
                             ( bypass_alu1_src0_en ? bypass_alu1.wdata : rdata.rs0_data ) ) : rdata.rs0_data;
 assign src1 = uops.op1re ?  ( bypass_alu0_src1_en ? bypass_alu0.wdata : 
-                            ( bypass_alu1_src1_en ? bypass_alu1.wdata : rdata.rs0_data ) ) : uops.imm ;
+                            ( bypass_alu1_src1_en ? bypass_alu1.wdata : rdata.rs1_data ) ) : uops.imm ;
 
 uOP uop;
 assign uop = uops.uOP;
@@ -169,11 +169,12 @@ assign overflow =   ( (!src0[31] & !src1_complement[31] & sum[31]) |
                     ( ( uop == ADD_U ) || ( uop == ADDI_U ) || ( uop == SUB_U ) ) ? 
                     1'b1 : 1'b0; 
 
-ALUType alutype = uops.aluType;
+ALUType alutype;
+assign alutype = uops.aluType;
 
 // 结果赋值
 assign wbData.rd = uops.dstPAddr;
-assign wbData.wen = uops.dstwe;
+assign wbData.wen = uops.dstwe & uops.valid;
 assign wbData.wdata =   ( alutype == ALU_LOGIC  ) ? logic_res       :
                         ( alutype == ALU_SHIFT  ) ? shift_res       :
                         ( alutype == ALU_ARITH  ) ? arithmetic_res  :

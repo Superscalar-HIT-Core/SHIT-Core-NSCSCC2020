@@ -185,9 +185,13 @@ wire [`MDU_QUEUE_LEN-1:0] ready_vec, valid_vec, isMul_vec;
 wire [`MDU_QUEUE_IDX_LEN-2:0]   sel0;
 wire                            sel0_valid;
 MDU_Queue_Meta                  mdu_queue_dout0;
-assign issue_info_hi            = mdu_queue_dout0.ops_hi;
-assign issue_info_lo            = mdu_queue_dout0.ops_lo;
-assign issue_en_0               = sel0_valid;
+assign issue_en_0            = sel0_valid;
+always_comb begin
+    issue_info_hi            = mdu_queue_dout0.ops_hi;
+    issue_info_lo            = mdu_queue_dout0.ops_lo;
+    issue_info_hi.valid      = sel0_valid;
+    issue_info_lo.valid      = sel0_valid;
+end
 
 iq_mdu u_iq_mdu(
     // Global Signals
