@@ -224,7 +224,7 @@ issue_unit_MDU issue_mdu(
 integer fp;
 integer count;
 initial begin
-    #0 fp = $fopen("../../../../source/instr.hex","r");
+    #0 fp = $fopen("D:\\SHIT-Core\\source\\instr.hex","r");
     regs_decode0.inst.valid = 0;
     regs_decode1.inst.valid = 0;
     ctrl_decode_rename_regs.pause = 0;
