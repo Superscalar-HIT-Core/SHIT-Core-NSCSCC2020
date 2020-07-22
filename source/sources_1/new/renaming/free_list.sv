@@ -4,6 +4,7 @@ module free_list(
     input clk,
     input rst,
     input recover,      // recover 信号仅支持一个周期
+    input pause,
     // 来自指令的重命名请求
     // 如果目的寄存器是0，则不需要进行重命名
     input inst_0_req,
@@ -44,9 +45,9 @@ freelist_enc64 enc1(
 
 assign free_list_3 = inst_1_req ? (free_list_2 | (1'b1 << free_num_1)) : free_list_2;   // 第二条指令分配之后
 
-assign allocatable =  (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req) ||
-                    (free_valid_0 && inst_0_req && ~inst_1_req) ||
-                    (free_valid_1 && inst_1_req && ~inst_0_req); // 只有一个指令请求，且请求完就满了的情况
+assign allocatable =    (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req) ||
+                        (free_valid_0 && inst_0_req && ~inst_1_req) ||
+                        (free_valid_1 && inst_1_req && ~inst_0_req) || (~inst_0_req && ~inst_1_req); // 只有一个指令请求，且请求完就满了的情况
 
 // assign allocatable =  (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req && (free_num_0 != free_num_1)) ||
 //                     (free_valid_0 && inst_0_req && ~inst_1_req) ||
@@ -59,11 +60,16 @@ wire [`PRF_NUM-1:0] free_list_after_alloc = allocatable ? free_list_3 : free_lis
 assign free_list_4 = commit_info_0.wr_reg_commit && commit_valid_0 ? (free_list_after_alloc & ~(`PRF_NUM'b1 << commit_info_0.stale_prf)) : free_list_after_alloc;
 assign free_list_5 = commit_info_1.wr_reg_commit && commit_valid_1 ? (free_list_4 & ~(`PRF_NUM'b1 << commit_info_1.stale_prf)) : free_list_4;
 
+wire [`PRF_NUM-1:0] free_list1_after_free = commit_valid_0 ? (free_list_1 & ~(`PRF_NUM'b1 << commit_info_0.stale_prf)) : free_list_1;
+wire [`PRF_NUM-1:0] free_list2_after_free = commit_valid_0 ? (free_list1_after_free & ~(`PRF_NUM'b1 << commit_info_1.stale_prf)) : free_list1_after_free;
+
 always @(posedge clk)   begin
     if(rst) begin
         free_list_1 <= `PRF_NUM'b1;     // 0号寄存器永远不分配出去
     end else if(recover)    begin
         free_list_1 <= committed_fl | `PRF_NUM'b1;
+    end else if(pause)  begin
+        free_list_1 <= free_list2_after_free;   // 暂停时，只允许释放，不进行分配
     end else begin
         free_list_1 <= free_list_5 | `PRF_NUM'b1;
     end

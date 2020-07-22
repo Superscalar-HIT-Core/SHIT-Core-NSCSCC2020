@@ -92,6 +92,10 @@ module ROB(
 
     always_ff @(posedge clk) begin
         if(rst || ctrl_rob.flush) begin
+            for(integer i=0;i<`ROB_SIZE;i++) begin
+                data0[i]             <= 0;
+                data1[i]             <= 0;
+            end 
             tail                    <= 32'h0;
             for(integer i = 0; i < `ROB_SIZE; i++) begin
                 data0[i] <= 0;

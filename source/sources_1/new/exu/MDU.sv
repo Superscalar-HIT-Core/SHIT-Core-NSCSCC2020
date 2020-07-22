@@ -33,9 +33,9 @@ module MDU(
         .aclk                   (clk                    ),
         .aresetn                (~rst                   ),
         .s_axis_divisor_tvalid  (`TRUE                  ),  
-        .s_axis_divisor_tdata   (rdata.rs0_data         ),    
+        .s_axis_divisor_tdata   (rdata.rs1_data         ),    
         .s_axis_dividend_tvalid (`TRUE                  ),
-        .s_axis_dividend_tdata  (rdata.rs1_data         ),  
+        .s_axis_dividend_tdata  (rdata.rs0_data         ),  
         // .m_axis_dout_tvalid     (m_axis_dout_tvalid),        
         .m_axis_dout_tdata      ({quotient, remainder}  )           
     );

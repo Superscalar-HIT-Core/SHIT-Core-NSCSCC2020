@@ -1,23 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2020/07/22 02:27:18
-// Design Name: 
-// Module Name: Commit
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 `include "defines/defines.svh"
 
 module Commit(
@@ -76,6 +57,9 @@ module Commit(
         commit_rename_req_1.committed_arf   <= rob_commit.uOP1.dstLAddr;
         commit_rename_req_1.committed_prf   <= rob_commit.uOP1.dstPAddr;
         commit_rename_req_1.stale_prf       <= rob_commit.uOP1.dstPStale;
+
+        commit_rename_req_0.wr_reg_commit   <= rob_commit.uOP0.dstwe;
+        commit_rename_req_1.wr_reg_commit   <= rob_commit.uOP1.dstwe;
     end
 
     always_comb begin
