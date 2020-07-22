@@ -228,7 +228,38 @@ module ICache(
     always_ff @ (posedge clk) begin
         state           <= nextState;
         lastState       <= state;
-        valid           <= nxtvalid;
+        priority if (rst | ctrl_iCache.flush) begin
+            valid[0] = 0;
+            valid[1] = 0;
+            valid[2] = 0;
+            valid[3] = 0;
+        end else if(!valid[0][delayLineAddr]) begin
+            valid[0][delayLineAddr] = `TRUE;
+        end else if(!valid[1][delayLineAddr]) begin
+            valid[1][delayLineAddr] = `TRUE;
+        end else if(!valid[2][delayLineAddr]) begin
+            valid[2][delayLineAddr] = `TRUE;
+        end else if(!valid[3][delayLineAddr]) begin
+            valid[3][delayLineAddr] = `TRUE;
+        end else begin
+            priority casex (age[delayLineAddr])
+                3'b0?0: begin
+                    writeSel = 2'b00;
+                end
+                3'b0?1: begin
+                    writeSel = 2'b01;
+                end
+                3'b10?: begin
+                    writeSel = 2'b10;
+                end
+                3'b11?: begin
+                    writeSel = 2'b11;
+                end
+                default: begin
+                    writeSel = 2'b00;
+                end
+            endcase
+        end
         if(nextState == sReset) begin
             delayPC         <= 32'h0000_0000;
             delayLineAddr   <= 6'h00_0000;
@@ -262,37 +293,47 @@ module ICache(
     end
 
     always_comb begin
-        iCache_regs.inst0                   = regs_iCache.inst0;
-        iCache_regs.inst1                   = regs_iCache.inst1;
-        ctrl_iCache.pauseReq                = `FALSE;
-        instReq.valid                       = `FALSE;
-        instResp.ready                      = `FALSE;
-        iCache_regs.inst0                   = 0;
-        iCache_regs.inst1                   = 0;
+        iCache_regs.inst0           = regs_iCache.inst0;
+        iCache_regs.inst1           = regs_iCache.inst1;
+        ctrl_iCache.pauseReq        = `FALSE;
+        instReq.valid               = `FALSE;
+        instResp.ready              = `FALSE;
+        iCache_regs.inst0           = 0;
+        iCache_regs.inst1           = 0;
+
+        tag0IO.writeEn              = `FALSE;
+        tag1IO.writeEn              = `FALSE;
+        tag2IO.writeEn              = `FALSE;
+        tag3IO.writeEn              = `FALSE;
+
+        tag3IO.address              = lineAddress;
+        tag0IO.address              = lineAddress;
+        tag1IO.address              = lineAddress;
+        tag2IO.address              = lineAddress;
+
+        tag3IO.dataIn               = 0;
+        tag0IO.dataIn               = 0;
+        tag1IO.dataIn               = 0;
+        tag2IO.dataIn               = 0;
+    
+        data0IO.writeEn             = `FALSE;
+        data1IO.writeEn             = `FALSE;
+        data2IO.writeEn             = `FALSE;
+        data3IO.writeEn             = `FALSE;
+        
+        data3IO.address             = lineAddress;
+        data0IO.address             = lineAddress;
+        data1IO.address             = lineAddress;
+        data2IO.address             = lineAddress;
+        
+        data3IO.dataIn              = 0;
+        data0IO.dataIn              = 0;
+        data1IO.dataIn              = 0;
+        data2IO.dataIn              = 0;
         case(state)
             sStartUp: begin
                 instReq.valid               = `FALSE;
                 instResp.ready              = `FALSE || discardNextResp;
-
-                tag0IO.writeEn              = `FALSE;
-                tag1IO.writeEn              = `FALSE;
-                tag2IO.writeEn              = `FALSE;
-                tag3IO.writeEn              = `FALSE;
-
-                tag3IO.address              = lineAddress;
-                tag0IO.address              = lineAddress;
-                tag1IO.address              = lineAddress;
-                tag2IO.address              = lineAddress;
-            
-                data0IO.writeEn             = `FALSE;
-                data1IO.writeEn             = `FALSE;
-                data2IO.writeEn             = `FALSE;
-                data3IO.writeEn             = `FALSE;
-                
-                data3IO.address              = lineAddress;
-                data0IO.address              = lineAddress;
-                data1IO.address              = lineAddress;
-                data2IO.address              = lineAddress;
 
                 if(hit) begin
                     ctrl_iCache.pauseReq        = `FALSE;
@@ -312,25 +353,6 @@ module ICache(
                 ctrl_iCache.pauseReq        = !hit;
             end
             sRunning: begin
-                tag0IO.writeEn              = `FALSE;
-                tag1IO.writeEn              = `FALSE;
-                tag2IO.writeEn              = `FALSE;
-                tag3IO.writeEn              = `FALSE;
-
-                tag3IO.address              = lineAddress;
-                tag0IO.address              = lineAddress;
-                tag1IO.address              = lineAddress;
-                tag2IO.address              = lineAddress;
-            
-                data0IO.writeEn             = `FALSE;
-                data1IO.writeEn             = `FALSE;
-                data2IO.writeEn             = `FALSE;
-                data3IO.writeEn             = `FALSE;
-                
-                data3IO.address              = lineAddress;
-                data0IO.address              = lineAddress;
-                data1IO.address              = lineAddress;
-                data2IO.address              = lineAddress;
                 if(hit) begin
                     instReq.valid               = `FALSE;
                     instResp.ready              = `FALSE  || discardNextResp;
@@ -355,32 +377,18 @@ module ICache(
             sBlock: begin
                 instReq.valid               = `FALSE;
                 instResp.ready              = `TRUE;
-
-                tag0IO.writeEn              = `FALSE;
-                tag1IO.writeEn              = `FALSE;
-                tag2IO.writeEn              = `FALSE;
-                tag3IO.writeEn              = `FALSE;
-                
-                data0IO.writeEn             = `FALSE;
-                data1IO.writeEn             = `FALSE;
-                data2IO.writeEn             = `FALSE;
-                data3IO.writeEn             = `FALSE;
                 
                 ctrl_iCache.pauseReq        = ~instResp.valid;
 
                 if(instResp.valid) begin
                     priority if(!valid[0][delayLineAddr]) begin
                         writeSel = 2'b00;
-                        nxtvalid[0][delayLineAddr] = `TRUE;
                     end else if(!valid[1][delayLineAddr]) begin
                         writeSel = 2'b01;
-                        nxtvalid[1][delayLineAddr] = `TRUE;
                     end else if(!valid[2][delayLineAddr]) begin
                         writeSel = 2'b10;
-                        nxtvalid[2][delayLineAddr] = `TRUE;
                     end else if(!valid[3][delayLineAddr]) begin
                         writeSel = 2'b11;
-                        nxtvalid[3][delayLineAddr] = `TRUE;
                     end else begin
                         priority casex (age[delayLineAddr])
                             3'b0?0: begin

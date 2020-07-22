@@ -306,6 +306,14 @@ module AXIInterface(
         axiReadAddr.length  = 4'b0011;  // burst 4
         axiReadAddr.size    = 3'b010;
         axiReadAddr.burst   = 2'b10;
+                
+        dReadReady          = `FALSE;
+        iReadReady          = `FALSE;
+        dcReadReady         = `FALSE;
+
+        instResp.cacheLine  = iReadRes;
+        dataResp.data       = axiReadData.data;
+        dCacheResp.data     = dcReadRes;
         unique case(rState)
             sRAddr: begin
                 if(dCacheReqBusy && !dCacheReqWEn) begin
@@ -351,6 +359,7 @@ module AXIInterface(
                         2'b01: iReadRes[ 63:32] = axiReadData.data;
                         2'b10: iReadRes[ 95:64] = axiReadData.data;
                         2'b11: iReadRes[127:96] = axiReadData.data;
+                        default: iReadRes       = 0; // fuck latch
                     endcase
                 end
                 if(axiReadData.last) begin
@@ -368,6 +377,7 @@ module AXIInterface(
                         2'b01: dcReadRes[ 63:32] = axiReadData.data;
                         2'b10: dcReadRes[ 95:64] = axiReadData.data;
                         2'b11: dcReadRes[127:96] = axiReadData.data;
+                        default: dcReadRes       = 0; // fuck latch
                     endcase
                 end
                 if(axiReadData.last) begin
@@ -402,6 +412,7 @@ module AXIInterface(
         axiWriteData.strobe     = 4'b1111;
         axiWriteData.data       = 0;
         axiWriteData.last       = `FALSE; 
+        axiWriteResp.ready      = `FALSE;
         unique case(wState)
             sWAddr: begin
                 if(dCacheReqBusy && dCacheReqWEn) begin

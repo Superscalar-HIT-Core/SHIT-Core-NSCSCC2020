@@ -50,11 +50,11 @@ module MDU(
 
     always_ff @ (posedge clk) begin
         if(rst) begin
-            for(integer i = 0; i <= `MDU_MUL_CYCLE + 1; i++) begin
+            for(integer i = 0; i <= `MDU_MUL_CYCLE; i++) begin
                 mulPipeHi[i]      <= 0;
                 mulPipeLo[i]      <= 0;
             end
-            for(integer i = 0; i <= `MDU_DIV_CYCLE + 1; i++) begin
+            for(integer i = 0; i <= `MDU_DIV_CYCLE; i++) begin
                 divPipeHi[i]      <= 0;
                 divPipeLo[i]      <= 0;
             end
