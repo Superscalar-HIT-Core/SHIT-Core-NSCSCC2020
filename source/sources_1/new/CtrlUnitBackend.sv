@@ -37,6 +37,7 @@ module CtrlUnitBackend(
 
     assign ctrl_instBuffer_decode_regs.pause =
         ctrl_rob.pauseReq                   ||
+        ctrl_decode_rename_regs.pauseReq    ||
         !aluIQReady                         ||
         !lsuIQReady                         ||
         !mduIQReady                         ||

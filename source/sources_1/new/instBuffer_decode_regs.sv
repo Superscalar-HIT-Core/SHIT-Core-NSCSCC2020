@@ -15,7 +15,7 @@ module InstBuffer_decode_regs(
     assign instBuffer_backend.ready     = ~ctrl_instBuffer_decode_regs.pause;
 
     always_ff @ (posedge clk) begin
-        if(rst || ctrl_instBuffer_decode_regs.flush || !instBuffer_backend.valid) begin
+        if(rst || ctrl_instBuffer_decode_regs.flush || (!instBuffer_backend.valid && !ctrl_instBuffer_decode_regs.pause)) begin
             regs_decode0.inst.valid <= `FALSE;
             regs_decode1.inst.valid <= `FALSE;
         end else if(ctrl_instBuffer_decode_regs.pause) begin
