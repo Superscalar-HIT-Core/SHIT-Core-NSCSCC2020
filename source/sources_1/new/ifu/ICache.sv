@@ -228,7 +228,7 @@ module ICache(
     always_ff @ (posedge clk) begin
         state           <= nextState;
         lastState       <= state;
-        priority if (rst | ctrl_iCache.flush) begin
+        if (rst | ctrl_iCache.flush) begin
             valid[0] = 0;
             valid[1] = 0;
             valid[2] = 0;

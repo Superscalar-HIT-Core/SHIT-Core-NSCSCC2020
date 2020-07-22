@@ -367,7 +367,7 @@ module AXIInterface(
                 axiReadData.ready = `TRUE;
                 if(axiReadData.last) begin
                     iReadReady = `TRUE;
-                    instResp.cacheLine = {iReadRes[95:0], axiReadData.data};
+                    instResp.cacheLine = {axiReadData.data, iReadRes[95:0]};
                 end
                 dReadReady  = `FALSE;
                 dcReadReady = `FALSE;
@@ -376,7 +376,7 @@ module AXIInterface(
                 axiReadData.ready = `TRUE;
                 if(axiReadData.last) begin
                     dcReadReady     = `TRUE;
-                    dCacheResp.data = {dcReadRes[95:0], axiReadData.data};
+                    dCacheResp.data = {axiReadData.data, dcReadRes[95:0]};
                 end
                 iReadReady  = `FALSE;
                 dReadReady  = `FALSE;
