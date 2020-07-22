@@ -62,6 +62,7 @@ module ICache(
     logic [  1:0]   writeSel;
     logic           lastPause;
     logic           pauseDiscard;
+    logic           discardNextResp;
 
     TagRamIO    tag0IO,     tag1IO,     tag2IO,     tag3IO;
     DataRamIO   data0IO,    data1IO,    data2IO,    data3IO;
@@ -158,6 +159,14 @@ module ICache(
     always_ff @ (posedge clk) lastPause = ctrl_iCache.pause;
 
     assign pauseDiscard = lastPause && !ctrl_iCache.pause;
+
+    always_ff @ (posedge clk) begin
+        if(rst || ctrl_iCache.flush) begin
+            discardNextResp <= `TRUE;
+        end else begin
+            discardNextResp <= instReq.valid ? `FALSE : discardNextResp;
+        end
+    end
 
     always_comb begin
         if(state == sBlock && instResp.valid) hitLine = instResp.cacheLine;
@@ -257,7 +266,7 @@ module ICache(
         case(state)
             sStartUp: begin
                 instReq.valid               = `FALSE;
-                instResp.ready              = `FALSE;
+                instResp.ready              = `FALSE || discardNextResp;
 
                 tag0IO.writeEn              = `FALSE;
                 tag1IO.writeEn              = `FALSE;
@@ -318,7 +327,7 @@ module ICache(
                 data2IO.address              = lineAddress;
                 if(hit) begin
                     instReq.valid               = `FALSE;
-                    instResp.ready              = `FALSE;
+                    instResp.ready              = `FALSE  || discardNextResp;
                     ctrl_iCache.pauseReq        = `FALSE;
                     
                     iCache_regs.inst0.pc        = delayPC & 32'hffff_fffc;
@@ -330,7 +339,7 @@ module ICache(
                     iCache_regs.inst1.inst      = insts[{delayPC[3], 1'b1}];
                 end else begin
                     instReq.valid               = `TRUE;
-                    instResp.ready              = `FALSE;
+                    instResp.ready              = `FALSE  || discardNextResp;
                     instReq.pc                  = delayPC;
                     ctrl_iCache.pauseReq        = `TRUE;
                     iCache_regs.inst0.valid     = `FALSE;
@@ -441,7 +450,7 @@ module ICache(
             end
             sReset: begin
                 instReq.valid               = `FALSE;
-                instResp.ready              = `FALSE;
+                instResp.ready              = `FALSE || discardNextResp;
 
                 tag0IO.writeEn              = `FALSE;
                 tag1IO.writeEn              = `FALSE;

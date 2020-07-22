@@ -54,6 +54,7 @@ module MyCPU(
     DCacheReq           dCacheReq();
     DCacheResp          dCacheResp();
     
+    Ctrl                backend_ctrl();
     Ctrl                ctrl_if0_1_regs();
     Ctrl                ctrl_if2_3_regs();
     Ctrl                ctrl_iCache();
@@ -76,6 +77,19 @@ module MyCPU(
     Ctrl                ctrl_alu1_output_regs();
     Ctrl                ctrl_mdu_output_regs();
     Ctrl                ctrl_lsu_output_regs();
+    Ctrl                ctrl_commit();
+
+    logic               aluIQReady;
+    logic               lsuIQReady;
+    logic               mduIQReady;
+    logic               renameAllocatable;
+
+    logic               renameRecover;
+    logic               aluIQFlush;
+    logic               lsuIQFlush;
+    logic               mduIQFlush;
+
+    logic               pauseRename;
 
     BackendRedirect     backend_if0();
     BPDUpdate           backend_bpd();
@@ -184,6 +198,11 @@ module MyCPU(
     PRFwInfo            mduWBOut;
     PRFwInfo            lsuWBOut;
 
+    logic                commit_rename_valid_0;
+    logic                commit_rename_valid_1;
+    commit_info          commit_rename_req_0;
+    commit_info          commit_rename_req_1;
+
     assign wake_reg_LSU_en = 0;
     assign wake_reg_MDU_en = 0;
     assign wake_reg_LSU = 0;
@@ -191,6 +210,7 @@ module MyCPU(
     assign lsu_busy = 0;
 
     CtrlUnit                cu(.*);
+    CtrlUnitBackend         cub(.*);
     AXIInterface            axiInterface(.*);
     AXIWarp                 axiWarp(.*);
     IFU                     ifu(.*);
@@ -202,17 +222,17 @@ module MyCPU(
     register_rename rr(
         .clk(clk), 
         .rst(rst),
-        .recover(recover), 
+        .recover(renameRecover), 
         .inst0_ops_in(regs_rename.uOP0), 
         .inst1_ops_in(regs_rename.uOP1),
         .inst0_ops_out(rename_dispatch_0), 
         .inst1_ops_out(rename_dispatch_1),
 
-        .commit_valid_0(0), 
-        .commit_valid_1(0),
-        .commit_req_0(0), 
-        .commit_req_1(0),
-        .allocatable(allocatable_rename)
+        .commit_valid_0(commit_rename_valid_0), 
+        .commit_valid_1(commit_rename_valid_1),
+        .commit_req_0(commit_rename_req_0), 
+        .commit_req_1(commit_rename_req_1),
+        .allocatable(renameAllocatable)
     );
     rename_dispatch_reg r_d_reg(
         .clk(clk),
@@ -247,7 +267,7 @@ module MyCPU(
     scoreboard_20r6w scoreboard_alu(
         .clk                                (clk),
         .rst                                (rst),
-        .flush                              (flush),
+        .flush                              (aluIQFlush),
         // dispatched instructions
         .set_busy_0                         (set_busy_0),
         .set_busy_1                         (set_busy_1),
@@ -270,7 +290,7 @@ module MyCPU(
     issue_unit_ALU issue_alu(
         .clk                                (clk),
         .rst                                (rst),
-        .flush                              (0),
+        .flush                              (aluIQFlush),
         .inst_Ops_0                         (dispatch_alu_0),
         .inst_Ops_1                         (dispatch_alu_1),
         .enq_req_0                          (rs_alu_wen_0),
@@ -283,7 +303,7 @@ module MyCPU(
         .wake_reg_1                         (wake_reg_ALU_1),
         .wake_reg_0_en                      (wake_reg_ALU_0_en),
         .wake_reg_1_en                      (wake_reg_ALU_1_en),
-        .ready                              (alu_queue_ready),
+        .ready                              (aluIQReady),
         // To scoreboard
         .scoreboard_rd_num_l                (scoreboard_rd_num_l_aluiq2sb),
         .scoreboard_rd_num_r                (scoreboard_rd_num_r_aluiq2sb),
@@ -299,7 +319,7 @@ module MyCPU(
     scoreboard_20r6w scoreboard_lsu(
         .clk                                (clk),
         .rst                                (rst),
-        .flush                              (flush),
+        .flush                              (lsuIQFlush),
         // dispatched instructions
         .set_busy_0                         (set_busy_0),
         .set_busy_1                         (set_busy_1),
@@ -324,7 +344,7 @@ module MyCPU(
     issue_unit_LSU issue_lsu(
         .clk                                (clk),
         .rst                                (rst),
-        .flush                              (0),
+        .flush                              (lsuIQFlush),
         .inst_Ops_0                         (dispatch_lsu_0),
         .inst_Ops_1                         (dispatch_lsu_0),
         .enq_req_0                          (rs_lsu_wen_0),
@@ -332,7 +352,7 @@ module MyCPU(
         .lsu_busy                           (lsu_busy),
         .issue_info_0                       (issue_lsu_inst),
         .issue_en_0                         (issue_lsu_en),
-        .ready                              (lsu_queue_ready),
+        .ready                              (lsuIQReady),
         // Scoreboard
         .scoreboard_rd_num_l                (scoreboard_rd_num_l_lsuiq2sb),
         .scoreboard_rd_num_r                (scoreboard_rd_num_r_lsuiq2sb),
@@ -347,7 +367,7 @@ module MyCPU(
     scoreboard_20r6w scoreboard_mdu(
         .clk                                (clk),
         .rst                                (rst),
-        .flush                              (flush),
+        .flush                              (mduIQFlush),
         // dispatched instructions
         .set_busy_0                         (set_busy_0),
         .set_busy_1                         (set_busy_1),
@@ -371,7 +391,7 @@ module MyCPU(
     issue_unit_MDU issue_mdu(
         .clk                                (clk),
         .rst                                (rst),
-        .flush                              (0),
+        .flush                              (mduIQFlush),
         .inst_Ops_0                         (dispatch_mdu_0),
         .enq_req_0                          (rs_mdu_wen_0),
         .mul_busy                           (mul_busy),
@@ -379,7 +399,7 @@ module MyCPU(
         .issue_info_hi                      (issue_mdu_inst_hi),
         .issue_info_lo                      (issue_mdu_inst_lo),
         .issue_en_0                         (issue_mdu_en),
-        .ready                              (mdu_queue_ready),
+        .ready                              (mduIQReady),
         // Scoreboard
         .scoreboard_rd_num_l                (scoreboard_rd_num_l_mduiq2sb),
         .scoreboard_rd_num_r                (scoreboard_rd_num_r_mduiq2sb),
@@ -531,6 +551,6 @@ module MyCPU(
         .prfWReq                            (mduWBReq),
         .commitInfo                         (mdu_rob)
     );
-
+    Commit commit(.*);
 
 endmodule
