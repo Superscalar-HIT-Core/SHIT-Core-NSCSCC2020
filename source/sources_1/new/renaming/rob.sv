@@ -91,6 +91,10 @@ module ROB(
     // >>>>>>>>>> INPUT PORT <<<<<<<<<<
     always_ff @(posedge clk) begin
         if(rst || ctrl_rob.flush) begin
+            for(integer i=0;i<`ROB_SIZE;i++) begin
+                data0[i]             <= 0;
+                data1[i]             <= 0;
+            end 
             tail                    <= 32'h0;
         end else if(dispatch_rob.ready && dispatch_rob.valid && !full) begin
             tail                    <= tail + 1'h1;
