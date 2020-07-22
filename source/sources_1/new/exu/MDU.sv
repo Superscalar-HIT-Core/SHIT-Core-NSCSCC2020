@@ -33,9 +33,9 @@ module MDU(
         .aclk                   (clk                    ),
         .aresetn                (~rst                   ),
         .s_axis_divisor_tvalid  (`TRUE                  ),  
-        .s_axis_divisor_tdata   (rdata.rs0_data         ),    
+        .s_axis_divisor_tdata   (rdata.rs1_data         ),    
         .s_axis_dividend_tvalid (`TRUE                  ),
-        .s_axis_dividend_tdata  (rdata.rs1_data         ),  
+        .s_axis_dividend_tdata  (rdata.rs0_data         ),  
         // .m_axis_dout_tvalid     (m_axis_dout_tvalid),        
         .m_axis_dout_tdata      ({quotient, remainder}  )           
     );
@@ -67,6 +67,7 @@ module MDU(
             mulPipeLo[`MDU_MUL_CYCLE - 0] <= (uopLo.uOP == MULTLO_U || uopLo.uOP == MULTULO_U) ? uopLo : dummy;
             for(integer i = 0; i < `MDU_DIV_CYCLE; i++) begin
                 divPipeHi[i] <= divPipeHi[i + 1];
+                divPipeLo[i] <= divPipeLo[i + 1];
             end
             divPipeHi[`MDU_DIV_CYCLE - 1] <= (uopHi.uOP ==  DIVHI_U || uopHi.uOP ==  DIVUHI_U) ? uopHi : dummy;
             divPipeLo[`MDU_DIV_CYCLE - 0] <= (uopLo.uOP ==  DIVLO_U || uopLo.uOP ==  DIVULO_U) ? uopLo : dummy;
