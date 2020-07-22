@@ -56,6 +56,7 @@ module decode_rename_regs(
                 regs_rename.uOP1.branchType = typeNormal;
                 regs_rename.uOP1.causeExc   = `FALSE;
                 regs_rename.uOP1.valid      = `TRUE;
+                regs_rename.uOP1.dstwe      = `FALSE;
             end
         end else begin
             regs_rename.uOP0  = uOP0;

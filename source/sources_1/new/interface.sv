@@ -314,6 +314,7 @@ interface NLPUpdate;
 
     modport if3(output update);
     modport nlp(input update);
+    modport backend(input update);
 endinterface
 
 interface Regs_IF3;

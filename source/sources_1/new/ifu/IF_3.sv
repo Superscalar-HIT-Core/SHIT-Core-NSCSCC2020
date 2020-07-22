@@ -19,13 +19,16 @@ module IF_3(
     InstBundle  inst0;
     InstBundle  inst1;
 
+    logic [31:0]decodeTarget0;
+    logic [31:0]decodeTarget1;
+
     Predecoder pre0(
         .pc     (regs_if3.inst0.pc      ),
         .inst   (regs_if3.inst0.inst    ),
         .valid  (regs_if3.inst0.valid   ),
         .isJ    (if3_regs.inst0.isJ     ),
         .isBr   (if3_regs.inst0.isBr    ),
-        .target (if3_regs.inst0.target  ),
+        .target (decodeTarget0          ),
         .jr     (inst0Jr                )
     );
 
@@ -35,7 +38,7 @@ module IF_3(
         .valid  (regs_if3.inst1.valid   ),
         .isJ    (if3_regs.inst1.isJ     ),
         .isBr   (if3_regs.inst1.isBr    ),
-        .target (if3_regs.inst1.target  ),
+        .target (decodeTarget1          ),
         .jr     (inst1Jr                )
     );
 
@@ -46,10 +49,10 @@ module IF_3(
     assign inst1NLPTaken = (inst1.nlpInfo.valid && inst1.nlpInfo.taken) ? `TRUE : `FALSE;
 
     assign inst0.predTaken  = inst0.taken && !(inst0Jr && !inst0.nlpInfo.valid);
-    assign inst0.predAddr   = inst0Jr ? inst0.nlpInfo.target : inst0.target;
+    assign inst0.predAddr   = inst0Jr ? inst0.nlpInfo.target : decodeTarget0;
 
     assign inst1.predTaken  = inst1.taken && !(inst1Jr && !inst1.nlpInfo.valid);
-    assign inst1.predAddr   = inst1Jr ? inst1.nlpInfo.target : inst1.target;
+    assign inst1.predAddr   = inst1Jr ? inst1.nlpInfo.target : decodeTarget1;
 
     always_comb begin
         if3_regs.inst0.pc       = regs_if3.inst0.pc;
