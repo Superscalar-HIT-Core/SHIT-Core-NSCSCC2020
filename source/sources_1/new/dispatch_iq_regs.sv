@@ -11,9 +11,9 @@ module dispatch_iq_regs(
     input ALU_Queue_Meta rs_alu_dout_0_i, rs_alu_dout_1_i,
     input MDU_Queue_Meta rs_mdu_dout_0_i,
     input LSU_Queue_Meta rs_lsu_dout_0_i, rs_lsu_dout_1_i,
-    output rs_alu_wen_0, rs_alu_wen_1, 
-    output rs_mdu_wen_0, 
-    output rs_lsu_wen_0, rs_lsu_wen_1,
+    output reg rs_alu_wen_0, rs_alu_wen_1, 
+    output reg rs_mdu_wen_0, 
+    output reg rs_lsu_wen_0, rs_lsu_wen_1,
     output ALU_Queue_Meta rs_alu_dout_0, rs_alu_dout_1,
     output MDU_Queue_Meta rs_mdu_dout_0,
     output LSU_Queue_Meta rs_lsu_dout_0, rs_lsu_dout_1
