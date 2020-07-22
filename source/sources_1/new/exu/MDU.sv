@@ -15,10 +15,9 @@ module MDU(
     wire  [31:0]    quotient, remainder;
     wire  [63:0]    mulRes;
     logic [31:0]    divLo;
-    PRFNum          divLoAddr;
     logic [31:0]    mulLo;
-    PRFNum          mulLoAddr;
     UOPBundle       dummy;
+    assign dummy = 0;
     UOPBundle       mulPipeHi [`MDU_MUL_CYCLE:0];
     UOPBundle       mulPipeLo [`MDU_MUL_CYCLE:0];
     UOPBundle       divPipeHi [`MDU_DIV_CYCLE:0];
@@ -32,6 +31,7 @@ module MDU(
 
     Divider_IP divider_i(
         .aclk                   (clk                    ),
+        .aresetn                (~rst                   ),
         .s_axis_divisor_tvalid  (`TRUE                  ),  
         .s_axis_divisor_tdata   (rdata.rs0_data         ),    
         .s_axis_dividend_tvalid (`TRUE                  ),
@@ -44,7 +44,8 @@ module MDU(
         .CLK                    (clk                    ),
         .A                      (rdata.rs0_data         ),    
         .B                      (rdata.rs1_data         ),    
-        .P                      (mulRes                 )     
+        .P                      (mulRes                 ),
+        .SCLR                   (rst                    )     
     );
 
     always_ff @ (posedge clk) begin
@@ -108,9 +109,15 @@ module MDU(
     end
 
     always_ff @ (posedge clk) begin
+        if(rst) begin
+            state       <= idle;
+            divLo       <= 0;
+            mulLo       <= 0; 
+        end else begin
             state       <= nxtState;
             divLo       <= state == divOutputHi ? quotient     : divLo;
-            mulLo       <= state == mulOutputHi ? mulRes[31:0] : mulLo;           
+            mulLo       <= state == mulOutputHi ? mulRes[31:0] : mulLo;              
+        end
     end
 
     always_comb begin
