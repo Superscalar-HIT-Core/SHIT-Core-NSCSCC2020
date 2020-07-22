@@ -113,10 +113,10 @@ module AXIInterface(
     end
 
     always_comb begin
-        dCacheReqBusy       =lastDCacheBusy   ;
-        dCacheReqAddr       =lastDCacheReqAddr;
-        dCacheReqAddr       =lastDCacheReqData;
-        dCacheReqWEn        =lastDCacheReqWEn ;
+        dCacheReqBusy       = lastDCacheBusy   ;
+        dCacheReqAddr       = lastDCacheReqAddr;
+        dCacheReqData       = lastDCacheReqData;
+        dCacheReqWEn        = lastDCacheReqWEn ;
         if(rst) begin
             dCacheReqBusy   = `FALSE;
             dCacheReqWEn    = `FALSE;
@@ -270,6 +270,12 @@ module AXIInterface(
         end else if(rState == sRInst) begin
             if(axiReadData.ready && axiReadData.valid) begin
                 instRespCounter <= instRespCounter + 1;
+                unique case(instRespCounter)
+                    2'b00: iReadRes[ 31: 0] <= axiReadData.data;
+                    2'b01: iReadRes[ 63:32] <= axiReadData.data;
+                    2'b10: iReadRes[ 95:64] <= axiReadData.data;
+                    2'b11: iReadRes[127:96] <= axiReadData.data;
+                endcase
             end
         end else begin
             instRespCounter <= 0;
@@ -282,6 +288,12 @@ module AXIInterface(
         end else if(rState == sRDCache) begin
             if(axiReadData.ready && axiReadData.valid) begin
                 dCacheRespCounter <= dCacheRespCounter + 1;
+                unique case(dCacheRespCounter)
+                    2'b00: dcReadRes[ 31: 0] = axiReadData.data;
+                    2'b01: dcReadRes[ 63:32] = axiReadData.data;
+                    2'b10: dcReadRes[ 95:64] = axiReadData.data;
+                    2'b11: dcReadRes[127:96] = axiReadData.data;
+                endcase
             end
         end else begin
             dCacheRespCounter <= 0;
@@ -353,36 +365,18 @@ module AXIInterface(
             end
             sRInst: begin
                 axiReadData.ready = `TRUE;
-                if(axiReadData.valid) begin
-                    unique case(instRespCounter)
-                        2'b00: iReadRes[ 31: 0] = axiReadData.data;
-                        2'b01: iReadRes[ 63:32] = axiReadData.data;
-                        2'b10: iReadRes[ 95:64] = axiReadData.data;
-                        2'b11: iReadRes[127:96] = axiReadData.data;
-                        default: iReadRes       = 0; // fuck latch
-                    endcase
-                end
                 if(axiReadData.last) begin
                     iReadReady = `TRUE;
-                    instResp.cacheLine = iReadRes;
+                    instResp.cacheLine = {iReadRes[95:0], axiReadData.data};
                 end
                 dReadReady  = `FALSE;
                 dcReadReady = `FALSE;
             end
             sRDCache: begin
                 axiReadData.ready = `TRUE;
-                if(axiReadData.valid) begin
-                    unique case(dCacheRespCounter)
-                        2'b00: dcReadRes[ 31: 0] = axiReadData.data;
-                        2'b01: dcReadRes[ 63:32] = axiReadData.data;
-                        2'b10: dcReadRes[ 95:64] = axiReadData.data;
-                        2'b11: dcReadRes[127:96] = axiReadData.data;
-                        default: dcReadRes       = 0; // fuck latch
-                    endcase
-                end
                 if(axiReadData.last) begin
                     dcReadReady     = `TRUE;
-                    dCacheResp.data = dcReadRes;
+                    dCacheResp.data = {dcReadRes[95:0], axiReadData.data};
                 end
                 iReadReady  = `FALSE;
                 dReadReady  = `FALSE;

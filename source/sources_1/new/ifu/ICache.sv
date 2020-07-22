@@ -233,33 +233,21 @@ module ICache(
             valid[1] = 0;
             valid[2] = 0;
             valid[3] = 0;
-        end else if(!valid[0][delayLineAddr]) begin
+        end else if (state != sBlock) begin
+            valid[0] = valid[0];
+            valid[1] = valid[1];
+            valid[2] = valid[2];
+            valid[3] = valid[3];
+        end else if(!valid[0][delayLineAddr] && instResp.valid) begin
             valid[0][delayLineAddr] = `TRUE;
-        end else if(!valid[1][delayLineAddr]) begin
+        end else if(!valid[1][delayLineAddr] && instResp.valid) begin
             valid[1][delayLineAddr] = `TRUE;
-        end else if(!valid[2][delayLineAddr]) begin
+        end else if(!valid[2][delayLineAddr] && instResp.valid) begin
             valid[2][delayLineAddr] = `TRUE;
-        end else if(!valid[3][delayLineAddr]) begin
+        end else if(!valid[3][delayLineAddr] && instResp.valid) begin
             valid[3][delayLineAddr] = `TRUE;
-        end else begin
-            priority casex (age[delayLineAddr])
-                3'b0?0: begin
-                    writeSel = 2'b00;
-                end
-                3'b0?1: begin
-                    writeSel = 2'b01;
-                end
-                3'b10?: begin
-                    writeSel = 2'b10;
-                end
-                3'b11?: begin
-                    writeSel = 2'b11;
-                end
-                default: begin
-                    writeSel = 2'b00;
-                end
-            endcase
         end
+        
         if(nextState == sReset) begin
             delayPC         <= 32'h0000_0000;
             delayLineAddr   <= 6'h00_0000;
