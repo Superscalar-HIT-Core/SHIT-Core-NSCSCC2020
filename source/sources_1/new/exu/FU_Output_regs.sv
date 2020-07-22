@@ -18,7 +18,8 @@ module FU_Output_regs(
     always_ff @ (posedge clk) begin
         if(rst || ctrl_fu_output_regs.flush) begin
             prfWReq                 <= 0;
-            commitInfo              <= 0;
+            commitInfo.setFinish    <= 0;
+            commitInfo.id           <= 0;
         end else begin  // no pause
             prfWReq                 <= fuWbData;
             commitInfo.setFinish    <= fuCommitInfo.setFinish;
