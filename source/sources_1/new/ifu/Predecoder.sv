@@ -47,11 +47,13 @@ module Predecoder(
                     isJ     = `TRUE;
                     isBr    = `FALSE;
                     jr      = `TRUE;    // must redirect, unless unknown target info
+                    target  = 32'h00000000;
                 end
                 default: begin
                     isJ     = `FALSE;
                     isBr    = `FALSE;
                     jr      = `FALSE;   // don't redirect on normal instrutions
+                    target  = 32'h00000000;
                 end
             endcase
         end

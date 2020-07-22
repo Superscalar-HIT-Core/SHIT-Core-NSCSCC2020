@@ -32,6 +32,8 @@ module IF0_1_reg(
     assign regs_iCache.inst0.nlpInfo    = nlp_if0.nlpInfo0;
     assign regs_iCache.inst1.nlpInfo    = nlp_if0.nlpInfo1;
 
+    assign backend_if0.ready = `TRUE;
+
     always_ff @ (posedge clk) begin
         if(rst || ctrl_if0_1_regs.flush) begin
             PC          <=  32'h0;
