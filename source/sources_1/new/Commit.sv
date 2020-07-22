@@ -31,7 +31,7 @@ module Commit(
     assign takePredFailed   = rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP0.branchTaken != rob_commit.uOP0.predTaken;
     assign addrPredFailed   = !takePredFailed && (rob_commit.uOP0.branchAddr != rob_commit.uOP0.predAddr);
     assign target           = rob_commit.uOP0.branchTaken ? rob_commit.uOP0.branchAddr : rob_commit.uOP0.pc + 32'h8;
-
+    assign rob_commit.ready = `TRUE;
     always_ff @(posedge clk) begin
         if(takePredFailed || addrPredFailed) begin
             predFailed                      <= `TRUE;

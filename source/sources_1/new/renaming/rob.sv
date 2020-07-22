@@ -52,9 +52,6 @@ module ROB(
     logic                   out0Done;
     logic                   out1Done;
 
-    logic                   noConflict;
-
-
     UOPBundle   data0[`ROB_SIZE-1 : 0];
     UOPBundle   data1[`ROB_SIZE-1 : 0];
 
