@@ -105,12 +105,21 @@ module MyCPU(
     wire                rs_mdu_wen_0;
     wire                rs_lsu_wen_0;
     wire                rs_lsu_wen_1;
+    wire                rs_alu_wen_0_reg;
+    wire                rs_alu_wen_1_reg;
+    wire                rs_mdu_wen_0_reg;
+    wire                rs_lsu_wen_0_reg;
+    wire                rs_lsu_wen_1_reg;
     
     wire                alu_queue_ready, lsu_queue_ready, mdu_queue_ready;
 
     ALU_Queue_Meta      dispatch_alu_0, dispatch_alu_1;
     LSU_Queue_Meta      dispatch_lsu_0, dispatch_lsu_1;
     MDU_Queue_Meta      dispatch_mdu_0;
+
+    ALU_Queue_Meta      dispatch_alu_0_reg, dispatch_alu_1_reg;
+    LSU_Queue_Meta      dispatch_lsu_0_reg, dispatch_lsu_1_reg;
+    MDU_Queue_Meta      dispatch_mdu_0_reg;
 
     Dispatch_ROB        dispatch_rob();
 
@@ -208,6 +217,7 @@ module MyCPU(
     wire           mduIQFlush;
     wire           pauseRename;
     wire           pauseRename_dispatch_reg;
+    wire           pauseDispatch_iq_reg;
 
     CtrlUnit                cu(.*);
     CtrlUnitBackend         cub(.*);
@@ -248,23 +258,50 @@ module MyCPU(
     dispatch u_dispatch(
         .inst_0_ops                         (dispatch_inst0_in), 
         .inst_1_ops                         (dispatch_inst1_in),
-        // To Issue Queues
-        .rs_alu_wen_0                       (rs_alu_wen_0), 
-        .rs_alu_wen_1                       (rs_alu_wen_1), 
-        .rs_mdu_wen_0                       (rs_mdu_wen_0), 
-        .rs_lsu_wen_0                       (rs_lsu_wen_0), 
-        .rs_lsu_wen_1                       (rs_lsu_wen_1),
-        .rs_alu_dout_0                      (dispatch_alu_0), 
-        .rs_alu_dout_1                      (dispatch_alu_1),
-        .rs_mdu_dout_0                      (dispatch_mdu_0), 
-        .rs_lsu_dout_0                      (dispatch_lsu_0), 
-        .rs_lsu_dout_1                      (dispatch_lsu_1),
+        // To Pipeline Regs
+        .rs_alu_wen_0                       (rs_alu_wen_0_reg), 
+        .rs_alu_wen_1                       (rs_alu_wen_1_reg), 
+        .rs_mdu_wen_0                       (rs_mdu_wen_0_reg), 
+        .rs_lsu_wen_0                       (rs_lsu_wen_0_reg), 
+        .rs_lsu_wen_1                       (rs_lsu_wen_1_reg),
+        .rs_alu_dout_0                      (dispatch_alu_0_reg), 
+        .rs_alu_dout_1                      (dispatch_alu_1_reg),
+        .rs_mdu_dout_0                      (dispatch_mdu_0_reg), 
+        .rs_lsu_dout_0                      (dispatch_lsu_0_reg), 
+        .rs_lsu_dout_1                      (dispatch_lsu_1_reg),
         .dispatch_inst0_wnum                (set_busy_num_0),
         .dispatch_inst1_wnum                (set_busy_num_1),
         .dispatch_inst0_wen                 (set_busy_0),
         .dispatch_inst1_wen                 (set_busy_1),
         .dispatch_rob                       (dispatch_rob)
     );
+    dispatch_iq_regs dispatch_iq(
+    .clk                                (clk),
+    .rst                                (rst),
+    .flush                              (aluIQFlush),
+    .pausereq                           (pauseDispatch_iq_reg),
+    .rs_alu_wen_0_i                     (rs_alu_wen_0_reg), 
+    .rs_alu_wen_1_i                     (rs_alu_wen_1_reg), 
+    .rs_mdu_wen_0_i                     (rs_mdu_wen_0_reg), 
+    .rs_lsu_wen_0_i                     (rs_lsu_wen_0_reg), 
+    .rs_lsu_wen_1_i                     (rs_lsu_wen_1_reg),
+    .rs_alu_dout_0_i                    (dispatch_alu_0_reg), 
+    .rs_alu_dout_1_i                    (dispatch_alu_1_reg),
+    .rs_mdu_dout_0_i                    (dispatch_mdu_0_reg), 
+    .rs_lsu_dout_0_i                    (dispatch_lsu_0_reg), 
+    .rs_lsu_dout_1_i                    (dispatch_lsu_1_reg),
+    .rs_alu_wen_0                       (rs_alu_wen_0), 
+    .rs_alu_wen_1                       (rs_alu_wen_1), 
+    .rs_mdu_wen_0                       (rs_mdu_wen_0), 
+    .rs_lsu_wen_0                       (rs_lsu_wen_0), 
+    .rs_lsu_wen_1                       (rs_lsu_wen_1),
+    .rs_alu_dout_0                      (dispatch_alu_0), 
+    .rs_alu_dout_1                      (dispatch_alu_1),
+    .rs_mdu_dout_0                      (dispatch_mdu_0), 
+    .rs_lsu_dout_0                      (dispatch_lsu_0), 
+    .rs_lsu_dout_1                      (dispatch_lsu_1)
+    );
+
     ROB rob(.*);
     scoreboard_20r6w scoreboard_alu(
         .clk                                (clk),

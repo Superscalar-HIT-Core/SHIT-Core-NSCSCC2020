@@ -32,7 +32,8 @@ module CtrlUnitBackend(
     output wire           mduIQFlush,
 
     output wire           pauseRename,
-    output wire           pauseRename_dispatch_reg
+    output wire           pauseRename_dispatch_reg,
+    output wire           pauseDispatch_iq_reg
 );
 
     assign ctrl_instBuffer_decode_regs.pause =
@@ -58,6 +59,11 @@ module CtrlUnitBackend(
 
     assign pauseRename_dispatch_reg =
         ctrl_rob.pauseReq                   ||
+        !aluIQReady                         ||
+        !lsuIQReady                         ||
+        !mduIQReady;
+
+    assign pauseDispatch_iq_reg = 
         !aluIQReady                         ||
         !lsuIQReady                         ||
         !mduIQReady;
