@@ -12,12 +12,13 @@ module IF_3(
 );
     logic       inst0Jr;
     logic       inst1Jr;
+    logic       inst0J;
+    logic       inst1J;
+    logic       inst0Br;
+    logic       inst1Br;
 
     logic       inst0NLPTaken;
     logic       inst1NLPTaken;
-
-    InstBundle  inst0;
-    InstBundle  inst1;
 
     logic [31:0]decodeTarget0;
     logic [31:0]decodeTarget1;
@@ -26,8 +27,8 @@ module IF_3(
         .pc     (regs_if3.inst0.pc      ),
         .inst   (regs_if3.inst0.inst    ),
         .valid  (regs_if3.inst0.valid   ),
-        .isJ    (if3_regs.inst0.isJ     ),
-        .isBr   (if3_regs.inst0.isBr    ),
+        .isJ    (inst0J                 ),
+        .isBr   (inst0Br                ),
         .target (decodeTarget0          ),
         .jr     (inst0Jr                )
     );
@@ -36,83 +37,83 @@ module IF_3(
         .pc     (regs_if3.inst1.pc      ),
         .inst   (regs_if3.inst1.inst    ),
         .valid  (regs_if3.inst1.valid   ),
-        .isJ    (if3_regs.inst1.isJ     ),
-        .isBr   (if3_regs.inst1.isBr    ),
+        .isJ    (inst1J                 ),
+        .isBr   (inst1Br                ),
         .target (decodeTarget1          ),
         .jr     (inst1Jr                )
     );
 
-    assign if3_regs.inst0 = inst0;
-    assign if3_regs.inst1 = inst1;
-
-    assign inst0NLPTaken = (inst0.nlpInfo.valid && inst0.nlpInfo.taken) ? `TRUE : `FALSE;   // eliminate X state
-    assign inst1NLPTaken = (inst1.nlpInfo.valid && inst1.nlpInfo.taken) ? `TRUE : `FALSE;
-
-    assign inst0.predTaken  = inst0.taken && !(inst0Jr && !inst0.nlpInfo.valid);
-    assign inst0.predAddr   = inst0Jr ? inst0.nlpInfo.target : decodeTarget0;
-
-    assign inst1.predTaken  = inst1.taken && !(inst1Jr && !inst1.nlpInfo.valid);
-    assign inst1.predAddr   = inst1Jr ? inst1.nlpInfo.target : decodeTarget1;
+    assign inst0NLPTaken = (regs_if3.inst0.nlpInfo.valid && regs_if3. inst0.nlpInfo.taken) ? `TRUE : `FALSE;   // eliminate X state
+    assign inst1NLPTaken = (regs_if3.inst1.nlpInfo.valid && regs_if3.inst1.nlpInfo.taken) ? `TRUE : `FALSE;
 
     always_comb begin
+        if3_regs.inst0          = regs_if3.inst0;
+        if3_regs.inst1          = regs_if3.inst1;
+
         if3_regs.inst0.pc       = regs_if3.inst0.pc;
         if3_regs.inst0.inst     = regs_if3.inst0.inst;
         if3_regs.inst0.valid    = regs_if3.inst0.valid;
         if3_regs.inst0.nlpInfo  = regs_if3.inst0.nlpInfo;
         if3_regs.inst0.bpdInfo  = bpd_if3.bpdInfo0;
+        if3_regs.inst0.isJ      = inst0J;
+        if3_regs.inst0.isBr     = inst0Br;
+        if3_regs.inst0.predAddr = inst0Jr ? if3_regs.inst0.nlpInfo.target : decodeTarget0;
         
         if3_regs.inst1.pc       = regs_if3.inst1.pc;
         if3_regs.inst1.inst     = regs_if3.inst1.inst;
         if3_regs.inst1.valid    = regs_if3.inst1.valid;
         if3_regs.inst1.nlpInfo  = regs_if3.inst1.nlpInfo;
         if3_regs.inst1.bpdInfo  = bpd_if3.bpdInfo1;
+        if3_regs.inst1.isJ      = inst1J;
+        if3_regs.inst1.isBr     = inst1Br;
+        if3_regs.inst1.predAddr = inst1Jr ? if3_regs.inst1.nlpInfo.target : decodeTarget1;
 
-        if(!inst0.valid) begin                  // invalid inst
-            inst0.taken = `FALSE;
-        end else if(inst0.isJ) begin            // unconditional
-            inst0.taken = `TRUE;
-        end else if(!inst0.isBr) begin          // normal
-            inst0.taken = `FALSE;
-        end else if(inst0.bpdInfo.valid) begin  // predict by bpd
-            inst0.taken = inst0.bpdInfo.taken;
-        end else if(inst0.nlpInfo.valid) begin  // predict by nlp
-            inst0.taken = inst0.nlpInfo.taken;
+        if(!if3_regs.inst0.valid) begin                  // invalid inst
+            if3_regs.inst0.predTaken = `FALSE;
+        end else if(if3_regs.inst0.isJ) begin            // unconditional
+            if3_regs.inst0.predTaken = `TRUE;
+        end else if(!if3_regs.inst0.isBr) begin          // normal
+            if3_regs.inst0.predTaken = `FALSE;
+        end else if(if3_regs.inst0.bpdInfo.valid) begin  // predict by bpd
+            if3_regs.inst0.predTaken = if3_regs.inst0.bpdInfo.taken;
+        end else if(if3_regs.inst0.nlpInfo.valid) begin  // predict by nlp
+            if3_regs.inst0.predTaken = if3_regs.inst0.nlpInfo.taken;
         end else begin                          // both miss
-            inst0.taken = `FALSE;
+            if3_regs.inst0.predTaken = `FALSE;
         end
 
-        if(!inst1.valid) begin                  // invalid inst
-            inst1.taken = `FALSE;
-        end else if(inst1.isJ) begin            // unconditional
-            inst1.taken = `TRUE;
-        end else if(!inst1.isBr) begin          // normal
-            inst1.taken = `FALSE;
-        end else if(inst1.bpdInfo.valid) begin  // predict by bpd
-            inst1.taken = inst1.bpdInfo.taken;
-        end else if(inst1.nlpInfo.valid) begin  // predict by nlp
-            inst1.taken = inst1.nlpInfo.taken;
+        if(!if3_regs.inst1.valid) begin                  // invalid inst
+            if3_regs.inst1.predTaken = `FALSE;
+        end else if(if3_regs.inst1.isJ) begin            // unconditional
+            if3_regs.inst1.predTaken = `TRUE;
+        end else if(!if3_regs.inst1.isBr) begin          // normal
+            if3_regs.inst1.predTaken = `FALSE;
+        end else if(if3_regs.inst1.bpdInfo.valid) begin  // predict by bpd
+            if3_regs.inst1.predTaken = if3_regs.inst1.bpdInfo.taken;
+        end else if(if3_regs.inst1.nlpInfo.valid) begin  // predict by nlp
+            if3_regs.inst1.predTaken = if3_regs.inst1.nlpInfo.taken;
         end else begin                          // both miss
-            inst1.taken = `FALSE;
+            if3_regs.inst1.predTaken = `FALSE;
         end
 
-        if(inst0.predTaken && !inst0NLPTaken) begin
+        if(if3_regs.inst0.predTaken && !inst0NLPTaken) begin
             if3_0.redirect      = `TRUE;
-            if3_0.redirectPC    = inst0.predAddr;
+            if3_0.redirectPC    = if3_regs.inst0.predAddr;
             ctrl_if3.flushReq   = `TRUE;
             regs_if3.rescueDS   = `FALSE;
-        end else if(!inst0.predTaken && inst0NLPTaken) begin
+        end else if(!if3_regs.inst0.predTaken && inst0NLPTaken) begin
             if3_0.redirect      = `TRUE;
-            if3_0.redirectPC    = inst0.pc + 8;
+            if3_0.redirectPC    = if3_regs.inst0.pc + 8;
             ctrl_if3.flushReq   = `TRUE;
             regs_if3.rescueDS   = `FALSE;
-        end else if(inst1.predTaken && !inst1NLPTaken) begin
+        end else if(if3_regs.inst1.predTaken && !inst1NLPTaken) begin
             if3_0.redirect      = `TRUE;
-            if3_0.redirectPC    = inst1.predAddr;
+            if3_0.redirectPC    = if3_regs.inst1.predAddr;
             ctrl_if3.flushReq   = `TRUE;
             regs_if3.rescueDS   = `TRUE;
-        end else if(!inst1.predTaken && inst1NLPTaken) begin
+        end else if(!if3_regs.inst1.predTaken && inst1NLPTaken) begin
             if3_0.redirect      = `TRUE;
-            if3_0.redirectPC    = inst1.pc + 8;
+            if3_0.redirectPC    = if3_regs.inst1.pc + 8;
             ctrl_if3.flushReq   = `TRUE;
             regs_if3.rescueDS   = `TRUE;
         end else begin
@@ -123,17 +124,17 @@ module IF_3(
     end
 
     always_comb begin
-        if(inst0.bpdInfo.valid || (inst0.isJ && (!inst0Jr || (inst0Jr && inst0.nlpInfo.valid)))) begin
-            if3_nlp.update.pc          = inst0.pc;
-            if3_nlp.update.target      = inst0.predAddr;
-            if3_nlp.update.bimState    = inst0.nlpInfo.valid ? inst0.nlpInfo.bimState : 2'b01;
-            if3_nlp.update.shouldTake  = inst0.predTaken;
+        if(if3_regs.inst0.bpdInfo.valid || (if3_regs.inst0.isJ && (!inst0Jr || (inst0Jr && if3_regs.inst0.nlpInfo.valid)))) begin
+            if3_nlp.update.pc          = if3_regs.inst0.pc;
+            if3_nlp.update.target      = if3_regs.inst0.predAddr;
+            if3_nlp.update.bimState    = if3_regs.inst0.nlpInfo.valid ? if3_regs.inst0.nlpInfo.bimState : 2'b01;
+            if3_nlp.update.shouldTake  = if3_regs.inst0.predTaken;
             if3_nlp.update.valid       = `TRUE;
-        end else if(inst1.bpdInfo.valid || (inst1.isJ && (!inst1Jr || (inst1Jr && inst1.nlpInfo.valid)))) begin
-            if3_nlp.update.pc          = inst1.pc;
-            if3_nlp.update.target      = inst1.predAddr;
-            if3_nlp.update.bimState    = inst1.nlpInfo.valid ? inst1.nlpInfo.bimState : 2'b01;
-            if3_nlp.update.shouldTake  = inst1.predTaken;
+        end else if(if3_regs.inst1.bpdInfo.valid || (if3_regs.inst1.isJ && (!inst1Jr || (inst1Jr && if3_regs.inst1.nlpInfo.valid)))) begin
+            if3_nlp.update.pc          = if3_regs.inst1.pc;
+            if3_nlp.update.target      = if3_regs.inst1.predAddr;
+            if3_nlp.update.bimState    = if3_regs.inst1.nlpInfo.valid ? if3_regs.inst1.nlpInfo.bimState : 2'b01;
+            if3_nlp.update.shouldTake  = if3_regs.inst1.predTaken;
             if3_nlp.update.valid       = `TRUE;
         end else begin
             if3_nlp.update.valid       = `FALSE;
