@@ -47,8 +47,8 @@ module Commit(
         exception                           <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.exception : rob_commit.uOP0.exception;
         excCode                             <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.excCode : rob_commit.uOP0.excCode;
         
-        commit_rename_valid_0               <= rob_commit.uOP0.valid;
-        commit_rename_valid_1               <= rob_commit.uOP1.valid;
+        commit_rename_valid_0               <= rob_commit.uOP0.valid & rob_commit.valid;
+        commit_rename_valid_1               <= rob_commit.uOP1.valid & rob_commit.valid;
 
         commit_rename_req_0.committed_arf   <= rob_commit.uOP0.dstLAddr;
         commit_rename_req_0.committed_prf   <= rob_commit.uOP0.dstPAddr;

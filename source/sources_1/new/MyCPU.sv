@@ -243,7 +243,7 @@ module MyCPU(
         .inst1_in(rename_dispatch_1),
         .inst0_out(dispatch_inst0_in), 
         .inst1_out(dispatch_inst1_in),
-        .flush(0)
+        .flush(renameRecover)
     );
     dispatch u_dispatch(
         .inst_0_ops                         (dispatch_inst0_in), 
@@ -555,4 +555,13 @@ module MyCPU(
     );
     Commit commit(.*);
 
+    // synopsys translate_off
+    always @ (posedge clk) begin
+        if(rob_commit.valid) #21 begin
+            for(integer i = 0; i <= 34; i++) begin
+                $display("reg %d : %d", i, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[i]]);
+            end
+        end
+    end
+    // synopsys translate_on
 endmodule

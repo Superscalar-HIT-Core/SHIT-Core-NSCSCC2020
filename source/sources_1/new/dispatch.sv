@@ -26,15 +26,17 @@ module dispatch(
     // output PRFNum dispatch_inst1_r1
     );
 // 分配判断
-wire [`ROB_ID_W] robID_0, rob_ID_1;
-assign robID_0 = { (dispatch_rob.robID << 1), 0 } ;
-assign robID_1 = { (dispatch_rob.robID << 1), 1 } ;
+wire [`ROB_ID_W] robID_0, robID_1;
+assign robID_0 = { dispatch_rob.robID[`ROB_ID_W+1], 1'b0 } ;
+assign robID_1 = { dispatch_rob.robID[`ROB_ID_W+1], 1'b1 } ;
 UOPBundle inst_0_ops_dispatch, inst_1_ops_dispatch;
 always_comb begin
     inst_0_ops_dispatch = inst_0_ops;
     inst_0_ops_dispatch.id = robID_0;
+    inst_0_ops_dispatch.busy = ( inst_0_ops.valid && inst_0_ops.uOP != NOP_U && inst_0_ops.uOP != MDBUBBLE_U );
     inst_1_ops_dispatch = inst_1_ops;
     inst_1_ops_dispatch.id = robID_1;
+    inst_1_ops_dispatch.busy = ( inst_1_ops.valid && inst_1_ops.uOP != NOP_U && inst_1_ops.uOP != MDBUBBLE_U );
 end
 assign dispatch_rob.uOP0 = inst_0_ops_dispatch;
 assign dispatch_rob.uOP1 = inst_1_ops_dispatch;
