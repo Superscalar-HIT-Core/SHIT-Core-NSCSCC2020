@@ -26,9 +26,9 @@ module dispatch(
     // output PRFNum dispatch_inst1_r1
     );
 // 分配判断
-wire [`ROB_ID_W] robID_0, robID_1;
-assign robID_0 = { dispatch_rob.robID[`ROB_ID_W+1], 1'b0 } ;
-assign robID_1 = { dispatch_rob.robID[`ROB_ID_W+1], 1'b1 } ;
+wire [7:0] robID_0, robID_1;
+assign robID_0 = { dispatch_rob.robID[6:0], 1'b0 } ;
+assign robID_1 = { dispatch_rob.robID[6:0], 1'b1 } ;
 UOPBundle inst_0_ops_dispatch, inst_1_ops_dispatch;
 always_comb begin
     inst_0_ops_dispatch = inst_0_ops;
