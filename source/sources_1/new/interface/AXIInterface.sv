@@ -306,7 +306,6 @@ module AXIInterface(
         axiReadAddr.length  = 4'b0011;  // burst 4
         axiReadAddr.size    = 3'b010;
         axiReadAddr.burst   = 2'b10;
-        axiReadAddr.valid   = `FALSE;
         unique case(rState)
             sRAddr: begin
                 if(dCacheReqBusy && !dCacheReqWEn) begin
