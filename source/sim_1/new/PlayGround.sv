@@ -121,7 +121,7 @@ module PlayGround(
         forever begin
             integer b = $random % 4;
             while (b --> 0) #20;
-            cpu.instBuffer_backend.getResp(clk);
+            //cpu.instBuffer_backend.getResp(clk);
         end
     end
 
