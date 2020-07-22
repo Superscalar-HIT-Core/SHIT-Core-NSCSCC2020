@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`include "defines/defines.svh"
 
 module CtrlUnitBackend(
     Ctrl.master     backend_ctrl,
@@ -71,5 +72,6 @@ module CtrlUnitBackend(
     assign  lsuIQFlush                          = ctrl_commit.flushReq;
     assign  mduIQFlush                          = ctrl_commit.flushReq;
     assign  backend_ctrl.flush                  = ctrl_commit.flushReq;
+    assign  backend_ctrl.pause                  = `FALSE;
 
 endmodule

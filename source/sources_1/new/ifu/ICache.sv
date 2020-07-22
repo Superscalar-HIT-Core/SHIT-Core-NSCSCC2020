@@ -186,6 +186,7 @@ module ICache(
     end
 
     always_comb begin
+        nextState = sReset;
         case(state)
             sStartUp: begin
                 if(rst) begin
@@ -263,6 +264,11 @@ module ICache(
     always_comb begin
         iCache_regs.inst0                   = regs_iCache.inst0;
         iCache_regs.inst1                   = regs_iCache.inst1;
+        ctrl_iCache.pauseReq                = `FALSE;
+        instReq.valid                       = `FALSE;
+        instResp.ready                      = `FALSE;
+        iCache_regs.inst0                   = 0;
+        iCache_regs.inst1                   = 0;
         case(state)
             sStartUp: begin
                 instReq.valid               = `FALSE;
@@ -376,7 +382,7 @@ module ICache(
                         writeSel = 2'b11;
                         nxtvalid[3][delayLineAddr] = `TRUE;
                     end else begin
-                        casex (age[delayLineAddr])
+                        priority casex (age[delayLineAddr])
                             3'b0?0: begin
                                 writeSel = 2'b00;
                             end
@@ -388,6 +394,9 @@ module ICache(
                             end
                             3'b11?: begin
                                 writeSel = 2'b11;
+                            end
+                            default: begin
+                                writeSel = 2'b00;
                             end
                         endcase
                     end

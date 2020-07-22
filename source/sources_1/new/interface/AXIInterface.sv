@@ -27,17 +27,25 @@ module AXIInterface(
     
     logic           instReqBusy;
     logic [31:0]    instReqPC;
+    logic [31:0]    lastInstReqPC;
 
     logic           dataReqBusy;
     logic [31:0]    dataReqAddr;
     logic [31:0]    dataReqData;
     logic           dataReqWEn;
     logic [3:0]     dataReqStrobe;
+    logic [31:0]    lastDataReqAddr;
+    logic [31:0]    lastDataReqData;
+    logic           lastDataReqWEn;
+    logic [3:0]     lastDataReqStrobe;
 
     logic           dCacheReqBusy;
     logic [31:0]    dCacheReqAddr;
     logic [127:0]   dCacheReqData;
     logic           dCacheReqWEn;
+    logic [31:0]    lastDCacheReqAddr;
+    logic [127:0]   lastDCacheReqData;
+    logic           lastDCacheReqWEn;
 
     logic           dReadReady;
     logic [31:0]    dReadRes;
@@ -68,51 +76,77 @@ module AXIInterface(
     assign dCacheResp.valid = dcReadReady;
 
     always_comb begin
+        instReqBusy     = lastInstBusy ;
+        instReqPC       = lastInstReqPC;
         if(rst) begin
-            instReqBusy <= `FALSE;
+            instReqBusy = `FALSE;
         end else if(instReq.valid && !lastInstBusy) begin
-            instReqBusy <= `TRUE;
-            instReqPC   <= instReq.pc;
+            instReqBusy = `TRUE;
+            instReqPC   = instReq.pc;
         end else if(rState == sRInst) begin
-            instReqBusy <= `FALSE;
+            instReqBusy = `FALSE;
+        end else begin
+            instReqBusy = lastInstBusy;
         end
     end
 
     always_comb begin
+        dataReqBusy         = lastDataBusy;
+        dataReqBusy         = lastDataBusy;
+        dataReqAddr         = lastDataReqAddr;
+        dataReqData         = lastDataReqData;
+        dataReqStrobe       = lastDataReqStrobe;
+        dataReqWEn          = lastDataReqWEn;
         if(rst) begin
-            dataReqBusy     <= `FALSE;
-            dataReqWEn      <= `FALSE;
+            dataReqBusy     = `FALSE;
+            dataReqWEn      = `FALSE;
         end else if(dataReq.valid && !lastDataBusy) begin
-            dataReqBusy     <= `TRUE;
-            dataReqAddr     <= dataReq.addr;
-            dataReqWEn      <= dataReq.write_en;
-            dataReqStrobe   <= dataReq.strobe;
-            dataReqData     <= dataReq.data;
+            dataReqBusy     = `TRUE;
+            dataReqAddr     = dataReq.addr;
+            dataReqWEn      = dataReq.write_en;
+            dataReqStrobe   = dataReq.strobe;
+            dataReqData     = dataReq.data;
         end else if (rState == sRData || wState == sWDResp) begin
-            dataReqBusy     <= `FALSE;
-            dataReqWEn      <= `FALSE;
+            dataReqBusy     = `FALSE;
+            dataReqWEn      = `FALSE;
         end
     end
 
     always_comb begin
+        dCacheReqBusy       =lastDCacheBusy   ;
+        dCacheReqAddr       =lastDCacheReqAddr;
+        dCacheReqAddr       =lastDCacheReqData;
+        dCacheReqWEn        =lastDCacheReqWEn ;
         if(rst) begin
-            dCacheReqBusy   <= `FALSE;
-            dCacheReqWEn    <= `FALSE;
+            dCacheReqBusy   = `FALSE;
+            dCacheReqWEn    = `FALSE;
         end else if(dCacheReq.valid && !lastDCacheBusy) begin
-            dCacheReqBusy   <= `TRUE;
-            dCacheReqAddr   <= dCacheReq.addr;
-            dCacheReqWEn    <= dCacheReq.write_en;
-            dCacheReqData   <= dCacheReq.data;
+            dCacheReqBusy   = `TRUE;
+            dCacheReqAddr   = dCacheReq.addr;
+            dCacheReqWEn    = dCacheReq.write_en;
+            dCacheReqData   = dCacheReq.data;
         end else if (rState == sRDCache || wState == sWDCResp) begin
-            dCacheReqBusy   <= `FALSE;
-            dCacheReqWEn    <= `FALSE;
+            dCacheReqBusy   = `FALSE;
+            dCacheReqWEn    = `FALSE;
+        end else begin
+            dCacheReqBusy   = lastDCacheBusy;
         end
     end
 
     always_ff @ (posedge clk) begin
-        lastInstBusy    <= instReqBusy;
-        lastDataBusy    <= dataReqBusy;
-        lastDCacheBusy  <= dCacheReqBusy;
+        lastInstBusy        <= instReqBusy;
+        lastInstReqPC       <= instReqPC;
+
+        lastDataBusy        <= dataReqBusy;
+        lastDataReqAddr     <= dataReqAddr;
+        lastDataReqData     <= dataReqData;
+        lastDataReqStrobe   <= dataReqStrobe;
+        lastDataReqWEn      <= dataReqWEn;
+
+        lastDCacheBusy      <= dCacheReqBusy;
+        lastDCacheReqAddr   <= dCacheReqAddr;
+        lastDCacheReqData   <= dCacheReqAddr;
+        lastDCacheReqWEn    <= dCacheReqWEn;
     end
 
     always_comb begin
@@ -220,7 +254,7 @@ module AXIInterface(
                 end
             end
             default: begin
-                nextWState = sWAddr;
+                nextWState = sWRst;
             end
         endcase
     end
@@ -267,6 +301,12 @@ module AXIInterface(
     end
 
     always_comb begin
+        axiReadAddr.id      = 4'h1;
+        axiReadAddr.address = 0;
+        axiReadAddr.length  = 4'b0011;  // burst 4
+        axiReadAddr.size    = 3'b010;
+        axiReadAddr.burst   = 2'b10;
+        axiReadAddr.valid   = `FALSE;
         unique case(rState)
             sRAddr: begin
                 if(dCacheReqBusy && !dCacheReqWEn) begin
@@ -354,6 +394,15 @@ module AXIInterface(
     end
 
     always_comb begin
+        axiWriteAddr.id         = 4'h0;
+        axiWriteAddr.address    = dCacheReqAddr;
+        axiWriteAddr.length     = 4'b0011;
+        axiWriteAddr.size       = 3'b010;
+        axiWriteAddr.burst      = 2'b10;
+        axiWriteData.id         = 4'h0;
+        axiWriteData.strobe     = 4'b1111;
+        axiWriteData.data       = 0;
+        axiWriteData.last       = `FALSE; 
         unique case(wState)
             sWAddr: begin
                 if(dCacheReqBusy && dCacheReqWEn) begin
