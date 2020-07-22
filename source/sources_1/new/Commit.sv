@@ -13,8 +13,8 @@ module Commit(
 
     output logic                commit_rename_valid_0,
     output logic                commit_rename_valid_1,
-    input  commit_info          commit_rename_req_0,
-    input  commit_info          commit_rename_req_1
+    output commit_info          commit_rename_req_0,
+    output commit_info          commit_rename_req_1
 );
 
     logic           takePredFailed;
