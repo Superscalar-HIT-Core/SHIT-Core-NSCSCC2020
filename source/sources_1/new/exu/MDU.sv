@@ -1,23 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2020/07/19 23:05:36
-// Design Name: 
-// Module Name: MDU
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 `include "../defines/defines.svh"
 
 module MDU(
@@ -69,12 +50,12 @@ module MDU(
     always_ff @ (posedge clk) begin
         if(rst) begin
             for(integer i = 0; i <= `MDU_MUL_CYCLE + 1; i++) begin
-                mulPipeHi[i].valid <= `FALSE;
-                mulPipeLo[i].valid <= `FALSE;
+                mulPipeHi[i]      <= 0;
+                mulPipeLo[i]      <= 0;
             end
             for(integer i = 0; i <= `MDU_DIV_CYCLE + 1; i++) begin
-                divPipeHi[i].valid <= `FALSE;
-                divPipeLo[i].valid <= `FALSE;
+                divPipeHi[i]      <= 0;
+                divPipeLo[i]      <= 0;
             end
         end else begin
             for(integer i = 0; i < `MDU_MUL_CYCLE; i++) begin
@@ -127,9 +108,16 @@ module MDU(
     end
 
     always_ff @ (posedge clk) begin
-        state       <= nxtState;
-        divLo       <= state == divOutputHi ? quotient     : divLo;
-        mulLo       <= state == mulOutputHi ? mulRes[31:0] : mulLo;
+        if(rst) begin
+            state       <= 0;
+            divLo       <= 0;
+            mulLo       <= 0;
+        end else begin
+            state       <= nxtState;
+            divLo       <= state == divOutputHi ? quotient     : divLo;
+            mulLo       <= state == mulOutputHi ? mulRes[31:0] : mulLo;           
+        end
+
     end
 
     always_comb begin

@@ -1,23 +1,5 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2020/07/21 20:18:05
-// Design Name: 
-// Module Name: Issue_RF_regs
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
+
 `include "../defines/defines.svh"
 
 module Issue_RF_regs(
@@ -34,7 +16,7 @@ module Issue_RF_regs(
 
     always_ff @ (posedge clk) begin
         if(rst || ctrl_issue_rf_regs.flush) begin
-            rfBundle.valid  <= `FALSE;
+            rfBundle        <= 0;
             prfRequest      <= 0;
         end else if(primPauseReq || ctrl_issue_rf_regs.pause) begin
             rfBundle        <= rfBundle;

@@ -1,23 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2020/07/21 21:06:00
-// Design Name: 
-// Module Name: MDUIQ_RF_regs
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 `include "../defines/defines.svh"
 
 module MDUIQ_RF_regs(
@@ -60,8 +41,8 @@ module MDUIQ_RF_regs(
 
     always_ff @ (posedge clk) begin
         if(rst || ctrl_issue_mdu_regs.flush) begin
-            rfBundleHi.valid    <= `FALSE;
-            rfBundleLo.valid    <= `FALSE;
+            rfBundleHi          <= 0;
+            rfBundleLo          <= 0;
             prfRequest          <= 0;
             mulTimeLine         <= 32'h0;
             divTimeLine         <= 32'h0;

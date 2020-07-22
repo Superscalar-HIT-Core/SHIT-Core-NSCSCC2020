@@ -36,7 +36,7 @@ module RF_FU_regs(
 
     always_ff @ (posedge clk) begin
         if(rst || ctrl_rf_fu_regs.flush) begin
-            fuBundle.valid  <= `FALSE;
+            fuBundle        <= 0;
             fuOprands       <= 0;
         end else if(primPauseReq || ctrl_rf_fu_regs.pause) begin
             fuBundle        <= fuBundle;
