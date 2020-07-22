@@ -108,16 +108,9 @@ module MDU(
     end
 
     always_ff @ (posedge clk) begin
-        if(rst) begin
-            state       <= 0;
-            divLo       <= 0;
-            mulLo       <= 0;
-        end else begin
             state       <= nxtState;
             divLo       <= state == divOutputHi ? quotient     : divLo;
             mulLo       <= state == mulOutputHi ? mulRes[31:0] : mulLo;           
-        end
-
     end
 
     always_comb begin
