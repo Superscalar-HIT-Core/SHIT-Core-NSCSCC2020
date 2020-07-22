@@ -28,7 +28,12 @@ module Commit(
     ROB_Commit.commit           rob_commit,
     BackendRedirect.backend     backend_if0,
     BPDUpdate.backend           backend_bpd,
-    NLPUpdate.backend           backend_nlp
+    NLPUpdate.backend           backend_nlp,
+
+    output logic                commit_rename_valid_0,
+    output logic                commit_rename_valid_1,
+    input  commit_info          commit_rename_req_0,
+    input  commit_info          commit_rename_req_1
 );
 
     logic           takePredFailed;
@@ -38,6 +43,9 @@ module Commit(
     logic           lastWaitDs;
     logic [31:0]    target;
     logic [31:0]    lastTarget;
+    logic           causeExec;
+    ExceptionType   exception;
+    logic [19:0]    excCode;
 
     assign takePredFailed   = rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP0.branchTaken != rob_commit.uOP0.predTaken;
     assign addrPredFailed   = !takePredFailed && rob_commit.uOP0.branchAddr != rob_commit.uOP0.predAddr;
@@ -45,14 +53,29 @@ module Commit(
 
     always_ff @(posedge clk) begin
         if(takePredFailed || addrPredFailed) begin
-            predFailed  <= `TRUE;
-            waitDS      <= rob_commit.uOP1.uOP == MDBUBBLE_U;
+            predFailed                      <= `TRUE;
+            waitDS                          <= rob_commit.uOP1.uOP == MDBUBBLE_U;
         end else begin
-            predFailed  <= `FALSE;
-            waitDS      <= `FALSE;
+            predFailed                      <= `FALSE;
+            waitDS                          <= `FALSE;
         end
-        lastWaitDs      <= waitDS;
-        lastTarget      <= target;
+
+        lastWaitDs                          <= waitDS;
+        lastTarget                          <= target;
+        causeExec                           <= rob_commit.uOP0.causeExc || rob_commit.uOP1.causeExc;
+        exception                           <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.exception : rob_commit.uOP0.exception;
+        excCode                             <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.excCode : rob_commit.uOP0.excCode;
+        
+        commit_rename_valid_0               <= rob_commit.uOP0.valid;
+        commit_rename_valid_1               <= rob_commit.uOP1.valid;
+
+        commit_rename_req_0.committed_arf   <= rob_commit.uOP0.dstLAddr;
+        commit_rename_req_0.committed_prf   <= rob_commit.uOP0.dstPAddr;
+        commit_rename_req_0.stale_prf       <= rob_commit.uOP0.dstPStale;
+
+        commit_rename_req_1.committed_arf   <= rob_commit.uOP1.dstLAddr;
+        commit_rename_req_1.committed_prf   <= rob_commit.uOP1.dstPAddr;
+        commit_rename_req_1.stale_prf       <= rob_commit.uOP1.dstPStale;
     end
 
     always_comb begin
