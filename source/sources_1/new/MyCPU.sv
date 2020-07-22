@@ -79,17 +79,6 @@ module MyCPU(
     Ctrl                ctrl_lsu_output_regs();
     Ctrl                ctrl_commit();
 
-    logic               aluIQReady;
-    logic               lsuIQReady;
-    logic               mduIQReady;
-    logic               renameAllocatable;
-
-    logic               renameRecover;
-    logic               aluIQFlush;
-    logic               lsuIQFlush;
-    logic               mduIQFlush;
-
-    logic               pauseRename;
 
     BackendRedirect     backend_if0();
     BPDUpdate           backend_bpd();
@@ -209,6 +198,17 @@ module MyCPU(
     assign wake_reg_MDU = 0;
     assign lsu_busy = 0;
 
+    wire           aluIQReady;
+    wire           lsuIQReady;
+    wire           mduIQReady;
+    wire           renameAllocatable;
+    wire           renameRecover;
+    wire           aluIQFlush;
+    wire           lsuIQFlush;
+    wire           mduIQFlush;
+    wire           pauseRename;
+    wire           pauseRename_dispatch_reg;
+
     CtrlUnit                cu(.*);
     CtrlUnitBackend         cub(.*);
     AXIInterface            axiInterface(.*);
@@ -232,11 +232,13 @@ module MyCPU(
         .commit_valid_1(commit_rename_valid_1),
         .commit_req_0(commit_rename_req_0), 
         .commit_req_1(commit_rename_req_1),
-        .allocatable(renameAllocatable)
+        .allocatable(renameAllocatable),
+        .pauseRename(pauseRename)
     );
     rename_dispatch_reg r_d_reg(
         .clk(clk),
         .rst(rst),
+        .pauseRename_dispatch_reg(pauseRename_dispatch_reg),
         .inst0_in(rename_dispatch_0), 
         .inst1_in(rename_dispatch_1),
         .inst0_out(dispatch_inst0_in), 

@@ -20,18 +20,18 @@ module CtrlUnitBackend(
     Ctrl.master     ctrl_lsu_output_regs,
     Ctrl.master     ctrl_commit,
 
-    logic           aluIQReady,
-    logic           lsuIQReady,
-    logic           mduIQReady,
-    logic           renameAllocatable,
+    input wire           aluIQReady,
+    input wire           lsuIQReady,
+    input wire           mduIQReady,
+    input wire           renameAllocatable,
 
-    logic           renameRecover,
-    logic           aluIQFlush,
-    logic           lsuIQFlush,
-    logic           mduIQFlush,
+    output wire           renameRecover,
+    output wire           aluIQFlush,
+    output wire           lsuIQFlush,
+    output wire           mduIQFlush,
 
-    logic           pauseRename,
-    logic           pauseRename_dispatch_reg
+    output wire           pauseRename,
+    output wire           pauseRename_dispatch_reg
 );
 
     assign ctrl_instBuffer_decode_regs.pause =

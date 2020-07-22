@@ -6,6 +6,7 @@ module register_rename(
     input clk, 
     input rst,
     input recover, 
+    input pauseRename, 
     input UOPBundle inst0_ops_in, inst1_ops_in,
     output UOPBundle inst0_ops_out, inst1_ops_out,
     input commit_valid_0, commit_valid_1,
@@ -19,14 +20,15 @@ free_list u_free_list(
     .rst         (rst         ),
     .recover     (recover     ),
     .inst_0_req  (inst0_ops_in.dstwe && inst0_ops_in.valid ),
-    .inst_1_req  (inst1_ops_in.dstwe && inst1_ops_in.valid  ),
+    .inst_1_req  (inst1_ops_in.dstwe && inst1_ops_in.valid ),
     .inst_0_prf      (free_prf_0      ),
     .inst_1_prf      (free_prf_1      ),
     .commit_valid_0     (commit_valid_0),
     .commit_valid_1     (commit_valid_1),
     .commit_info_0 (commit_req_0 ),
     .commit_info_1 (commit_req_1 ),
-    .allocatable (allocatable )
+    .allocatable (allocatable ),
+    .pause(pauseRename)
 );
 rename_table_input rnamet_input_inst0, rnamet_input_inst1;
 
@@ -52,8 +54,8 @@ map_table u_map_table(
 	.clk                 (clk                 ),
     .rst                 (rst                 ),
     .recover             (recover             ),
-    .inst_0_valid        (inst0_ops_in.valid  && allocatable ),
-    .inst_1_valid        (inst1_ops_in.valid  && allocatable ),
+    .inst_0_valid        (inst0_ops_in.valid  && allocatable && (~pauseRename) ),
+    .inst_1_valid        (inst1_ops_in.valid  && allocatable && (~pauseRename) ),
     .rname_input_inst0  (rnamet_input_inst0  ),
     .rname_input_inst1  (rnamet_input_inst1  ),
     .rname_output_inst0 (rnamet_output_inst0 ),
