@@ -40,6 +40,7 @@ module Predecoder(
                 32'b000001??_???10000_????????_????????: begin  // BLTZAL
                     isJ     = `FALSE;  // redirect unknown;
                     isBr    = `TRUE;
+                    jr      = `FALSE;
                     target  = pc + {{14{inst[15]}}, inst[15:0] << 2};
                 end
                 32'b000000??_???00000_00000000_00001000,        // JR
