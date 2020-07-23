@@ -17,6 +17,8 @@ module Commit(
     output commit_info          commit_rename_req_1
 );
 
+    logic           inst0Good;
+    logic           inst1Good;
     logic           takePredFailed;
     logic           addrPredFailed;
     logic           predFailed;
@@ -28,8 +30,10 @@ module Commit(
     ExceptionType   exception;
     logic [19:0]    excCode;
 
-    assign takePredFailed   = rob_commit.valid && rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP0.branchTaken != rob_commit.uOP0.predTaken;
-    assign addrPredFailed   = rob_commit.valid && !takePredFailed && (rob_commit.uOP0.branchAddr != rob_commit.uOP0.predAddr);
+    assign inst0Good        = rob_commit.valid && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
+    assign inst1Good        = rob_commit.valid && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
+    assign takePredFailed   = inst0Good && rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP0.branchTaken != rob_commit.uOP0.predTaken;
+    assign addrPredFailed   = inst0Good && !takePredFailed && (rob_commit.uOP0.branchAddr != rob_commit.uOP0.predAddr);
     assign target           = rob_commit.uOP0.branchTaken ? rob_commit.uOP0.branchAddr : rob_commit.uOP0.pc + 32'h8;
     assign rob_commit.ready = `TRUE;
     always_ff @(posedge clk) begin
@@ -49,13 +53,13 @@ module Commit(
             end
 
             lastWaitDs                          <= waitDS;
-            lastTarget                          <= target;
-            causeExec                           <= rob_commit.valid && (rob_commit.uOP0.causeExc || rob_commit.uOP1.causeExc);
+            lastTarget                          <= waitDS ? lastTarget : target;
+            causeExec                           <= (rob_commit.uOP0.causeExc && inst0Good) || (rob_commit.uOP1.causeExc && inst1Good);
             exception                           <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.exception : rob_commit.uOP0.exception;
             excCode                             <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.excCode : rob_commit.uOP0.excCode;
             
-            commit_rename_valid_0               <= rob_commit.uOP0.valid & rob_commit.valid;
-            commit_rename_valid_1               <= rob_commit.uOP1.valid & rob_commit.valid;
+            commit_rename_valid_0               <= inst0Good;
+            commit_rename_valid_1               <= inst1Good;
 
             commit_rename_req_0.committed_arf   <= rob_commit.uOP0.dstLAddr;
             commit_rename_req_0.committed_prf   <= rob_commit.uOP0.dstPAddr;
@@ -68,7 +72,7 @@ module Commit(
             commit_rename_req_0.wr_reg_commit   <= rob_commit.uOP0.dstwe;
             commit_rename_req_1.wr_reg_commit   <= rob_commit.uOP1.dstwe;
 
-            backend_nlp.update.valid            <= rob_commit.uOP0.valid && rob_commit.uOP0.branchType != typeNormal;
+            backend_nlp.update.valid            <= inst0Good && rob_commit.uOP0.branchType != typeNormal;
             backend_nlp.update.pc               <= rob_commit.uOP0.pc;
             backend_nlp.update.target           <= rob_commit.uOP0.branchAddr;
             backend_nlp.update.shouldTake       <= rob_commit.uOP0.branchTaken;
@@ -81,7 +85,7 @@ module Commit(
             ctrl_commit.flushReq    = `TRUE;
             backend_if0.redirect    = `TRUE;
             backend_if0.valid       = `TRUE;
-            backend_if0.redirectPC  = target;
+            backend_if0.redirectPC  = lastTarget;
         end else begin
             ctrl_commit.flushReq    = `FALSE;
             backend_if0.redirect    = `FALSE;

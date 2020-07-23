@@ -594,11 +594,51 @@ module MyCPU(
     Commit commit(.*);
 
     // synopsys translate_off
+    logic sanityCheck0;
+    PRFNum sanityCheck0ARF;
+    logic sanityCheck1;
+    PRFNum sanityCheck1ARF;
+    UOPBundle delayedCommitInfo0;
+    UOPBundle delayedCommitInfo1;
     always @ (posedge clk) begin
-        if(commit_rename_req_0 || commit_rename_req_0) #1 begin
+        // if(commit_rename_valid_0 || commit_rename_valid_1) #1 begin
+        //     for(integer i = 0; i < 34; i++) begin
+        //         $display("reg %d : %d", i, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[i]]);
+        //     end
+        // end
+        delayedCommitInfo0 <= rob_commit.uOP0;
+        delayedCommitInfo1 <= rob_commit.uOP1;
+        if (commit_rename_valid_0 && commit_rename_req_0.wr_reg_commit) begin
+            $display("(pAddr %d) regs %d <= %d", commit_rename_req_0.committed_prf, commit_rename_req_0.committed_arf, prf_u.prfs_bank0[commit_rename_req_0.committed_prf]);
+            $display("instruction info: %s @ %h, isDS = %d", delayedCommitInfo0.uOP.name(), delayedCommitInfo0.pc, delayedCommitInfo0.isDS);
+            sanityCheck0 <= `TRUE;
+            sanityCheck0ARF <= commit_rename_req_0.committed_arf;
+        end else sanityCheck0 <= `FALSE;
+        if (commit_rename_valid_1 && commit_rename_req_1.wr_reg_commit) begin
+            $display("(pAddr %d) regs %d <= %d", commit_rename_req_1.committed_prf, commit_rename_req_1.committed_arf, prf_u.prfs_bank0[commit_rename_req_1.committed_prf]);
+            $display("instruction info: %s @ %h, isDS = %d", delayedCommitInfo1.uOP.name(), delayedCommitInfo1.pc, delayedCommitInfo1.isDS);
+            sanityCheck1 <= `TRUE;
+            sanityCheck1ARF <= commit_rename_req_1.committed_arf;
+        end else sanityCheck1 <= `FALSE;
+    end
+    always @ (posedge clk) begin
+        if (sanityCheck0) begin
+            $display("sanity check : reg %d is %d", sanityCheck0ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck0ARF]]);
+        end
+        if (sanityCheck1) begin
+            $display("sanity check : reg %d is %d", sanityCheck1ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck1ARF]]);
+        end
+    end
+
+    always @ (posedge clk) begin
+        if (ctrl_commit.flushReq) begin
+            $display("Detect branch prediction failed. redirecting...");
+            #1
+            $display("========== arf after refresh ==========");
             for(integer i = 0; i < 34; i++) begin
                 $display("reg %d : %d", i, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[i]]);
             end
+            $display("========== arf disp finished ==========");
         end
     end
     // synopsys translate_on

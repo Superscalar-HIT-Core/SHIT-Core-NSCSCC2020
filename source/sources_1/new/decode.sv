@@ -434,7 +434,7 @@ module decode(
                     uOP0.op1re      = `TRUE;
                     uOP0.dstwe      = `FALSE;
                     uOP0.branchType = typeBR;
-                    uOP0.branchAddr = {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
+                    uOP0.branchAddr = inst.pc + {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
                 end
                 `BNE: begin
                     uOP0.uOP        = BNE_U;
@@ -446,7 +446,7 @@ module decode(
                     uOP0.op1re      = `TRUE;
                     uOP0.dstwe      = `FALSE;
                     uOP0.branchType = typeBR;
-                    uOP0.branchAddr = {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
+                    uOP0.branchAddr = inst.pc + {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
                 end
                 `BGEZ: begin
                     uOP0.uOP        = BGEZ_U;
@@ -457,7 +457,7 @@ module decode(
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
                     uOP0.branchType = typeBR;
-                    uOP0.branchAddr = {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
+                    uOP0.branchAddr = inst.pc + {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
                 end
                 `BGTZ: begin
                     uOP0.uOP        = BGTZ_U;
@@ -468,7 +468,7 @@ module decode(
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
                     uOP0.branchType = typeBR;
-                    uOP0.branchAddr = {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
+                    uOP0.branchAddr = inst.pc + {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
                 end
                 `BLEZ: begin
                     uOP0.uOP        = BLEZ_U;
@@ -479,7 +479,7 @@ module decode(
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
                     uOP0.branchType = typeBR;
-                    uOP0.branchAddr = {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
+                    uOP0.branchAddr = inst.pc + {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
                 end
                 `BLTZ: begin
                     uOP0.uOP        = BLTZ_U;
@@ -490,7 +490,7 @@ module decode(
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
                     uOP0.branchType = typeBR;
-                    uOP0.branchAddr = {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
+                    uOP0.branchAddr = inst.pc + {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
                 end
                 `BGEZAL: begin
                     uOP0.uOP        = BGEZAL_U;
@@ -502,7 +502,7 @@ module decode(
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `TRUE;
                     uOP0.branchType = typeBR;
-                    uOP0.branchAddr = {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
+                    uOP0.branchAddr = inst.pc + {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
                 end
                 `BLTZAL: begin
                     uOP0.uOP        = BLTZAL_U;
@@ -514,7 +514,7 @@ module decode(
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `TRUE;
                     uOP0.branchType = typeBR;
-                    uOP0.branchAddr = {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00};
+                    uOP0.branchAddr = inst.pc + {{14{inst_raw[15]}}, inst_raw[15:0], 2'b00} + 4;
                 end
                 `J: begin
                     uOP0.uOP        = J_U;

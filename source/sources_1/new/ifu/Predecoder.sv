@@ -29,11 +29,11 @@ module Predecoder(
                 //     target  = pc + {{14{inst[15]}}, inst[15:0] << 2};
                 // end
                 // backend-redirect, predecode for wrong target or checking NLP/BPD false postive(br/normal mispredict)
-                `BEQ, `BGEZ, `BGEZAL, `BGTZ, `BLEZ, `BLTZ, `BLTZAL: begin
+                `BEQ, `BNE, `BGEZ, `BGEZAL, `BGTZ, `BLEZ, `BLTZ, `BLTZAL: begin
                     isJ     = `FALSE;  // redirect unknown;
                     isBr    = `TRUE;
                     jr      = `FALSE;
-                    target  = pc + {{14{inst[15]}}, inst[15:0] << 2};
+                    target  = pc + {{14{inst[15]}}, inst[15:0], 2'b00} + 4;
                 end
                 `JR, `JALR: begin  // JALR
                     isJ     = `TRUE;
