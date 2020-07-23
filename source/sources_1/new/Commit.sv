@@ -39,9 +39,10 @@ module Commit(
             commit_rename_req_0 <= 0;
             commit_rename_req_1 <= 0;
         end else begin
-            if(takePredFailed || addrPredFailed) begin
-            predFailed                      <= `TRUE;
-            waitDS                          <= rob_commit.uOP1.uOP == MDBUBBLE_U;
+            if( takePredFailed ||   // 只有预测跳转的时候，才需要检查地址
+                (~takePredFailed && (rob_commit.uOP0.branchTaken == `TRUE) && addrPredFailed ) ) begin
+                predFailed                      <= `TRUE;
+                waitDS                          <= rob_commit.uOP1.uOP == MDBUBBLE_U;
             end else begin
                 predFailed                      <= `FALSE;
                 waitDS                          <= `FALSE;
