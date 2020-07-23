@@ -2,6 +2,8 @@
 `include "defines/defines.svh"
 
 module CtrlUnitBackend(
+    input clk,
+    input rst,
     Ctrl.master     backend_ctrl,
 
     Ctrl.master     ctrl_instBuffer_decode_regs,
