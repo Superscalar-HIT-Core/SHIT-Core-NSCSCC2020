@@ -49,7 +49,7 @@ module Commit(
                 waitDS                          <= rob_commit.uOP1.uOP == MDBUBBLE_U;
             end else begin
                 predFailed                      <= `FALSE;
-                waitDS                          <= `FALSE;
+                waitDS                          <= inst1Good ? `FALSE : waitDS;
             end
 
             lastWaitDs                          <= waitDS;
@@ -81,7 +81,7 @@ module Commit(
     end
 
     always_comb begin
-        if((predFailed && !waitDS) || lastWaitDs) begin
+        if( (predFailed && !waitDS) || (lastWaitDs && !waitDS) ) begin
             ctrl_commit.flushReq    = `TRUE;
             backend_if0.redirect    = `TRUE;
             backend_if0.valid       = `TRUE;

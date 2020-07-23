@@ -630,16 +630,14 @@ module MyCPU(
         end
     end
 
-    always @ (posedge clk) begin
-        if (ctrl_commit.flushReq) begin
-            $display("Detect branch prediction failed. redirecting...");
-            #1
-            $display("========== arf after refresh ==========");
-            for(integer i = 0; i < 34; i++) begin
-                $display("reg %d : %d", i, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[i]]);
-            end
-            $display("========== arf disp finished ==========");
+    always @ (negedge ctrl_commit.flushReq) #1 begin
+        $display("Detect branch prediction failed. redirecting...");
+        #1
+        $display("========== arf after refresh ==========");
+        for(integer i = 0; i < 34; i++) begin
+            $display("reg %d : %d", i, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[i]]);
         end
+        $display("========== arf disp finished ==========");
     end
     // synopsys translate_on
 endmodule
