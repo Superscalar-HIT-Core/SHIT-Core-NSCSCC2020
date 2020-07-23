@@ -56,6 +56,7 @@ module iq_alu(
     input clk,
     input rst,
     input flush, 
+    input stall,
     input enq_req_0,
     input enq_req_1,
     input deq_req_0,
@@ -87,7 +88,7 @@ assign almost_full = (tail == `ALU_QUEUE_IDX_LEN'h`ALU_QUEUE_LEN_MINUS1);  // �
 assign empty = (tail == `ALU_QUEUE_IDX_LEN'h0);  // 差1位满，也不能写入
 assign full = (tail == `ALU_QUEUE_IDX_LEN'h`ALU_QUEUE_LEN);
 assign almost_empty = (tail == `ALU_QUEUE_IDX_LEN'h1);
-wire freeze = almost_full || full;
+wire freeze = almost_full || full || stall;     // 当stall的时候，不能往队列里写
 
 // 唤醒信息
 PRFNum [`ALU_QUEUE_LEN-1:0] rs0_nums;
@@ -181,6 +182,9 @@ module issue_unit_ALU(
     input clk,
     input rst,
     input flush,        // 清除请求
+    input stall,
+    input ROBempty,
+    output priv_issued,
     input ALU_Queue_Meta inst_Ops_0, inst_Ops_1,      // 从译码模块来的，指令的译码信息
     input enq_req_0, enq_req_1,                     // 指令入队请求
     output UOPBundle issue_info_0, issue_info_1,         // 输出给执行单元流水线的
@@ -222,6 +226,7 @@ iq_alu u_iq_alu(
     .clk            (clk            ),
     .rst            (rst            ),
     .flush          (flush          ),
+    .stall          (stall          ),
     // From Dispatch
     .enq_req_0      (enq_req_0      ),
     .enq_req_1      (enq_req_1      ),
