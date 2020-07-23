@@ -19,7 +19,7 @@ module IF0_1_reg(
 );
 
     logic           headIsDS;
-    logic           dsAddr;
+    logic [31:0]    dsAddr;
     logic [31:0]    PC;
 
     assign if0_regs.PC      = PC;
@@ -29,10 +29,9 @@ module IF0_1_reg(
 
     assign ctrl_if0_1_regs.pauseReq     = `FALSE;
 
-    assign regs_iCache.inst0.nlpInfo    = nlp_if0.nlpInfo0;
-    assign regs_iCache.inst1.nlpInfo    = nlp_if0.nlpInfo1;
-
     assign backend_if0.ready = `TRUE;
+
+    assign regs_iCache.onlyGetDS = headIsDS;
 
     always_ff @ (posedge clk) begin
         if(rst || ctrl_if0_1_regs.flush) begin
@@ -62,6 +61,31 @@ module IF0_1_reg(
             PC          <=  if0_regs.nPC;
             headIsDS    <=  `FALSE;
         end
+        regs_iCache.inst0.nlpInfo    <= nlp_if0.nlpInfo0;
+        regs_iCache.inst1.nlpInfo    <= nlp_if0.nlpInfo1;
     end
+
+    // synopsys translate_off
+    always_ff @ (posedge clk) begin
+        $display("pc: %h", PC);
+        if(rst || ctrl_if0_1_regs.flush) begin
+            $display("rst");
+        end else if(backend_if0.redirect && backend_if0.valid) begin
+            $display("backend redirect");
+        end else if(if3_0.redirect) begin
+            $display("if3 redirect");
+        end else if(headIsDS) begin
+            $display("delayed nlp redirect");
+        end else if(nlp_if0.nlpInfo0.valid && nlp_if0.nlpInfo0.taken) begin
+            $display("nlp0 redirect");
+        end else if(nlp_if0.nlpInfo1.valid && nlp_if0.nlpInfo1.taken) begin
+            $display("nlp1 delayed redirect");
+        end else if(ctrl_if0_1_regs.pause) begin
+            $display("pause");
+        end else begin
+            $display("npc");
+        end
+    end
+    // synopsys translate_on
 
 endmodule

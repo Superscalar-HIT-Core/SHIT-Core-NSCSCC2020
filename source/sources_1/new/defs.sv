@@ -9,9 +9,9 @@
 
 `define IB_SIZE         16
 `define IB_ADDR         3:0
-`define NLP_SIZE        1024
-`define NLP_ADDR        9:0
-`define NLP_PC          11:2
+`define NLP_SIZE        512
+// `define NLP_ADDR        9:0
+`define NLP_PC          10:2
 
 typedef struct packed {
     logic   [31:0]  target;
@@ -46,8 +46,6 @@ typedef struct packed {
     logic           isBr;
     logic           isDs;
     logic           isJ;
-    logic   [31:0]  target;
-    logic           taken;
     logic           valid;
     NLPPredInfo     nlpInfo;
     BPDPredInfo     bpdInfo;

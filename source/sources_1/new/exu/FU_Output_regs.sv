@@ -17,13 +17,19 @@ module FU_Output_regs(
 
     always_ff @ (posedge clk) begin
         if(rst || ctrl_fu_output_regs.flush) begin
-            prfWReq                 <= 0;
-            commitInfo.setFinish    <= 0;
-            commitInfo.id           <= 0;
+            prfWReq                     <= 0;
+            commitInfo.setFinish        <= 0;
+            commitInfo.id               <= 0;
+            commitInfo.setBranchStatus  <= 0;
+            commitInfo.branchTaken      <= 0;
+            commitInfo.branchAddr       <= 0;
         end else begin  // no pause
-            prfWReq                 <= fuWbData;
-            commitInfo.setFinish    <= fuCommitInfo.setFinish;
-            commitInfo.id           <= fuCommitInfo.id;
+            prfWReq                     <= fuWbData;
+            commitInfo.setFinish        <= fuCommitInfo.setFinish;
+            commitInfo.id               <= fuCommitInfo.id;
+            commitInfo.setBranchStatus  <= fuCommitInfo.setBranchStatus;
+            commitInfo.branchTaken      <= fuCommitInfo.branchTaken;
+            commitInfo.branchAddr       <= fuCommitInfo.branchAddr;
         end
     end
 

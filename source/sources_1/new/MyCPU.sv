@@ -594,8 +594,8 @@ module MyCPU(
 
     // synopsys translate_off
     always @ (posedge clk) begin
-        if(rob_commit.valid) #21 begin
-            for(integer i = 0; i <= 34; i++) begin
+        if(commit_rename_req_0 || commit_rename_req_0) #1 begin
+            for(integer i = 0; i < 34; i++) begin
                 $display("reg %d : %d", i, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[i]]);
             end
         end

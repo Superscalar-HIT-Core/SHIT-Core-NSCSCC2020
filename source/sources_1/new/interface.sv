@@ -270,12 +270,13 @@ endinterface //Regs_BPD
 
 interface Regs_ICache;
     logic   [31:0]  PC;
+    logic           onlyGetDS;
 
     InstBundle      inst0;
     InstBundle      inst1;
 
-    modport regs(output PC, inst0, inst1);
-    modport iCache(input PC, inst0, inst1);
+    modport regs(output PC, inst0, inst1, onlyGetDS);
+    modport iCache(input PC, inst0, inst1, onlyGetDS);
 
     task automatic sendPC(logic [31:0] addr, ref logic clk);
         @(posedge clk) #1 PC = addr;

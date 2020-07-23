@@ -30,7 +30,7 @@ module ICache(
 
     ICache_Regs.iCache  iCache_regs
 );
-    typedef enum { sStartUp, sRunning, sBlock, sReset } ICacheState;
+    typedef enum { sStartUp, sRunning, sBlock, sReset, sRecovery } ICacheState;
 
     typedef struct packed {
         logic           clk;
@@ -62,7 +62,11 @@ module ICache(
     logic [  1:0]   writeSel;
     logic           lastPause;
     logic           pauseDiscard;
-    logic           discardNextResp;
+    logic           delayOnlyGetDS;
+
+    logic [  1:0]   pendingCounter;
+    logic [  1:0]   nxtPendingCounter;
+    logic           pendingResp;
 
     TagRamIO    tag0IO,     tag1IO,     tag2IO,     tag3IO;
     DataRamIO   data0IO,    data1IO,    data2IO,    data3IO;
@@ -160,14 +164,6 @@ module ICache(
 
     assign pauseDiscard = lastPause && !ctrl_iCache.pause;
 
-    always_ff @ (posedge clk) begin
-        if(rst || ctrl_iCache.flush) begin
-            discardNextResp <= `TRUE;
-        end else begin
-            discardNextResp <= instReq.valid ? `FALSE : discardNextResp;
-        end
-    end
-
     always_comb begin
         if(state == sBlock && instResp.valid) hitLine = instResp.cacheLine;
         else if(tag == tag0IO.dataOut && valid[0][delayLineAddr]) hitLine = data0IO.dataOut;
@@ -185,12 +181,26 @@ module ICache(
         end
     end
 
+    always_ff @ (posedge clk) begin
+        if(rst) begin
+            pendingCounter <= 0;
+        end else begin
+            pendingCounter <= nxtPendingCounter;
+        end
+    end
+    assign pendingResp = nxtPendingCounter != 2'b00;
+    assign nxtPendingCounter = instReq.valid ? pendingCounter + 1 : (instResp.valid ? pendingCounter - 1 : pendingCounter);
+
+    always_ff @ (posedge clk) delayOnlyGetDS <= regs_iCache.onlyGetDS;
+
     always_comb begin
         nextState = sReset;
         case(state)
             sStartUp: begin
                 if(rst) begin
                     nextState = sReset;
+                end else if(ctrl_iCache.flush) begin
+                    nextState = sRecovery;
                 end else begin
                     nextState = sRunning;
                 end
@@ -198,6 +208,8 @@ module ICache(
             sRunning: begin
                 if(rst) begin
                     nextState = sReset;
+                end else if(ctrl_iCache.flush) begin
+                    nextState = sRecovery;
                 end else if(hit) begin
                     nextState = sRunning;
                 end else if(instReq.ready) begin
@@ -209,14 +221,25 @@ module ICache(
             sBlock: begin
                 if(rst) begin
                     nextState = sReset;
+                end else if(ctrl_iCache.flush) begin
+                    nextState = sRecovery;
                 end else if(instResp.valid) begin
                     nextState = sStartUp;
                 end else begin
                     nextState = sBlock;
                 end
             end
-            sReset: begin
+            sRecovery: begin
                 if(rst) begin
+                    nextState = sReset;
+                end else if(instResp.valid || !pendingResp || hit) begin
+                    nextState = sStartUp;
+                end else begin
+                    nextState = sRecovery;
+                end
+            end
+            sReset: begin
+                if(rst || ctrl_iCache.flush) begin
                     nextState = sReset;
                 end else begin
                     nextState = sStartUp;
@@ -228,7 +251,7 @@ module ICache(
     always_ff @ (posedge clk) begin
         state           <= nextState;
         lastState       <= state;
-        if (rst | ctrl_iCache.flush) begin
+        if (rst) begin
             valid[0] = 0;
             valid[1] = 0;
             valid[2] = 0;
@@ -261,7 +284,7 @@ module ICache(
     end
 
     always_ff @ (posedge clk) begin
-        if(rst || ctrl_iCache.flush) begin
+        if(rst) begin
             for(integer i = 0; i < 64; i++) begin
                 age[i]      = 3'b000;
             end
@@ -286,8 +309,6 @@ module ICache(
         ctrl_iCache.pauseReq        = `FALSE;
         instReq.valid               = `FALSE;
         instResp.ready              = `FALSE;
-        iCache_regs.inst0           = 0;
-        iCache_regs.inst1           = 0;
 
         tag0IO.writeEn              = `FALSE;
         tag1IO.writeEn              = `FALSE;
@@ -321,7 +342,7 @@ module ICache(
         case(state)
             sStartUp: begin
                 instReq.valid               = `FALSE;
-                instResp.ready              = `FALSE || discardNextResp;
+                instResp.ready              = `FALSE;
 
                 if(hit) begin
                     ctrl_iCache.pauseReq        = `FALSE;
@@ -331,19 +352,19 @@ module ICache(
                     iCache_regs.inst0.inst      = insts[{delayPC[3], 1'b0}];
 
                     iCache_regs.inst1.pc        = delayPC | 32'h0000_0004;
-                    iCache_regs.inst1.valid     = !pauseDiscard;
+                    iCache_regs.inst1.valid     = !pauseDiscard && !delayOnlyGetDS;
                     iCache_regs.inst1.inst      = insts[{delayPC[3], 1'b1}];
                 end else begin
                     iCache_regs.inst0.valid     = `FALSE;
                     iCache_regs.inst1.valid     = `FALSE;
                 end
 
-                ctrl_iCache.pauseReq        = !hit;
+                ctrl_iCache.pauseReq            = !hit;
             end
             sRunning: begin
                 if(hit) begin
                     instReq.valid               = `FALSE;
-                    instResp.ready              = `FALSE  || discardNextResp;
+                    instResp.ready              = `FALSE;
                     ctrl_iCache.pauseReq        = `FALSE;
                     
                     iCache_regs.inst0.pc        = delayPC & 32'hffff_fffc;
@@ -351,11 +372,11 @@ module ICache(
                     iCache_regs.inst0.inst      = insts[{delayPC[3], 1'b0}];
 
                     iCache_regs.inst1.pc        = delayPC | 32'h0000_0004;
-                    iCache_regs.inst1.valid     = !pauseDiscard;
+                    iCache_regs.inst1.valid     = !pauseDiscard && !delayOnlyGetDS;
                     iCache_regs.inst1.inst      = insts[{delayPC[3], 1'b1}];
                 end else begin
                     instReq.valid               = `TRUE;
-                    instResp.ready              = `FALSE  || discardNextResp;
+                    instResp.ready              = `FALSE;
                     instReq.pc                  = delayPC;
                     ctrl_iCache.pauseReq        = `TRUE;
                     iCache_regs.inst0.valid     = `FALSE;
@@ -441,7 +462,7 @@ module ICache(
                     iCache_regs.inst0.inst  = insts[{delayPC[3], 1'b0}];
 
                     iCache_regs.inst1.pc    = delayPC | 32'h0000_0004;
-                    iCache_regs.inst1.valid = `TRUE;
+                    iCache_regs.inst1.valid = `TRUE && !delayOnlyGetDS;
                     iCache_regs.inst1.inst  = insts[{delayPC[3], 1'b1}];
                 end else begin
                     iCache_regs.inst0.pc    = 32'h0000_0000;
@@ -453,9 +474,16 @@ module ICache(
                     iCache_regs.inst0.inst  = 32'h0000_0000;
                 end
             end
+            sRecovery: begin
+                instReq.valid               = `FALSE;
+                instResp.ready              = `TRUE;
+                ctrl_iCache.pauseReq        = `TRUE;
+                iCache_regs.inst0           = 0;
+                iCache_regs.inst1           = 0;
+            end
             sReset: begin
                 instReq.valid               = `FALSE;
-                instResp.ready              = `FALSE || discardNextResp;
+                instResp.ready              = `FALSE;
 
                 tag0IO.writeEn              = `FALSE;
                 tag1IO.writeEn              = `FALSE;

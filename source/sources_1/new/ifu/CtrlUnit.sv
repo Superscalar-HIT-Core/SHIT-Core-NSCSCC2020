@@ -12,13 +12,13 @@ module CtrlUnit(
     Ctrl.master     ctrl_instBuffer
 );
 
-    assign ctrl_if0_1_regs.pause        = ctrl_iCache.pauseReq || ctrl_instBuffer.pauseReq || ctrl_if2_3_regs.pauseReq;
+    assign ctrl_if0_1_regs.pause        = ctrl_iCache.pauseReq || ctrl_instBuffer.pauseReq;
     assign ctrl_if2_3_regs.pause        = ctrl_instBuffer.pauseReq;
     assign ctrl_iCache.pause            = ctrl_instBuffer.pauseReq;
     assign ctrl_if3.pause               = ctrl_instBuffer.pauseReq;
     assign ctrl_if3_output_regs.pause   = ctrl_instBuffer.pauseReq;
 
-    assign ctrl_if0_1_regs.flush        = backend_ctrl.flush || ctrl_if3.flushReq;
+    assign ctrl_if0_1_regs.flush        = `FALSE; //backend_ctrl.flush || ctrl_if3.flushReq;
     assign ctrl_iCache.flush            = backend_ctrl.flush || ctrl_if3.flushReq;
     assign ctrl_if2_3_regs.flush        = backend_ctrl.flush || ctrl_if3.flushReq;
     assign ctrl_if3_output_regs.flush   = backend_ctrl.flush;

@@ -14,9 +14,9 @@ module Predecoder(
 
     always_comb begin
         if(valid) begin
-            priority casez (inst)
+            casez (inst)
                 // quick redirect
-                `J, `JAL: begin  // JAL
+                `J, `JAL: begin
                     isJ     = `TRUE;    // must redirect
                     isBr    = `FALSE;
                     jr      = `FALSE;

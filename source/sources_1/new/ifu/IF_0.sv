@@ -12,7 +12,7 @@ module IF_0(
     assign if0_regs.inst1.valid     = `TRUE;
 
     always_comb begin
-        if0_regs.nPC           =   (if0_regs.PC & 32'hFFFF_FFF8) + 32'h0000_0008;
+        if0_regs.nPC                =   (if0_regs.PC & 32'hFFFF_FFF8) + 32'h0000_0008;
     end
 
 endmodule

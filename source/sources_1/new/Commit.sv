@@ -28,8 +28,8 @@ module Commit(
     ExceptionType   exception;
     logic [19:0]    excCode;
 
-    assign takePredFailed   = rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP0.branchTaken != rob_commit.uOP0.predTaken;
-    assign addrPredFailed   = !takePredFailed && (rob_commit.uOP0.branchAddr != rob_commit.uOP0.predAddr);
+    assign takePredFailed   = rob_commit.valid && rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP0.branchTaken != rob_commit.uOP0.predTaken;
+    assign addrPredFailed   = rob_commit.valid && !takePredFailed && (rob_commit.uOP0.branchAddr != rob_commit.uOP0.predAddr);
     assign target           = rob_commit.uOP0.branchTaken ? rob_commit.uOP0.branchAddr : rob_commit.uOP0.pc + 32'h8;
     assign rob_commit.ready = `TRUE;
     always_ff @(posedge clk) begin
@@ -43,7 +43,7 @@ module Commit(
 
         lastWaitDs                          <= waitDS;
         lastTarget                          <= target;
-        causeExec                           <= rob_commit.uOP0.causeExc || rob_commit.uOP1.causeExc;
+        causeExec                           <= rob_commit.valid && (rob_commit.uOP0.causeExc || rob_commit.uOP1.causeExc);
         exception                           <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.exception : rob_commit.uOP0.exception;
         excCode                             <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.excCode : rob_commit.uOP0.excCode;
         
@@ -60,6 +60,12 @@ module Commit(
 
         commit_rename_req_0.wr_reg_commit   <= rob_commit.uOP0.dstwe;
         commit_rename_req_1.wr_reg_commit   <= rob_commit.uOP1.dstwe;
+
+        backend_nlp.update.valid            <= rob_commit.uOP0.valid && rob_commit.uOP0.branchType != typeNormal;
+        backend_nlp.update.pc               <= rob_commit.uOP0.pc;
+        backend_nlp.update.target           <= rob_commit.uOP0.branchAddr;
+        backend_nlp.update.shouldTake       <= rob_commit.uOP0.branchTaken;
+        backend_nlp.update.bimState         <= rob_commit.uOP0.nlpBimState;
     end
 
     always_comb begin

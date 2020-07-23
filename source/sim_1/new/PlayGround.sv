@@ -172,10 +172,10 @@ module PlayGround(
 always @(posedge clk)   begin
     #2
     if(cpu.alu0.wbData.wen) begin
-        $display("PC=%h wData=%h",cpu.alu0.uops.pc, cpu.alu0.wbData.wdata);
+        // $display("PC=%h wData=%h",cpu.alu0.uops.pc, cpu.alu0.wbData.wdata);
     end
     if(cpu.alu1.wbData.wen) begin
-        $display("PC=%h wData=%h",cpu.alu1.uops.pc, cpu.alu1.wbData.wdata);
+        // $display("PC=%h wData=%h",cpu.alu1.uops.pc, cpu.alu1.wbData.wdata);
     end
 end
 endmodule

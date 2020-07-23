@@ -22,8 +22,8 @@ module AXIInterface(
     typedef enum  { sRAddr, sRInst, sRData, sRDCache, sRRst } AXIRState;
     typedef enum  { sWAddr, sWData, sWDCache, sWDResp, sWDCResp, sWRst } AXIWState;
 
-    AXIRState   rState, nextRState;
-    AXIWState   wState, nextWState;
+    AXIRState   rState, nextRState, lastRState;
+    AXIWState   wState, nextWState, lastWState;
     
     logic           instReqBusy;
     logic [31:0]    instReqPC;
@@ -83,7 +83,7 @@ module AXIInterface(
         end else if(instReq.valid && !lastInstBusy) begin
             instReqBusy = `TRUE;
             instReqPC   = instReq.pc;
-        end else if(rState == sRInst) begin
+        end else if(rState == sRInst && lastRState == sRAddr) begin
             instReqBusy = `FALSE;
         end else begin
             instReqBusy = lastInstBusy;
@@ -125,7 +125,7 @@ module AXIInterface(
             dCacheReqAddr   = dCacheReq.addr;
             dCacheReqWEn    = dCacheReq.write_en;
             dCacheReqData   = dCacheReq.data;
-        end else if (rState == sRDCache || wState == sWDCResp) begin
+        end else if (rState == sRDCache && lastRState == sRAddr || (wState == sWDCResp && lastWState == sWDCache)) begin
             dCacheReqBusy   = `FALSE;
             dCacheReqWEn    = `FALSE;
         end else begin
@@ -262,6 +262,8 @@ module AXIInterface(
     always_ff @(posedge clk) begin
         rState <= nextRState;
         wState <= nextWState;
+        lastRState <= rState;
+        lastWState <= wState;
     end
 
     always_ff @(posedge clk) begin

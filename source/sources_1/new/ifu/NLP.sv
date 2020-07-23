@@ -15,15 +15,15 @@ module NLP(
 );
 // fake nlp for now
 
-    logic [         31 : 0] target      [`NLP_ADDR];
-    logic [          1 : 0] bimState    [`NLP_ADDR];
+    logic [         31 : 0] target      [`NLP_SIZE-1 : 0];
+    logic [          1 : 0] bimState    [`NLP_SIZE-1 : 0];
     logic [`NLP_SIZE-1 : 0] valid;
 
-    logic pc0;
-    logic pc1;
+    logic [         31 : 0] pc0;
+    logic [         31 : 0] pc1;
 
-    assign pc0 = regs_nlp.PC[`NLP_PC];
-    assign pc1 = regs_nlp.PC[`NLP_PC] + 4;
+    assign pc0 = regs_nlp.PC;
+    assign pc1 = regs_nlp.PC + 4;
 
     always_ff @ (posedge clk) begin
         if(rst || ctrl_nlp.flush) begin
@@ -54,13 +54,13 @@ module NLP(
         end
     end
 
-    assign nlp_if0.nlpInfo0.valid    = valid[pc0];
-    assign nlp_if0.nlpInfo0.target   = target[pc0];
-    assign nlp_if0.nlpInfo0.taken    = bimState[pc0][1];
-    assign nlp_if0.nlpInfo0.bimState = bimState[pc0];
+    assign nlp_if0.nlpInfo0.valid    = valid    [pc0[`NLP_PC]];
+    assign nlp_if0.nlpInfo0.target   = target   [pc0[`NLP_PC]];
+    assign nlp_if0.nlpInfo0.taken    = bimState [pc0[`NLP_PC]][1];
+    assign nlp_if0.nlpInfo0.bimState = bimState [pc0[`NLP_PC]];
 
-    assign nlp_if0.nlpInfo1.valid    = valid[pc1];
-    assign nlp_if0.nlpInfo1.target   = target[pc1];
-    assign nlp_if0.nlpInfo1.taken    = bimState[pc1][1];
-    assign nlp_if0.nlpInfo1.bimState = bimState[pc1];
+    assign nlp_if0.nlpInfo1.valid    = valid    [pc1[`NLP_PC]];
+    assign nlp_if0.nlpInfo1.target   = target   [pc1[`NLP_PC]];
+    assign nlp_if0.nlpInfo1.taken    = bimState [pc1[`NLP_PC]][1];
+    assign nlp_if0.nlpInfo1.bimState = bimState [pc1[`NLP_PC]];
 endmodule

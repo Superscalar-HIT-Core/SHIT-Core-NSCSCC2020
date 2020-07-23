@@ -10,7 +10,7 @@ module ALU(
     FU_ROB.fu   alu_rob
     );
 
-assign alu_rob.setFinish = uops.valid && !uops.uOP == NOP_U && uops.dstwe;
+assign alu_rob.setFinish = uops.valid;
 assign alu_rob.id = uops.id;
 
 // Result Select
@@ -77,6 +77,10 @@ assign branch_taken =   ( uop == BEQ_U ) ? ( src0 == src1 ) :
                         ( uop == BLTZ_U ) ? ( src0[31] ) : 
                         ( uop == J_U || uop == JAL_U || uop == JR_U || uop == JALR_U ) ? 1 : 0;
 assign branch_target = ( uop == JR_U || uop == JALR_U ) ? src0 : uops.branchAddr;
+
+assign alu_rob.setBranchStatus = uops.valid && uops.branchType != typeNormal;
+assign alu_rob.branchAddr = branch_target;
+assign alu_rob.branchTaken = branch_taken;
 
 always_comb begin
     uops_o = uops;
