@@ -294,8 +294,13 @@ interface ICache_TLB;
     
     task automatic autoReply(ref logic clk);
         @ (posedge clk) begin
-            phyAddr0 = virAddr0;
-            phyAddr1 = virAddr1;
+            // phyAddr0 = virAddr0;
+            // phyAddr1 = virAddr1;
+            if(virAddr0 > 32'hC0000000 || virAddr0 < 32'h3FFFFFFF) begin
+                phyAddr0 = virAddr0;
+            end else begin
+                phyAddr0 = virAddr0 && 32'h7FFF_FFFF;
+            end
         end
     endtask //automatic
 

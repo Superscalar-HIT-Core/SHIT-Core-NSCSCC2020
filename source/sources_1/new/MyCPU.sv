@@ -73,6 +73,7 @@ module MyCPU(
     Ctrl                ctrl_rf_alu1_regs();
     Ctrl                ctrl_rf_mdu_regs();
     Ctrl                ctrl_rf_lsu_regs();
+    Ctrl                ctrl_lsu();
     Ctrl                ctrl_alu0_output_regs();
     Ctrl                ctrl_alu1_output_regs();
     Ctrl                ctrl_mdu_output_regs();
@@ -205,7 +206,7 @@ module MyCPU(
     assign wake_reg_MDU_en = 0;
     assign wake_reg_LSU = 0;
     assign wake_reg_MDU = 0;
-    assign lsu_busy = 0;
+    // assign lsu_busy = 0;
 
     wire           aluIQReady;
     wire           lsuIQReady;
@@ -218,6 +219,7 @@ module MyCPU(
     wire           pauseRename;
     wire           pauseRename_dispatch_reg;
     wire           pauseDispatch_iq_reg;
+    wire           fireStore;
 
     CtrlUnit                cu(.*);
     CtrlUnitBackend         cub(.*);
@@ -315,11 +317,11 @@ module MyCPU(
         // issued instructions(at most 4 instructions issue at a time)
         .clr_busy_ALU0                      (wake_reg_ALU_0_en),
         .clr_busy_ALU1                      (wake_reg_ALU_1_en),
-        .clr_busy_LSU                       (wake_reg_LSU_en),
+        .clr_busy_LSU                       (lsuWBReq.wen),
         .clr_busy_MDU                       (mduWBReq.wen),
         .clr_busy_num_ALU0                  (wake_reg_ALU_0),
         .clr_busy_num_ALU1                  (wake_reg_ALU_1),
-        .clr_busy_num_LSU                   (wake_reg_LSU),
+        .clr_busy_num_LSU                   (lsuWBReq.rd),
         .clr_busy_num_MDU                   (mduWBReq.rd), 
         .rd_num_l                           (scoreboard_rd_num_l_aluiq2sb),
         .rd_num_r                           (scoreboard_rd_num_r_aluiq2sb),
@@ -366,14 +368,14 @@ module MyCPU(
         .set_busy_num_0                     (set_busy_num_0),
         .set_busy_num_1                     (set_busy_num_1),
         // issued instructions(at most 4 instructions issue at a time)
-        .clr_busy_ALU0                      (wake_reg_ALU_0_en),
-        .clr_busy_ALU1                      (wake_reg_ALU_1_en),
-        .clr_busy_LSU                       (wake_reg_LSU_en),
-        .clr_busy_MDU                       (wake_reg_MDU_en),
-        .clr_busy_num_ALU0                  (wake_reg_ALU_0),
-        .clr_busy_num_ALU1                  (wake_reg_ALU_1),
-        .clr_busy_num_LSU                   (wake_reg_LSU),
-        .clr_busy_num_MDU                   (wake_reg_MDU),
+        .clr_busy_ALU0                      (alu0WBReq.wen),
+        .clr_busy_ALU1                      (alu1WBReq.wen),
+        .clr_busy_LSU                       (lsuWBReq.wen),
+        .clr_busy_MDU                       (mduWBReq.wen),
+        .clr_busy_num_ALU0                  (alu0WBReq.rd),
+        .clr_busy_num_ALU1                  (alu1WBReq.rd),
+        .clr_busy_num_LSU                   (lsuWBReq.rd),
+        .clr_busy_num_MDU                   (mduWBReq.rd),
         .rd_num_l                           (scoreboard_rd_num_l_lsuiq2sb),
         .rd_num_r                           (scoreboard_rd_num_r_lsuiq2sb),
         .busyvec_l                          (busyvec_l_sb2lsuiq),
@@ -416,11 +418,11 @@ module MyCPU(
         // issued instructions(at most 4 instructions issue at a time)
         .clr_busy_ALU0                      (alu0WBReq.wen),
         .clr_busy_ALU1                      (alu1WBReq.wen),
-        .clr_busy_LSU                       (wake_reg_LSU_en),
+        .clr_busy_LSU                       (lsuWBReq.wen),
         .clr_busy_MDU                       (mduWBReq.wen),
         .clr_busy_num_ALU0                  (alu0WBReq.rd),
         .clr_busy_num_ALU1                  (alu1WBReq.rd),
-        .clr_busy_num_LSU                   (wake_reg_LSU),
+        .clr_busy_num_LSU                   (lsuWBReq.rd),
         .clr_busy_num_MDU                   (mduWBReq.rd),
         .rd_num_l                           (scoreboard_rd_num_l_mduiq2sb),
         .rd_num_r                           (scoreboard_rd_num_r_mduiq2sb),
@@ -465,7 +467,7 @@ module MyCPU(
     Issue_RF_regs issue_lsu_regs(
         .*,
         .ctrl_issue_rf_regs                 (ctrl_issue_lsu_regs),
-        .issueBundle                        (issue_alu_inst_0),
+        .issueBundle                        (issue_lsu_inst),
         .primPauseReq                       (lsu_busy),
         .rfBundle                           (lsuRFBundle),
         .prfRequest                         (lsuRFReq)
@@ -550,7 +552,12 @@ module MyCPU(
         .wbData                             (alu1WBOut),
         .alu_rob                            (alu1_commit_reg)
     );
-    // lsu?
+    FakeLSU flsu(
+        .*,
+        .uOP                                (lsuUOPBundle),
+        .oprands                            (lsuOprands),
+        .wbData                             (lsuWBOut)
+    );
     MDU mdu(
         .*,
         .uopHi                              (mduUOPBundleHi),
@@ -608,26 +615,33 @@ module MyCPU(
         // end
         delayedCommitInfo0 <= rob_commit.uOP0;
         delayedCommitInfo1 <= rob_commit.uOP1;
+        // if (commit_rename_valid_0 && commit_rename_req_0.wr_reg_commit) begin
+        //     $display("(pAddr %d) regs %d <= 0x%h", commit_rename_req_0.committed_prf, commit_rename_req_0.committed_arf, prf_u.prfs_bank0[commit_rename_req_0.committed_prf]);
+        //     $display("instruction info: %s @ 0x%h, isDS = %d", delayedCommitInfo0.uOP.name(), delayedCommitInfo0.pc, delayedCommitInfo0.isDS);
+        //     sanityCheck0 <= `TRUE;
+        //     sanityCheck0ARF <= commit_rename_req_0.committed_arf;
+        // end else sanityCheck0 <= `FALSE;
+        // if (commit_rename_valid_1 && commit_rename_req_1.wr_reg_commit) begin
+        //     $display("(pAddr %d) regs %d <= 0x%h", commit_rename_req_1.committed_prf, commit_rename_req_1.committed_arf, prf_u.prfs_bank0[commit_rename_req_1.committed_prf]);
+        //     $display("instruction info: %s @ 0x%h, isDS = %d", delayedCommitInfo1.uOP.name(), delayedCommitInfo1.pc, delayedCommitInfo1.isDS);
+        //     sanityCheck1 <= `TRUE;
+        //     sanityCheck1ARF <= commit_rename_req_1.committed_arf;
+        // end else sanityCheck1 <= `FALSE;
         if (commit_rename_valid_0 && commit_rename_req_0.wr_reg_commit) begin
-            $display("(pAddr %d) regs %d <= %d", commit_rename_req_0.committed_prf, commit_rename_req_0.committed_arf, prf_u.prfs_bank0[commit_rename_req_0.committed_prf]);
-            $display("instruction info: %s @ %h, isDS = %d", delayedCommitInfo0.uOP.name(), delayedCommitInfo0.pc, delayedCommitInfo0.isDS);
-            sanityCheck0 <= `TRUE;
-            sanityCheck0ARF <= commit_rename_req_0.committed_arf;
-        end else sanityCheck0 <= `FALSE;
+            $display("1 %h %h %h", delayedCommitInfo0.pc, commit_rename_req_0.committed_arf, prf_u.prfs_bank0[commit_rename_req_0.committed_prf]);
+        end
         if (commit_rename_valid_1 && commit_rename_req_1.wr_reg_commit) begin
-            $display("(pAddr %d) regs %d <= %d", commit_rename_req_1.committed_prf, commit_rename_req_1.committed_arf, prf_u.prfs_bank0[commit_rename_req_1.committed_prf]);
-            $display("instruction info: %s @ %h, isDS = %d", delayedCommitInfo1.uOP.name(), delayedCommitInfo1.pc, delayedCommitInfo1.isDS);
-            sanityCheck1 <= `TRUE;
-            sanityCheck1ARF <= commit_rename_req_1.committed_arf;
-        end else sanityCheck1 <= `FALSE;
+            $display("1 %h %h %h", delayedCommitInfo1.pc, commit_rename_req_1.committed_arf, prf_u.prfs_bank0[commit_rename_req_1.committed_prf]);
+        end
+        
     end
     always @ (posedge clk) begin
-        if (sanityCheck0) begin
-            $display("sanity check : reg %d is %d", sanityCheck0ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck0ARF]]);
-        end
-        if (sanityCheck1) begin
-            $display("sanity check : reg %d is %d", sanityCheck1ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck1ARF]]);
-        end
+        // if (sanityCheck0) begin
+        //     $display("sanity check : reg %d is 0x%h", sanityCheck0ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck0ARF]]);
+        // end
+        // if (sanityCheck1) begin
+        //     $display("sanity check : reg %d is 0x%h", sanityCheck1ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck1ARF]]);
+        // end
     end
 
     always @ (negedge ctrl_commit.flushReq) #1 begin
@@ -635,7 +649,7 @@ module MyCPU(
         #1
         $display("========== arf after refresh ==========");
         for(integer i = 0; i < 34; i++) begin
-            $display("reg %d : %d", i, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[i]]);
+            $display("reg %d : 0x%h", i, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[i]]);
         end
         $display("========== arf disp finished ==========");
     end

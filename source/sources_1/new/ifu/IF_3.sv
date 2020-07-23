@@ -70,7 +70,7 @@ module IF_3(
 
         if(!if3_regs.inst0.valid) begin                  // invalid inst
             if3_regs.inst0.predTaken = `FALSE;
-        end else if(if3_regs.inst0.isJ) begin            // unconditional
+        end else if(if3_regs.inst0.isJ && !(inst0Jr && !if3_regs.inst0.nlpInfo.valid)) begin            // unconditional
             if3_regs.inst0.predTaken = `TRUE;
         end else if(!if3_regs.inst0.isBr) begin          // normal
             if3_regs.inst0.predTaken = `FALSE;
@@ -84,7 +84,7 @@ module IF_3(
 
         if(!if3_regs.inst1.valid) begin                  // invalid inst
             if3_regs.inst1.predTaken = `FALSE;
-        end else if(if3_regs.inst1.isJ) begin            // unconditional
+        end else if(if3_regs.inst1.isJ && !(inst1Jr && !if3_regs.inst1.nlpInfo.valid)) begin            // unconditional
             if3_regs.inst1.predTaken = `TRUE;
         end else if(!if3_regs.inst1.isBr) begin          // normal
             if3_regs.inst1.predTaken = `FALSE;
