@@ -68,26 +68,34 @@ module CtrlUnitBackend(
         !lsuIQReady                         ||
         !mduIQReady;
     
-    assign  ctrl_instBuffer_decode_regs.flush   = ctrl_commit.flushReq;
-    assign  ctrl_decode_rename_regs.flush       = ctrl_commit.flushReq;
-    assign  ctrl_rob.flush                      = ctrl_commit.flushReq;
-    assign  ctrl_issue_alu0_regs.flush          = ctrl_commit.flushReq;
-    assign  ctrl_issue_alu1_regs.flush          = ctrl_commit.flushReq;
-    assign  ctrl_issue_lsu_regs.flush           = ctrl_commit.flushReq;
-    assign  ctrl_issue_mdu_regs.flush           = ctrl_commit.flushReq;
-    assign  ctrl_rf_alu0_regs.flush             = ctrl_commit.flushReq;
-    assign  ctrl_rf_alu1_regs.flush             = ctrl_commit.flushReq;
-    assign  ctrl_rf_mdu_regs.flush              = ctrl_commit.flushReq;
-    assign  ctrl_rf_lsu_regs.flush              = ctrl_commit.flushReq;
-    assign  ctrl_alu0_output_regs.flush         = ctrl_commit.flushReq;
-    assign  ctrl_alu1_output_regs.flush         = ctrl_commit.flushReq;
-    assign  ctrl_mdu_output_regs.flush          = ctrl_commit.flushReq;
-    assign  ctrl_lsu_output_regs.flush          = ctrl_commit.flushReq;
-    assign  renameRecover                       = ctrl_commit.flushReq;
-    assign  aluIQFlush                          = ctrl_commit.flushReq;
-    assign  lsuIQFlush                          = ctrl_commit.flushReq;
-    assign  mduIQFlush                          = ctrl_commit.flushReq;
-    assign  backend_ctrl.flush                  = ctrl_commit.flushReq;
+    reg flushReq_dly;
+    always @(posedge clk)   begin
+        if(rst) begin
+            flushReq_dly <= 0;
+        end else begin
+            flushReq_dly <= ctrl_commit.flushReq;
+        end
+    end
+    assign  ctrl_instBuffer_decode_regs.flush   = flushReq_dly;
+    assign  ctrl_decode_rename_regs.flush       = flushReq_dly;
+    assign  ctrl_rob.flush                      = flushReq_dly;
+    assign  ctrl_issue_alu0_regs.flush          = flushReq_dly;
+    assign  ctrl_issue_alu1_regs.flush          = flushReq_dly;
+    assign  ctrl_issue_lsu_regs.flush           = flushReq_dly;
+    assign  ctrl_issue_mdu_regs.flush           = flushReq_dly;
+    assign  ctrl_rf_alu0_regs.flush             = flushReq_dly;
+    assign  ctrl_rf_alu1_regs.flush             = flushReq_dly;
+    assign  ctrl_rf_mdu_regs.flush              = flushReq_dly;
+    assign  ctrl_rf_lsu_regs.flush              = flushReq_dly;
+    assign  ctrl_alu0_output_regs.flush         = flushReq_dly;
+    assign  ctrl_alu1_output_regs.flush         = flushReq_dly;
+    assign  ctrl_mdu_output_regs.flush          = flushReq_dly;
+    assign  ctrl_lsu_output_regs.flush          = flushReq_dly;
+    assign  renameRecover                       = flushReq_dly;
+    assign  aluIQFlush                          = flushReq_dly;
+    assign  lsuIQFlush                          = flushReq_dly;
+    assign  mduIQFlush                          = flushReq_dly;
+    assign  backend_ctrl.flush                  = flushReq_dly;
     assign  backend_ctrl.pause                  = `FALSE;
 
 endmodule
