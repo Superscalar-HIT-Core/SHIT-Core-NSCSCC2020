@@ -113,13 +113,13 @@ always @(posedge clk)   begin
     end else begin
         if(commit_info_0.wr_reg_commit && commit_valid_0)    begin
             // Copy the commited state from the bank 
-            committed_rename_map_table_bank0[commit_info_0.committed_arf] <= rename_map_table_bank0[commit_info_0.committed_arf];
-            committed_rename_map_table_bank1[commit_info_0.committed_arf] <= rename_map_table_bank1[commit_info_0.committed_arf];
+            committed_rename_map_table_bank0[commit_info_0.committed_arf] <= commit_info_0.committed_prf;
+            committed_rename_map_table_bank1[commit_info_0.committed_arf] <= commit_info_0.committed_prf;
         end 
         if(commit_info_1.wr_reg_commit && commit_valid_1)    begin
             // Copy the commited state from the bank 
-            committed_rename_map_table_bank0[commit_info_1.committed_arf] <= rename_map_table_bank0[commit_info_1.committed_arf];
-            committed_rename_map_table_bank1[commit_info_1.committed_arf] <= rename_map_table_bank1[commit_info_1.committed_arf];
+            committed_rename_map_table_bank0[commit_info_1.committed_arf] <= commit_info_1.committed_prf;
+            committed_rename_map_table_bank1[commit_info_1.committed_arf] <= commit_info_1.committed_prf;
         end
     end
 end
