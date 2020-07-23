@@ -66,26 +66,26 @@ module IF0_1_reg(
     end
 
     // synopsys translate_off
-    always_ff @ (posedge clk) begin
-        $display("pc: %h", PC);
-        if(rst || ctrl_if0_1_regs.flush) begin
-            $display("rst");
-        end else if(backend_if0.redirect && backend_if0.valid) begin
-            $display("backend redirect");
-        end else if(if3_0.redirect) begin
-            $display("if3 redirect");
-        end else if(headIsDS) begin
-            $display("delayed nlp redirect");
-        end else if(nlp_if0.nlpInfo0.valid && nlp_if0.nlpInfo0.taken) begin
-            $display("nlp0 redirect");
-        end else if(nlp_if0.nlpInfo1.valid && nlp_if0.nlpInfo1.taken) begin
-            $display("nlp1 delayed redirect");
-        end else if(ctrl_if0_1_regs.pause) begin
-            $display("pause");
-        end else begin
-            $display("npc");
-        end
-    end
+    // always_ff @ (posedge clk) begin
+    //     $display("pc: %h", PC);
+    //     if(rst || ctrl_if0_1_regs.flush) begin
+    //         $display("rst");
+    //     end else if(backend_if0.redirect && backend_if0.valid) begin
+    //         $display("backend redirect");
+    //     end else if(if3_0.redirect) begin
+    //         $display("if3 redirect");
+    //     end else if(headIsDS) begin
+    //         $display("delayed nlp redirect");
+    //     end else if(nlp_if0.nlpInfo0.valid && nlp_if0.nlpInfo0.taken) begin
+    //         $display("nlp0 redirect");
+    //     end else if(nlp_if0.nlpInfo1.valid && nlp_if0.nlpInfo1.taken) begin
+    //         $display("nlp1 delayed redirect");
+    //     end else if(ctrl_if0_1_regs.pause) begin
+    //         $display("pause");
+    //     end else begin
+    //         $display("npc");
+    //     end
+    // end
     // synopsys translate_on
 
 endmodule
