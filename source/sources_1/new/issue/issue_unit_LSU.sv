@@ -194,11 +194,11 @@ wire [`LSU_QUEUE_IDX_LEN-2:0]   sel0;
 wire                            sel0_valid;
 LSU_Queue_Meta                  lsu_queue_dout0;
 UOPBundle                       uops0;
-assign uops0                    = lsu_queue_dout0.ops;
-assign wake_reg_0               = uops0.dstPAddr;
-assign wake_reg_0_en            = uops0.dstwe && sel0_valid;
-assign issue_info_0             = uops0;
-assign issue_en_0               = sel0_valid;
+assign issue_en_0            = sel0_valid;
+always_comb begin
+    issue_info_0            = queue_dout0.ops;    
+    issue_info_0.valid      = sel0_valid;
+end
 
 iq_lsu u_iq_lsu(
     // Global Signals
