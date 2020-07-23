@@ -33,39 +33,46 @@ module Commit(
     assign target           = rob_commit.uOP0.branchTaken ? rob_commit.uOP0.branchAddr : rob_commit.uOP0.pc + 32'h8;
     assign rob_commit.ready = `TRUE;
     always_ff @(posedge clk) begin
-        if(takePredFailed || addrPredFailed) begin
+        if(rst) begin
+            commit_rename_valid_0 <= 0;
+            commit_rename_valid_1 <= 0;
+            commit_rename_req_0 <= 0;
+            commit_rename_req_1 <= 0;
+        end else begin
+            if(takePredFailed || addrPredFailed) begin
             predFailed                      <= `TRUE;
             waitDS                          <= rob_commit.uOP1.uOP == MDBUBBLE_U;
-        end else begin
-            predFailed                      <= `FALSE;
-            waitDS                          <= `FALSE;
+            end else begin
+                predFailed                      <= `FALSE;
+                waitDS                          <= `FALSE;
+            end
+
+            lastWaitDs                          <= waitDS;
+            lastTarget                          <= target;
+            causeExec                           <= rob_commit.valid && (rob_commit.uOP0.causeExc || rob_commit.uOP1.causeExc);
+            exception                           <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.exception : rob_commit.uOP0.exception;
+            excCode                             <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.excCode : rob_commit.uOP0.excCode;
+            
+            commit_rename_valid_0               <= rob_commit.uOP0.valid & rob_commit.valid;
+            commit_rename_valid_1               <= rob_commit.uOP1.valid & rob_commit.valid;
+
+            commit_rename_req_0.committed_arf   <= rob_commit.uOP0.dstLAddr;
+            commit_rename_req_0.committed_prf   <= rob_commit.uOP0.dstPAddr;
+            commit_rename_req_0.stale_prf       <= rob_commit.uOP0.dstPStale;
+
+            commit_rename_req_1.committed_arf   <= rob_commit.uOP1.dstLAddr;
+            commit_rename_req_1.committed_prf   <= rob_commit.uOP1.dstPAddr;
+            commit_rename_req_1.stale_prf       <= rob_commit.uOP1.dstPStale;
+
+            commit_rename_req_0.wr_reg_commit   <= rob_commit.uOP0.dstwe;
+            commit_rename_req_1.wr_reg_commit   <= rob_commit.uOP1.dstwe;
+
+            backend_nlp.update.valid            <= rob_commit.uOP0.valid && rob_commit.uOP0.branchType != typeNormal;
+            backend_nlp.update.pc               <= rob_commit.uOP0.pc;
+            backend_nlp.update.target           <= rob_commit.uOP0.branchAddr;
+            backend_nlp.update.shouldTake       <= rob_commit.uOP0.branchTaken;
+            backend_nlp.update.bimState         <= rob_commit.uOP0.nlpBimState;
         end
-
-        lastWaitDs                          <= waitDS;
-        lastTarget                          <= target;
-        causeExec                           <= rob_commit.valid && (rob_commit.uOP0.causeExc || rob_commit.uOP1.causeExc);
-        exception                           <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.exception : rob_commit.uOP0.exception;
-        excCode                             <= rob_commit.uOP1.causeExc ? rob_commit.uOP1.excCode : rob_commit.uOP0.excCode;
-        
-        commit_rename_valid_0               <= rob_commit.uOP0.valid & rob_commit.valid;
-        commit_rename_valid_1               <= rob_commit.uOP1.valid & rob_commit.valid;
-
-        commit_rename_req_0.committed_arf   <= rob_commit.uOP0.dstLAddr;
-        commit_rename_req_0.committed_prf   <= rob_commit.uOP0.dstPAddr;
-        commit_rename_req_0.stale_prf       <= rob_commit.uOP0.dstPStale;
-
-        commit_rename_req_1.committed_arf   <= rob_commit.uOP1.dstLAddr;
-        commit_rename_req_1.committed_prf   <= rob_commit.uOP1.dstPAddr;
-        commit_rename_req_1.stale_prf       <= rob_commit.uOP1.dstPStale;
-
-        commit_rename_req_0.wr_reg_commit   <= rob_commit.uOP0.dstwe;
-        commit_rename_req_1.wr_reg_commit   <= rob_commit.uOP1.dstwe;
-
-        backend_nlp.update.valid            <= rob_commit.uOP0.valid && rob_commit.uOP0.branchType != typeNormal;
-        backend_nlp.update.pc               <= rob_commit.uOP0.pc;
-        backend_nlp.update.target           <= rob_commit.uOP0.branchAddr;
-        backend_nlp.update.shouldTake       <= rob_commit.uOP0.branchTaken;
-        backend_nlp.update.bimState         <= rob_commit.uOP0.nlpBimState;
     end
 
     always_comb begin
@@ -80,6 +87,7 @@ module Commit(
             backend_if0.valid       = `FALSE;
             backend_if0.redirectPC  = 32'h0;
         end
+        // TODO: Exception handle if exception xxxxxx, 
     end
 
 endmodule
