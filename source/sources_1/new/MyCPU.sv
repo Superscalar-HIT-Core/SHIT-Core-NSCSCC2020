@@ -330,6 +330,7 @@ module MyCPU(
         .clk                                (clk),
         .rst                                (rst),
         .flush                              (aluIQFlush),
+        .stall                              (0),
         .inst_Ops_0                         (dispatch_alu_0),
         .inst_Ops_1                         (dispatch_alu_1),
         .enq_req_0                          (rs_alu_wen_0),
