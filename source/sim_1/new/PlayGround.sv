@@ -106,10 +106,8 @@ module PlayGround(
         // dataReq.sendWReq(32'h00000144, 32'hd, clk);
         // dataReq.sendWReq(32'h00000148, 32'he, clk);
         // dataReq.sendWReq(32'h0000014C, 32'hf, clk);
-        #5000
         // backend_if0.redirectReq(32'h00000114, clk);
         // #1000
-        $stop(1);
     end
 
     initial begin
@@ -178,4 +176,146 @@ always @(posedge clk)   begin
         // $display("PC=%h wData=%h",cpu.alu1.uops.pc, cpu.alu1.wbData.wdata);
     end
 end
+
+wire [31:0] debug_wb_pc0;
+wire [31:0] debug_wb_pc1;
+wire        debug_wb_rf_wen0;
+wire        debug_wb_rf_wen1;
+wire [ 4:0] debug_wb_rf_wnum0;
+wire [ 4:0] debug_wb_rf_wnum1;
+wire [31:0] debug_wb_rf_wdata0;
+wire [31:0] debug_wb_rf_wdata1;
+
+assign debug_wb_pc0         = cpu.delayedCommitInfo0.pc;
+assign debug_wb_pc1         = cpu.delayedCommitInfo1.pc;
+assign debug_wb_rf_wen0     = cpu.commit_rename_valid_0 && cpu.commit_rename_req_0.wr_reg_commit;
+assign debug_wb_rf_wen1     = cpu.commit_rename_valid_1 && cpu.commit_rename_req_1.wr_reg_commit;
+assign debug_wb_rf_wnum0    = cpu.commit_rename_req_0.committed_arf;
+assign debug_wb_rf_wnum1    = cpu.commit_rename_req_1.committed_arf;
+assign debug_wb_rf_wdata0   = cpu.prf_u.prfs_bank0[cpu.commit_rename_req_0.committed_prf];
+assign debug_wb_rf_wdata1   = cpu.prf_u.prfs_bank0[cpu.commit_rename_req_1.committed_prf];
+
+integer trace_ref;
+initial begin
+    trace_ref = $fopen("C:/nscscc/SHIT-Core/golden_trace.txt", "r");
+    $display(trace_ref);  
+end
+
+reg        trace_cmp_flag0;
+reg        trace_cmp_flag1;
+reg        debug_end;
+
+reg [31:0] ref_wb_pc0;
+reg [4 :0] ref_wb_rf_wnum0;
+reg [31:0] ref_wb_rf_wdata0;
+reg [31:0] ref_wb_pc1;
+reg [4 :0] ref_wb_rf_wnum1;
+reg [31:0] ref_wb_rf_wdata1;
+
+always @(posedge clk)
+begin
+    #1;
+    if(debug_wb_rf_wen0 && debug_wb_rf_wnum0!=5'd0 && !debug_end)
+    begin
+        trace_cmp_flag0=1'b0;
+        while (!trace_cmp_flag0 && !($feof(trace_ref)))
+        begin
+            $fscanf(trace_ref, "%h %h %h %h", trace_cmp_flag0,
+                    ref_wb_pc0, ref_wb_rf_wnum0, ref_wb_rf_wdata0);
+        end
+    end
+    if(debug_wb_rf_wen1 && debug_wb_rf_wnum1!=5'd0 && !debug_end)
+    begin
+        trace_cmp_flag1=1'b0;
+        while (!trace_cmp_flag1 && !($feof(trace_ref)))
+        begin
+            $fscanf(trace_ref, "%h %h %h %h", trace_cmp_flag1,
+                    ref_wb_pc1, ref_wb_rf_wnum1, ref_wb_rf_wdata1);
+        end
+    end
+end
+reg debug_wb_err;
+reg w0;
+reg w1;
+assign w0 = debug_wb_rf_wen0 && debug_wb_rf_wnum0 != 5'd0;
+assign w1 = debug_wb_rf_wen1 && debug_wb_rf_wnum1 != 5'd0;
+always @(posedge clk)
+begin
+    #2;
+    if(rst)
+    begin
+        debug_wb_err <= 1'b0;
+    end
+    else if(!w0 && w1 && !debug_end)
+    begin
+        if (  (debug_wb_pc1!==ref_wb_pc1) || (debug_wb_rf_wnum1!==ref_wb_rf_wnum1)
+            ||(debug_wb_rf_wdata1!==ref_wb_rf_wdata1) )
+        begin
+            $display("--------------------------------------------------------------");
+            $display("[%t] Error!!!",$time);
+            $display("    reference: PC = 0x%8h, wb_rf_wnum = 0x%2h, wb_rf_wdata = 0x%8h",
+                    ref_wb_pc1, ref_wb_rf_wnum1, ref_wb_rf_wdata1);
+            $display("    mycpu    : PC = 0x%8h, wb_rf_wnum = 0x%2h, wb_rf_wdata = 0x%8h",
+                    debug_wb_pc1, debug_wb_rf_wnum1, debug_wb_rf_wdata1);
+            $display("--------------------------------------------------------------");
+            debug_wb_err <= 1'b1;
+            #40;
+            $finish;
+        end
+    end else if(w0 && !w1 && !debug_end)
+    begin
+        if (  (debug_wb_pc0!==ref_wb_pc0) || (debug_wb_rf_wnum0!==ref_wb_rf_wnum0)
+            ||(debug_wb_rf_wdata0!==ref_wb_rf_wdata0) )
+        begin
+            $display("--------------------------------------------------------------");
+            $display("[%t] Error!!!",$time);
+            $display("    reference: PC = 0x%8h, wb_rf_wnum = 0x%2h, wb_rf_wdata = 0x%8h",
+                    ref_wb_pc0, ref_wb_rf_wnum0, ref_wb_rf_wdata0);
+            $display("    mycpu    : PC = 0x%8h, wb_rf_wnum = 0x%2h, wb_rf_wdata = 0x%8h",
+                    debug_wb_pc0, debug_wb_rf_wnum0, debug_wb_rf_wdata0);
+            $display("--------------------------------------------------------------");
+            debug_wb_err <= 1'b1;
+            #40;
+            $finish;
+        end
+    end else if (w0 && w1 && !debug_end) begin
+        if (  (debug_wb_pc0!==ref_wb_pc0) || (debug_wb_rf_wnum0!==ref_wb_rf_wnum0)
+            ||(debug_wb_rf_wdata0!==ref_wb_rf_wdata0) )
+        begin
+            $display("--------------------------------------------------------------");
+            $display("[%t] Error!!!",$time);
+            $display("    reference: PC = 0x%8h, wb_rf_wnum = 0x%2h, wb_rf_wdata = 0x%8h",
+                    ref_wb_pc0, ref_wb_rf_wnum0, ref_wb_rf_wdata0);
+            $display("    mycpu    : PC = 0x%8h, wb_rf_wnum = 0x%2h, wb_rf_wdata = 0x%8h",
+                    debug_wb_pc0, debug_wb_rf_wnum0, debug_wb_rf_wdata0);
+            $display("--------------------------------------------------------------");
+            debug_wb_err <= 1'b1;
+            #40;
+            $finish;
+        end
+        
+        if (  (debug_wb_pc1!==ref_wb_pc1) || (debug_wb_rf_wnum1!==ref_wb_rf_wnum1)
+            ||(debug_wb_rf_wdata1!==ref_wb_rf_wdata1) )
+        begin
+            $display("--------------------------------------------------------------");
+            $display("[%t] Error!!!",$time);
+            $display("    reference: PC = 0x%8h, wb_rf_wnum = 0x%2h, wb_rf_wdata = 0x%8h",
+                    ref_wb_pc1, ref_wb_rf_wnum1, ref_wb_rf_wdata1);
+            $display("    mycpu    : PC = 0x%8h, wb_rf_wnum = 0x%2h, wb_rf_wdata = 0x%8h",
+                    debug_wb_pc1, debug_wb_rf_wnum1, debug_wb_rf_wdata1);
+            $display("--------------------------------------------------------------");
+            debug_wb_err <= 1'b1;
+            #40;
+            $finish;
+        end
+    end
+end
+
+initial begin
+    debug_end = 1'b0;
+    forever #10000 begin
+        if(!debug_wb_err) $display("Good until now.");
+    end
+end
+
 endmodule

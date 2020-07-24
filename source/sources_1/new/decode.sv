@@ -780,6 +780,15 @@ module decode(
                     uOP0.dstwe      = `FALSE;
                     uOP0.isPriv     = `TRUE;
                 end
+                default: begin
+                    uOP0.uOP        = NOP_U;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_MISC;
+                    uOP0.op0re      = `FALSE;
+                    uOP0.op1re      = `FALSE;
+                    uOP0.dstwe      = `FALSE;
+                    uOP0.valid      = `FALSE;
+                end
             endcase
         end else begin
             uOP0.valid      = `FALSE;

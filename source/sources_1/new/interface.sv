@@ -297,9 +297,11 @@ interface ICache_TLB;
             // phyAddr0 = virAddr0;
             // phyAddr1 = virAddr1;
             if(virAddr0 > 32'hC0000000 || virAddr0 < 32'h3FFFFFFF) begin
-                phyAddr0 = virAddr0;
+                phyAddr0 = #1 virAddr0;
+            end else if (virAddr0 > 32'h9fff_ffff) begin
+                phyAddr0 = #1 virAddr0 - 32'h9FFF_FFFF;
             end else begin
-                phyAddr0 = virAddr0 && 32'h7FFF_FFFF;
+                phyAddr0 = #1 virAddr0 - 32'h7FFF_FFFF;
             end
         end
     endtask //automatic

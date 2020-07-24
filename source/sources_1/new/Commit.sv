@@ -34,12 +34,12 @@ module Commit(
     logic           inst0Store;
     logic           inst1Store;
 
-    assign inst0Good        = rob_commit.valid && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
-    assign inst1Good        = rob_commit.valid && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
+    assign inst0Good        = rob_commit.valid && rob_commit.ready && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
+    assign inst1Good        = rob_commit.valid && rob_commit.ready && rob_commit.uOP1.valid && !rob_commit.uOP1.committed && !rob_commit.uOP1.busy;
     assign takePredFailed   = inst0Good && rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP0.branchTaken != rob_commit.uOP0.predTaken;
     assign addrPredFailed   = inst0Good && !takePredFailed && (rob_commit.uOP0.branchAddr != rob_commit.uOP0.predAddr);
     assign target           = rob_commit.uOP0.branchTaken ? rob_commit.uOP0.branchAddr : rob_commit.uOP0.pc + 32'h8;
-    assign rob_commit.ready = `TRUE;
+    assign rob_commit.ready = ~ctrl_commit.flushReq;
     assign inst0Store       = inst0Good&& (
         rob_commit.uOP0.uOP == SB_U  || 
         rob_commit.uOP0.uOP == SH_U  || 

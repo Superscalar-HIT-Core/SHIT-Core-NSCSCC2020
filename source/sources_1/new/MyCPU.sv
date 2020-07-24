@@ -388,7 +388,7 @@ module MyCPU(
         .rst                                (rst),
         .flush                              (lsuIQFlush),
         .inst_Ops_0                         (dispatch_lsu_0),
-        .inst_Ops_1                         (dispatch_lsu_0),
+        .inst_Ops_1                         (dispatch_lsu_1),
         .enq_req_0                          (rs_lsu_wen_0),
         .enq_req_1                          (rs_lsu_wen_1),
         .lsu_busy                           (lsu_busy),

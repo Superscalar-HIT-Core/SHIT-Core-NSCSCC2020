@@ -43,8 +43,8 @@ assign logic_res =  ( uop == OR_U   || uop == ORI_U || uop == LUI_U )   ? src0 |
                     ( uop == XOR_U  || uop == XORI_U )                  ? src0 ^ src1       : 32'b0;
 
 // 移位运算结果
-assign shift_res =  ( uop == SLL_U || uop == SLLV_U ) ? src1 << src0[4:0] :
-                    ( uop == SRL_U || uop == SRLV_U ) ? src1 >> src0[4:0] :
+assign shift_res =  ( uop == SLL_U || uop == SLLV_U ) ? src0 << src1[4:0] :
+                    ( uop == SRL_U || uop == SRLV_U ) ? src0 >> src1[4:0] :
                     ( uop == SRA_U || uop == SRAV_U ) ? 
                     ( {32{src1[31]}} << (6'd32 - {1'b0, src0[4:0]}) ) | src1 >> src0[4:0] : 32'b0;
 
@@ -84,7 +84,7 @@ assign alu_rob.branchTaken = branch_taken;
 
 always_comb begin
     uops_o = uops;
-    uops_o.branchAddr = branch_target;
+    uops_o.branchAddr = branch_target && uops.valid;
     uops_o.branchTaken = branch_taken;
 end
 
@@ -175,6 +175,8 @@ assign overflow =   ( (!src0[31] & !src1_complement[31] & sum[31]) |
 
 ALUType alutype;
 assign alutype = uops.aluType;
+
+assign branch_res = uops.pc + 8;
 
 // 结果赋值
 assign wbData.rd = uops.dstPAddr;

@@ -338,7 +338,8 @@ typedef enum bit[7:0] {
     //misc_U,
     CACHE_U     ,
     WAIT_U      ,
-    MDBUBBLE_U
+    MDBUBBLE_U  ,
+    RESERVED_U
 } uOP;
 
 typedef enum bit [1:0] {

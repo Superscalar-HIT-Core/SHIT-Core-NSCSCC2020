@@ -48,6 +48,7 @@ module ICache(
         logic  [127:0]  dataOut;
     } DataRamIO;
 
+
     ICacheState     state, nextState, lastState;
     logic [31:0]    delayPC;
     logic           hit;
@@ -143,6 +144,7 @@ module ICache(
                                     (tag == tag1IO.dataOut && valid[1][delayLineAddr]) ||
                                     (tag == tag2IO.dataOut && valid[2][delayLineAddr]) ||
                                     (tag == tag3IO.dataOut && valid[3][delayLineAddr]);
+
     assign insts[0]             =   hitLine[ 31: 0];
     assign insts[1]             =   hitLine[ 63:32];
     assign insts[2]             =   hitLine[ 95:64];
@@ -303,9 +305,17 @@ module ICache(
         end
     end
 
+    InstBundle delayInst0;
+    InstBundle delayInst1;
+
+    always_ff @ (posedge clk) begin
+        delayInst0 <= regs_iCache.inst0;
+        delayInst1 <= regs_iCache.inst1;
+    end
+
     always_comb begin
-        iCache_regs.inst0           = regs_iCache.inst0;
-        iCache_regs.inst1           = regs_iCache.inst1;
+        iCache_regs.inst0.nlpInfo   = delayInst0.nlpInfo;
+        iCache_regs.inst1.nlpInfo   = delayInst1.nlpInfo;
         ctrl_iCache.pauseReq        = `FALSE;
         instReq.valid               = `FALSE;
         instResp.ready              = `FALSE;
@@ -341,25 +351,17 @@ module ICache(
         data2IO.dataIn              = 0;
         case(state)
             sStartUp: begin
-                instReq.valid               = `FALSE;
-                instResp.ready              = `FALSE;
-
-                if(hit) begin
-                    ctrl_iCache.pauseReq        = `FALSE;
-                    
-                    iCache_regs.inst0.pc        = delayPC & 32'hffff_fffc;
-                    iCache_regs.inst0.valid     = ~delayPC[2] && !pauseDiscard;
-                    iCache_regs.inst0.inst      = insts[{delayPC[3], 1'b0}];
-
-                    iCache_regs.inst1.pc        = delayPC | 32'h0000_0004;
-                    iCache_regs.inst1.valid     = !pauseDiscard && !delayOnlyGetDS;
-                    iCache_regs.inst1.inst      = insts[{delayPC[3], 1'b1}];
-                end else begin
-                    iCache_regs.inst0.valid     = `FALSE;
-                    iCache_regs.inst1.valid     = `FALSE;
-                end
-
+                instReq.valid                   = `FALSE;
+                instResp.ready                  = `FALSE;
                 ctrl_iCache.pauseReq            = !hit;
+                
+                iCache_regs.inst0.pc            = delayPC & 32'hffff_fffc;
+                iCache_regs.inst0.valid         = ~delayPC[2] && !pauseDiscard && hit && lastState != sRecovery;
+                iCache_regs.inst0.inst          = insts[{delayPC[3], 1'b0}];
+
+                iCache_regs.inst1.pc            = delayPC | 32'h0000_0004;
+                iCache_regs.inst1.valid         = !pauseDiscard && !delayOnlyGetDS && hit && lastState != sRecovery;
+                iCache_regs.inst1.inst          = insts[{delayPC[3], 1'b1}];
             end
             sRunning: begin
                 if(hit) begin
@@ -456,14 +458,15 @@ module ICache(
                             data3IO.dataIn      = instResp.cacheLine;
                         end
                     endcase
+                    if(!delayPC[3]) begin
+                        iCache_regs.inst0.pc    = delayPC & 32'hffff_fffc;
+                        iCache_regs.inst0.valid = ~delayPC[2];
+                        iCache_regs.inst0.inst  = insts[{delayPC[3], 1'b0}];
 
-                    iCache_regs.inst0.pc    = delayPC & 32'hffff_fffc;
-                    iCache_regs.inst0.valid = ~delayPC[2];
-                    iCache_regs.inst0.inst  = insts[{delayPC[3], 1'b0}];
-
-                    iCache_regs.inst1.pc    = delayPC | 32'h0000_0004;
-                    iCache_regs.inst1.valid = `TRUE && !delayOnlyGetDS;
-                    iCache_regs.inst1.inst  = insts[{delayPC[3], 1'b1}];
+                        iCache_regs.inst1.pc    = delayPC | 32'h0000_0004;
+                        iCache_regs.inst1.valid = `TRUE && !delayOnlyGetDS;
+                        iCache_regs.inst1.inst  = insts[{delayPC[3], 1'b1}];
+                    end
                 end else begin
                     iCache_regs.inst0.pc    = 32'h0000_0000;
                     iCache_regs.inst0.valid = `FALSE;
@@ -511,5 +514,4 @@ module ICache(
             end
         endcase
     end
-
 endmodule

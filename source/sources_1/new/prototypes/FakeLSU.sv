@@ -44,12 +44,15 @@ module FakeLSU(
     LsuState    state, nxtState;
     UOPBundle   currentUOP;
     PRFrData    currentOprands;
+    UOPBundle   lastUOP;
+    PRFrData    lastOprands;
     logic       uOPIsLoad;
     logic       uOPIsSave;
 
     logic [ 7:0] bytes [3:0];
     logic [15:0] hws   [1:0];
     logic       committed;
+    logic       clearCurrent;
 
     assign uOPIsLoad = currentUOP.valid && (
         currentUOP.uOP == LB_U  || 
@@ -73,21 +76,22 @@ module FakeLSU(
     assign bytes[3] = dataResp.data[31:24];
     assign hws[0]   = dataResp.data[15: 0];
     assign hws[1]   = dataResp.data[31:16];
+    assign clearCurrent = !uOP.valid && (state == sSaveFire && dataReq.ready == `TRUE) || (state == sLoadResp && dataResp.valid == `TRUE);
 
     always_ff @ (posedge clk) begin
         if(rst) begin
-            // currentUOP      <= 0;
-            // currentOprands  <= 0;
+            lastUOP      <= 0;
+            lastOprands  <= 0;
             state           <= sReset;
         end else begin
-            // currentUOP      <= lsu_busy && state != sRecover && state != sLoadResp && state != sSaveFire ? currentUOP : uOP;
-            // currentOprands  <= lsu_busy && state != sRecover && state != sLoadResp && state != sSaveFire ? currentOprands : oprands;
+            lastUOP         <= currentUOP;
+            lastOprands     <= currentOprands;
             state           <= nxtState;
         end
     end
-
-    assign currentUOP = uOP;
-    assign currentOprands = oprands;
+    
+    assign currentUOP      =  clearCurrent ? 0 : (lsu_busy ? lastUOP  : uOP);
+    assign currentOprands  =  clearCurrent ? 0 : (lsu_busy ? lastOprands : oprands);
 
     always_ff @ (posedge clk) committed <= (state == sIdle && uOPIsSave) ? `FALSE : `TRUE;
 
@@ -177,7 +181,9 @@ module FakeLSU(
                 dataReq.valid                   = `FALSE;
                 dataResp.ready                  = `FALSE;
                 lsu_commit_reg.setFinish        = `FALSE;
-                lsu_busy                        = `FALSE;
+                lsu_busy                        = lastUOP.valid;
+                lsu_commit_reg.setFinish        = uOPIsSave;
+                lsu_commit_reg.id               = currentUOP.id;
             end
             sLoadReq: begin
                 dataReq.valid                   = `TRUE;
@@ -206,8 +212,6 @@ module FakeLSU(
             end
             sSaveBlock: begin
                 lsu_busy                        = `TRUE;
-                lsu_commit_reg.setFinish        = ~committed;
-                lsu_commit_reg.id               = currentUOP.id;
                 wbData.wen                      = `FALSE;
             end
             sSaveFire: begin
@@ -229,6 +233,9 @@ module FakeLSU(
                     SH_U :  dataReq.strobe = dataReq.addr[1] ? 4'b1100 : 4'b0011;
                     SW_U :  dataReq.strobe = 4'b1111;
                 endcase
+                if (dataReq.ready == `TRUE) begin
+                    lsu_busy            = `FALSE;
+                end
             end
             sRecover: begin
                 dataResp.ready          = `TRUE;

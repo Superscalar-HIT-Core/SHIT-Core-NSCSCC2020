@@ -196,7 +196,7 @@ LSU_Queue_Meta                  lsu_queue_dout0;
 UOPBundle                       uops0;
 assign issue_en_0            = sel0_valid;
 always_comb begin
-    issue_info_0            = queue_dout0.ops;    
+    issue_info_0            = lsu_queue_dout0.ops;    
     issue_info_0.valid      = sel0_valid;
 end
 

@@ -22,8 +22,8 @@ module IF2_3_reg(
 
     always_ff @ (posedge clk) begin
         if(ctrl_if2_3_regs.flush || rst) begin
-            regs_if3.inst0.valid    <= regs_if3.rescueDS;
-            regs_if3.inst1.valid    <= `FALSE;
+            regs_if3.inst0          <= regs_if3.rescueDS ? regs_if3.inst0 : 0;
+            regs_if3.inst1          <= 0;
         end else if(ctrl_if2_3_regs.pause && iCache_regs.overrun && !saveOverrun) begin
             regs_if3.inst0          <= regs_if3.inst0;
             regs_if3.inst1          <= regs_if3.inst1;
