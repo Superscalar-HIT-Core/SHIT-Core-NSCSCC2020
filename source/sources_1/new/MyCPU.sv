@@ -83,6 +83,12 @@ module MyCPU(
     BackendRedirect     backend_if0();
     BPDUpdate           backend_bpd();
     NLPUpdate           backend_nlp();
+    
+    CP0WRInterface      alu0_cp0();
+    CP0WRInterface      alu1_cp0_fake();
+    CP0WRInterface      exception_cp0();
+    CP0_TLB             cp0_tlb();
+    CP0StatusRegs       cp0Status();
 
     ICache_TLB          iCache_tlb();
     
@@ -542,6 +548,7 @@ module MyCPU(
     );
     ALU alu0(
         .uops                               (alu0UOPBundle),
+        .alu_cp0                            (alu0_cp0),
         .rdata                              (alu0Oprands),
         .bypass_alu0                        (alu0WBReq),
         .bypass_alu1                        (alu1WBReq),
@@ -550,6 +557,7 @@ module MyCPU(
     );
     ALU alu1(
         .uops                               (alu1UOPBundle),
+        .alu_cp0                            (alu1_cp0_fake),
         .rdata                              (alu1Oprands),
         .bypass_alu0                        (alu0WBReq),
         .bypass_alu1                        (alu1WBReq),
@@ -597,6 +605,7 @@ module MyCPU(
         .prfWReq                            (mduWBReq),
         .commitInfo                         (mdu_rob)
     );
+    CP0 cp0(.*);
     Commit commit(.*);
 
     // synopsys translate_off

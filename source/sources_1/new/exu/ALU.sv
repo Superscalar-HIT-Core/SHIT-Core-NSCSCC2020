@@ -5,6 +5,7 @@ module ALU(
     input UOPBundle uops,       // 输入的微操作
     input PRFrData rdata,       // 寄存器读入的数据
     input PRFwInfo bypass_alu0, bypass_alu1,  // 从下一级和下面的ALU旁路回来
+    CP0WRInterface.req  alu_cp0,
     output PRFwInfo wbData,     // 计算回写的数据
     output UOPBundle uops_o,              // 传递给下一级的
     FU_ROB.fu   alu_rob
@@ -19,6 +20,7 @@ Word arithmetic_res;
 Word branch_res;
 Word logic_res;
 Word shift_res;
+Word cp0_res;
 Word clz_res;
 Word clo_res;
 Word count_res;
@@ -35,6 +37,7 @@ assign src1 = uops.op1re ?  ( bypass_alu0_src1_en ? bypass_alu0.wdata :
 
 uOP uop;
 assign uop = uops.uOP;
+
 
 // 逻辑运算结果
 assign logic_res =  ( uop == OR_U   || uop == ORI_U || uop == LUI_U )   ? src0 | src1       :
@@ -77,6 +80,27 @@ assign branch_taken =   ( uop == BEQ_U ) ? ( src0 == src1 ) :
                         ( uop == BLTZ_U ) ? ( src0[31] ) : 
                         ( uop == J_U || uop == JAL_U || uop == JR_U || uop == JALR_U ) ? 1 : 0;
 assign branch_target = ( uop == JR_U || uop == JALR_U ) ? src0 : uops.predAddr;
+
+// CP0指令结果
+// CP0 interface  
+/*
+
+    logic [`CP0ADDR]    addr;
+    logic [`CP0SEL]     sel;
+    logic [31:0]        readData;
+    logic [31:0]        writeData;
+    logic               writeEn;
+
+    // uopbundle
+    logic   [4:0]           cp0Addr;
+    logic   [31:0]          cp0Data;
+    logic   [2:0]           cp0Sel;
+*/
+assign alu_cp0.addr         = uops.cp0Addr;
+assign alu_cp0.sel          = uops.cp0Sel;
+assign alu_cp0.writeEn      = (uop == MTC0_U);
+assign alu_cp0.writeData    = src0;
+assign cp0_res              = alu_cp0.readData;
 
 assign alu_rob.setBranchStatus = uops.valid && uops.branchType != typeNormal;
 assign alu_rob.branchAddr = branch_target;
@@ -184,7 +208,8 @@ assign wbData.wdata =   ( alutype == ALU_LOGIC  ) ? logic_res       :
                         ( alutype == ALU_ARITH  ) ? arithmetic_res  :
                         ( alutype == ALU_MOVE   ) ? move_res        :
                         ( alutype == ALU_COUNT  ) ? count_res       :
-                        ( alutype == ALU_BRANCH ) ? branch_res      : 32'b0;
+                        ( alutype == ALU_BRANCH ) ? branch_res      : 
+                        ( alutype == ALU_CP0    ) ? cp0_res         : 32'b0;
 
 
 endmodule

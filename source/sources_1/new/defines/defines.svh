@@ -456,8 +456,8 @@ typedef struct packed { // TODO
     Word rs1_data;
 } PRFrData;
 
-typedef enum bit[2:0] {
-    ALU_LOGIC, ALU_SHIFT, ALU_ARITH, ALU_MOVE, ALU_BRANCH, ALU_COUNT, ALU_MISC
+typedef enum bit[3:0] {
+    ALU_LOGIC, ALU_SHIFT, ALU_ARITH, ALU_MOVE, ALU_BRANCH, ALU_COUNT, ALU_MISC, ALU_CP0
 } ALUType;
 
 typedef struct packed {
