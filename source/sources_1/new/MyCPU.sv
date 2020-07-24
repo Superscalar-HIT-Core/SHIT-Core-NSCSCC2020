@@ -289,6 +289,7 @@ module mycpu_top(
     dispatch u_dispatch(
         .inst_0_ops                         (dispatch_inst0_in), 
         .inst_1_ops                         (dispatch_inst1_in),
+        .pause                              (pauseDispatch_iq_reg),
         // To Pipeline Regs
         .rs_alu_wen_0                       (rs_alu_wen_0_reg), 
         .rs_alu_wen_1                       (rs_alu_wen_1_reg), 
