@@ -4,8 +4,8 @@
 module dispatch(
     input clk,
     input rst,
-    input robEmpty,
-    input UOPBundle inst_0_ops_i, inst_1_ops_i,
+    input pause,
+    input UOPBundle inst_0_ops, inst_1_ops,
     output rs_alu_wen_0, rs_alu_wen_1, 
     output rs_mdu_wen_0, 
     output rs_lsu_wen_0, rs_lsu_wen_1,
@@ -21,13 +21,13 @@ module dispatch(
     output pause_req
     );
 // 分配判断
-wire pause_req_cp0;
-wire hasPrivInst =  (inst_0_ops_i.valid && inst_0_ops_i.isPriv) || 
-                    (inst_1_ops_i.valid && inst_1_ops_i.isPriv);
-wire slotsFull = inst_0_ops_i.valid && inst_1_ops_i.valid;
+wire robEmpty = dispatch_rob.empty;
+wire hasPrivInst =  (inst_0_ops.valid && inst_0_ops.isPriv) || 
+                    (inst_1_ops.valid && inst_1_ops.isPriv);
+wire slotsFull = inst_0_ops.valid && inst_1_ops.valid;
 wire passThrough = ~hasPrivInst;                // 不需要暂停，直接传递过去
-assign pause_req = ~dispatch_rob.ready || pause_req_cp0;
-
+reg pause_req_cp0;
+assign pause_req = pause_req_cp0;           // rob的已经在外面处理了
 // 对ROB发来的ROB ID进行处理
 wire [7:0] robID_0, robID_1;
 assign robID_0 = { dispatch_rob.robID[6:0], 1'b0 } ;
@@ -36,9 +36,8 @@ assign robID_1 = { dispatch_rob.robID[6:0], 1'b1 } ;
 // 根据当前的状态，对当前的两个ops进行reorder (TODO) //////////////////////////////
 UOPBundle inst_0_ops_reordered, inst_1_ops_reordered;
 // Handle CP0 Logic
-typedef enum bit[2:0] { IDLE, WAIT_ROB_SLOT0, WR_ROB_SLOT0, WAIT_ROB_SLOT1, WR_ROB_SLOT1 } dispatchState;
+typedef enum bit[2:0] { IDLE, WAIT_ROB_SLOT0, WR_ROB_SLOT0, WAIT_ROB_SLOT1, WR_ROB_SLOT1, DONE } dispatchState;
 dispatchState current_state, next_state;
-assign pause_req_cp0 = (current_state != IDLE) || (next_state != IDLE);
 
 always @(posedge clk)   begin
     if(rst) begin
@@ -61,13 +60,16 @@ always_comb begin
         end
         WR_ROB_SLOT0:     begin
             if(slotsFull)   next_state = WAIT_ROB_SLOT1;
-            else            next_state = IDLE;
+            else            next_state = DONE;
         end
         WAIT_ROB_SLOT1:   begin
             if(robEmpty)    next_state = WR_ROB_SLOT1;
             else            next_state = WAIT_ROB_SLOT1;
         end
         WR_ROB_SLOT1:     begin
+            next_state = DONE;
+        end
+        DONE:   begin
             next_state = IDLE;
         end
         default:    next_state = IDLE;
@@ -75,41 +77,56 @@ always_comb begin
 end
 
 always_comb begin   // 在此处完成reorder
+    pause_req_cp0 = 0;
+    inst_0_ops_reordered = 0;
+    inst_1_ops_reordered = 0;
     case(current_state)
         IDLE:       begin
-            if(pause_req) begin
+            if(~dispatch_rob.ready || hasPrivInst) begin
+                pause_req_cp0 = 1;
                 inst_0_ops_reordered = 0;
                 inst_1_ops_reordered = 0;
             end else begin
-                inst_0_ops_reordered = inst_0_ops_i;
-                inst_1_ops_reordered = inst_1_ops_i;
+                pause_req_cp0 = 0;
+                inst_0_ops_reordered = inst_0_ops;
+                inst_1_ops_reordered = inst_1_ops;
             end
         end
         WAIT_ROB_SLOT0:   begin
+            pause_req_cp0 = 1;
             inst_0_ops_reordered = 0;
             inst_1_ops_reordered = 0;
         end
         WR_ROB_SLOT0:     begin
-            inst_0_ops_reordered = inst_0_ops_i;
+            pause_req_cp0 = 1;
+            inst_0_ops_reordered = inst_0_ops;
             inst_1_ops_reordered = 0;
         end
         WAIT_ROB_SLOT1:   begin
+            pause_req_cp0 = 1;
             inst_0_ops_reordered = 0;
             inst_1_ops_reordered = 0;
         end
         WR_ROB_SLOT1:     begin
-            inst_0_ops_reordered = inst_1_ops_i;
+            pause_req_cp0 = 1;
+            inst_0_ops_reordered = inst_1_ops;
+            inst_1_ops_reordered = 0;
+        end
+        DONE:     begin
+            pause_req_cp0 = 0;
+            inst_0_ops_reordered = 0;
             inst_1_ops_reordered = 0;
         end
         default:          begin
+            pause_req_cp0 = 0;
             inst_0_ops_reordered = 0;
             inst_1_ops_reordered = 0;
         end
     endcase
     inst_0_ops_reordered.id = robID_0;
-    inst_0_ops_reordered.busy = ( inst_0_ops_i.valid && inst_0_ops_i.uOP != NOP_U && inst_0_ops_i.uOP != MDBUBBLE_U );
+    inst_0_ops_reordered.busy = ( inst_0_ops_reordered.valid && inst_0_ops_reordered.uOP != NOP_U && inst_0_ops_reordered.uOP != MDBUBBLE_U );
     inst_1_ops_reordered.id = robID_1;
-    inst_1_ops_reordered.busy = ( inst_1_ops_i.valid && inst_1_ops_i.uOP != NOP_U && inst_1_ops_i.uOP != MDBUBBLE_U );
+    inst_1_ops_reordered.busy = ( inst_1_ops_reordered.valid && inst_1_ops_reordered.uOP != NOP_U && inst_1_ops_reordered.uOP != MDBUBBLE_U );
 end
 
 wire inst0_isMul, inst1_isMul;
@@ -132,7 +149,7 @@ assign inst1_isStore =  (inst_1_ops_reordered.uOP == SB_U ) ||
 // 给ROB的
 assign dispatch_rob.uOP0 = inst_0_ops_reordered;
 assign dispatch_rob.uOP1 = inst_1_ops_reordered;
-assign dispatch_rob.valid = inst_0_ops_reordered.valid | inst_1_ops_reordered.valid;
+assign dispatch_rob.valid = (inst_0_ops_reordered.valid | inst_1_ops_reordered.valid) && (~pause);
 
 wire inst_0_is_alu = (inst_0_ops_reordered.rs_type == RS_ALU) && inst_0_ops_reordered.valid;
 wire inst_1_is_alu = (inst_1_ops_reordered.rs_type == RS_ALU) && inst_1_ops_reordered.valid;

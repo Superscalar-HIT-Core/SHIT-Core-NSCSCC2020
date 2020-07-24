@@ -207,6 +207,7 @@ module MyCPU(
     assign wake_reg_MDU = 0;
     assign lsu_busy = 0;
 
+    wire           dispatch_pause_req;
     wire           aluIQReady;
     wire           lsuIQReady;
     wire           mduIQReady;
@@ -216,6 +217,7 @@ module MyCPU(
     wire           lsuIQFlush;
     wire           mduIQFlush;
     wire           pauseRename;
+    wire           pauseDispatch;
     wire           pauseRename_dispatch_reg;
     wire           pauseDispatch_iq_reg;
 
@@ -256,6 +258,9 @@ module MyCPU(
         .flush(renameRecover)
     );
     dispatch u_dispatch(
+        .clk                                (clk),
+        .rst                                (rst),
+        .pause                              (pauseDispatch),
         .inst_0_ops                         (dispatch_inst0_in), 
         .inst_1_ops                         (dispatch_inst1_in),
         // To Pipeline Regs
@@ -273,7 +278,8 @@ module MyCPU(
         .dispatch_inst1_wnum                (set_busy_num_1),
         .dispatch_inst0_wen                 (set_busy_0),
         .dispatch_inst1_wen                 (set_busy_1),
-        .dispatch_rob                       (dispatch_rob)
+        .dispatch_rob                       (dispatch_rob),
+        .pause_req                          (dispatch_pause_req)
     );
     dispatch_iq_regs dispatch_iq(
     .clk                                (clk),
