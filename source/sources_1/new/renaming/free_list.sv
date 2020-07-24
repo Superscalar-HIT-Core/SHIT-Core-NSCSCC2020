@@ -61,7 +61,7 @@ assign free_list_4 = commit_info_0.wr_reg_commit && commit_valid_0 ? (free_list_
 assign free_list_5 = commit_info_1.wr_reg_commit && commit_valid_1 ? (free_list_4 & ~(`PRF_NUM'b1 << commit_info_1.stale_prf)) : free_list_4;
 
 wire [`PRF_NUM-1:0] free_list1_after_free = commit_valid_0 ? (free_list_1 & ~(`PRF_NUM'b1 << commit_info_0.stale_prf)) : free_list_1;
-wire [`PRF_NUM-1:0] free_list2_after_free = commit_valid_0 ? (free_list1_after_free & ~(`PRF_NUM'b1 << commit_info_1.stale_prf)) : free_list1_after_free;
+wire [`PRF_NUM-1:0] free_list2_after_free = commit_valid_1 ? (free_list1_after_free & ~(`PRF_NUM'b1 << commit_info_1.stale_prf)) : free_list1_after_free;
 
 always @(posedge clk)   begin
     if(rst) begin

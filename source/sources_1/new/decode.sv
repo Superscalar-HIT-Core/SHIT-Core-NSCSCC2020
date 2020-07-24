@@ -333,7 +333,7 @@ module decode(
                     uOP0.aluType    = ALU_LOGIC;
                     uOP0.op0LAddr   = rs;
                     uOP0.dstLAddr   = rt;
-                    uOP0.op0re      = `TRUE;
+                    uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `TRUE;
                     uOP0.imm        = imm_lui;
