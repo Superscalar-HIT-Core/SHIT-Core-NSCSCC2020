@@ -73,6 +73,9 @@ module PlayGround(
     wire          s_axi_rvalid   ;
     wire          s_axi_rready   ;
 
+    wire arst;
+    assign arst = ~rst;
+
     // AXIInterface        axiInterface(.*);
     // AXIWarp             AXIWarp(.*);
     // // axi_test_blk_mem    axi_mem(.*);

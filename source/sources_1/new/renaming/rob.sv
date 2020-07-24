@@ -118,11 +118,19 @@ module ROB(
                 data0[alu0_rob.id >> 1'b1].branchTaken <= alu0_rob.branchTaken;
                 data0[alu0_rob.id >> 1'b1].branchAddr  <= alu0_rob.branchAddr;
             end
+            if(alu0_rob.setException) begin
+                data0[alu0_rob.id >> 1'b1].causeExc    <= `TRUE;
+                data0[alu0_rob.id >> 1'b1].exception   <= alu0_rob.exceptionType;
+            end
         end else if(alu0_rob.setFinish && alu0_rob.id[0] == 1'b1) begin
             data1[alu0_rob.id >> 1'b1].busy <= `FALSE;
             if(alu0_rob.setBranchStatus) begin
                 data1[alu0_rob.id >> 1'b1].branchTaken <= alu0_rob.branchTaken;
                 data1[alu0_rob.id >> 1'b1].branchAddr  <= alu0_rob.branchAddr;
+            end
+            if(alu0_rob.setException) begin
+                data1[alu0_rob.id >> 1'b1].causeExc    <= `TRUE;
+                data1[alu0_rob.id >> 1'b1].exception   <= alu0_rob.exceptionType;
             end
         end
         
@@ -132,11 +140,19 @@ module ROB(
                 data0[alu1_rob.id >> 1'b1].branchTaken <= alu1_rob.branchTaken;
                 data0[alu1_rob.id >> 1'b1].branchAddr  <= alu1_rob.branchAddr;
             end
+            if(alu1_rob.setException) begin
+                data0[alu1_rob.id >> 1'b1].causeExc    <= `TRUE;
+                data0[alu1_rob.id >> 1'b1].exception   <= alu1_rob.exceptionType;
+            end
         end else if(alu1_rob.setFinish && alu1_rob.id[0] == 1'b1) begin
             data1[alu1_rob.id >> 1'b1].busy <= `FALSE;
             if(alu1_rob.setBranchStatus) begin
                 data1[alu1_rob.id >> 1'b1].branchTaken <= alu1_rob.branchTaken;
                 data1[alu1_rob.id >> 1'b1].branchAddr  <= alu1_rob.branchAddr;
+            end
+            if(alu1_rob.setException) begin
+                data1[alu1_rob.id >> 1'b1].causeExc    <= `TRUE;
+                data1[alu1_rob.id >> 1'b1].exception   <= alu1_rob.exceptionType;
             end
         end
         
@@ -148,8 +164,16 @@ module ROB(
         
         if(lsu_rob.setFinish && lsu_rob.id[0] == 1'b0) begin
             data0[lsu_rob.id >> 1'b1].busy <= `FALSE;
+            if(lsu_rob.setException) begin
+                data0[lsu_rob.id >> 1'b1].causeExc     <= `TRUE;
+                data0[lsu_rob.id >> 1'b1].exception    <= lsu_rob.exceptionType;
+            end
         end else if(lsu_rob.setFinish && lsu_rob.id[0] == 1'b1) begin
             data1[lsu_rob.id >> 1'b1].busy <= `FALSE;
+            if(lsu_rob.setException) begin
+                data1[lsu_rob.id >> 1'b1].causeExc     <= `TRUE;
+                data1[lsu_rob.id >> 1'b1].exception    <= lsu_rob.exceptionType;
+            end
         end
         
         // commit

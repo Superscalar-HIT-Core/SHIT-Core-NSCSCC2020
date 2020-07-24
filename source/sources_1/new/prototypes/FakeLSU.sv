@@ -76,22 +76,22 @@ module FakeLSU(
     assign bytes[3] = dataResp.data[31:24];
     assign hws[0]   = dataResp.data[15: 0];
     assign hws[1]   = dataResp.data[31:16];
-    assign clearCurrent = !uOP.valid && (state == sSaveFire && dataReq.ready == `TRUE) || (state == sLoadResp && dataResp.valid == `TRUE);
+    assign clearCurrent = uOP.valid && state == sIdle;
 
     always_ff @ (posedge clk) begin
         if(rst) begin
-            lastUOP      <= 0;
-            lastOprands  <= 0;
+            lastUOP         <= 0;
+            lastOprands     <= 0;
             state           <= sReset;
         end else begin
-            lastUOP         <= currentUOP;
-            lastOprands     <= currentOprands;
+            lastUOP         <= lsu_busy ? lastUOP : uOP;
+            lastOprands     <= lsu_busy ? lastOprands : oprands;
             state           <= nxtState;
         end
     end
     
-    assign currentUOP      =  clearCurrent ? 0 : (lsu_busy ? lastUOP  : uOP);
-    assign currentOprands  =  clearCurrent ? 0 : (lsu_busy ? lastOprands : oprands);
+    assign currentUOP      =  clearCurrent ? uOP : lastUOP;
+    assign currentOprands  =  clearCurrent ? oprands : lastOprands;
 
     always_ff @ (posedge clk) committed <= (state == sIdle && uOPIsSave) ? `FALSE : `TRUE;
 

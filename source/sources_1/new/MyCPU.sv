@@ -1,45 +1,55 @@
 `timescale 1ns / 1ps
 `include "defines/defines.svh"
 
-module MyCPU(
-    input clk,
-    input rst,
+module mycpu_top(
+    input aclk,
+    input aresetn,
 
-    output wire rsta_busy               ,
-    output wire rstb_busy               ,
+    input ext_int,
 
-    output wire         s_aclk          ,
-    output wire         s_aresetn       ,
-    output wire [ 3:0]  s_axi_awid      ,
-    output wire [31:0]  s_axi_awaddr    ,
-    output wire [ 7:0]  s_axi_awlen     ,
-    output wire [ 2:0]  s_axi_awsize    ,
-    output wire [ 1:0]  s_axi_awburst   ,
-    output wire         s_axi_awvalid   ,
-    input  wire         s_axi_awready   ,
-    output wire [31:0]  s_axi_wdata     ,
-    output wire [ 3:0]  s_axi_wstrb     ,
-    output wire         s_axi_wlast     ,
-    output wire         s_axi_wvalid    ,
-    input  wire         s_axi_wready    ,
-    input  wire [ 3:0]  s_axi_bid       ,
-    input  wire [ 1:0]  s_axi_bresp     ,
-    input  wire         s_axi_bvalid    ,
-    output wire         s_axi_bready    ,
-    output wire [ 3:0]  s_axi_arid      ,
-    output wire [31:0]  s_axi_araddr    ,
-    output wire [ 7:0]  s_axi_arlen     ,
-    output wire [ 2:0]  s_axi_arsize    ,
-    output wire [ 1:0]  s_axi_arburst   ,
-    output wire         s_axi_arvalid   ,
-    input  wire         s_axi_arready   ,
-    input  wire [ 3:0]  s_axi_rid       ,
-    input  wire [31:0]  s_axi_rdata     ,
-    input  wire [ 1:0]  s_axi_rresp     ,
-    input  wire         s_axi_rlast     ,
-    input  wire         s_axi_rvalid    ,
-    output wire         s_axi_rready    
+    output wire [ 3:0]  awid      ,
+    output wire [31:0]  awaddr    ,
+    output wire [ 7:0]  awlen     ,
+    output wire [ 2:0]  awsize    ,
+    output wire [ 1:0]  awburst   ,
+    output wire [ 1:0]  awlock    ,
+    output wire [ 3:0]  awcache   ,
+    output wire [ 2:0]  awprot    ,
+    output wire         awvalid   ,
+    input  wire         awready   ,
+
+    output wire [ 3:0]  wid       ,
+    output wire [31:0]  wdata     ,
+    output wire [ 3:0]  wstrb     ,
+    output wire         wlast     ,
+    output wire         wvalid    ,
+    input  wire         wready    ,
+
+    input  wire [ 3:0]  bid       ,
+    input  wire [ 1:0]  bresp     ,
+    input  wire         bvalid    ,
+    output wire         bready    ,
+
+    output wire [ 3:0]  arid      ,
+    output wire [31:0]  araddr    ,
+    output wire [ 7:0]  arlen     ,
+    output wire [ 2:0]  arsize    ,
+    output wire [ 1:0]  arburst   ,
+    output wire [ 1:0]  arlock    ,
+    output wire [ 3:0]  arcache   ,
+    output wire [ 2:0]  arprot    ,
+    output wire         arvalid   ,
+    input  wire         arready   ,
+
+    input  wire [ 3:0]  rid       ,
+    input  wire [31:0]  rdata     ,
+    input  wire [ 1:0]  rresp     ,
+    input  wire         rlast     ,
+    input  wire         rvalid    ,
+    output wire         rready    
 );
+    wire rst;
+    assign rst = ~aresetn;
     
     AXIReadAddr         axiReadAddr();
     AXIReadData         axiReadData();
@@ -232,7 +242,7 @@ module MyCPU(
     decode                  dec1(.regs_decode(regs_decode1), .decode_regs(decode_regs1));
     decode_rename_regs      dec_rename( .*, .decode0_regs(decode_regs0), .decode1_regs(decode_regs1));
     register_rename rr(
-        .clk(clk), 
+        .aclk(aclk), 
         .rst(rst),
         .recover(renameRecover), 
         .inst0_ops_in(regs_rename.uOP0), 
@@ -248,7 +258,7 @@ module MyCPU(
         .pauseRename(pauseRename)
     );
     rename_dispatch_reg r_d_reg(
-        .clk(clk),
+        .aclk(aclk),
         .rst(rst),
         .pauseRename_dispatch_reg(pauseRename_dispatch_reg),
         .inst0_in(rename_dispatch_0), 
@@ -278,7 +288,7 @@ module MyCPU(
         .dispatch_rob                       (dispatch_rob)
     );
     dispatch_iq_regs dispatch_iq(
-    .clk                                (clk),
+    .aclk                                (aclk),
     .rst                                (rst),
     .flush                              (aluIQFlush),
     .pausereq                           (pauseDispatch_iq_reg),
@@ -306,7 +316,7 @@ module MyCPU(
 
     ROB rob(.*);
     scoreboard_20r6w scoreboard_alu(
-        .clk                                (clk),
+        .aclk                                (aclk),
         .rst                                (rst),
         .flush                              (aluIQFlush),
         // dispatched instructions
@@ -329,7 +339,7 @@ module MyCPU(
         .busyvec_r                          (busyvec_r_sb2aluiq)
     );
     issue_unit_ALU issue_alu(
-        .clk                                (clk),
+        .aclk                                (aclk),
         .rst                                (rst),
         .flush                              (aluIQFlush),
         .stall                              (0),
@@ -359,7 +369,7 @@ module MyCPU(
     wire [9:0] busyvec_l_sb2lsuiq;
     wire [9:0] busyvec_r_sb2lsuiq;
     scoreboard_20r6w scoreboard_lsu(
-        .clk                                (clk),
+        .aclk                                (aclk),
         .rst                                (rst),
         .flush                              (lsuIQFlush),
         // dispatched instructions
@@ -384,7 +394,7 @@ module MyCPU(
 
 
     issue_unit_LSU issue_lsu(
-        .clk                                (clk),
+        .aclk                                (aclk),
         .rst                                (rst),
         .flush                              (lsuIQFlush),
         .inst_Ops_0                         (dispatch_lsu_0),
@@ -407,7 +417,7 @@ module MyCPU(
     wire [9:0] busyvec_l_sb2mduiq;
     wire [9:0] busyvec_r_sb2mduiq;
     scoreboard_20r6w scoreboard_mdu(
-        .clk                                (clk),
+        .aclk                                (aclk),
         .rst                                (rst),
         .flush                              (mduIQFlush),
         // dispatched instructions
@@ -431,7 +441,7 @@ module MyCPU(
     );
 
     issue_unit_MDU issue_mdu(
-        .clk                                (clk),
+        .aclk                                (aclk),
         .rst                                (rst),
         .flush                              (mduIQFlush),
         .inst_Ops_0                         (dispatch_mdu_0),
@@ -607,7 +617,7 @@ module MyCPU(
     PRFNum sanityCheck1ARF;
     UOPBundle delayedCommitInfo0;
     UOPBundle delayedCommitInfo1;
-    always @ (posedge clk) begin
+    always @ (posedge aclk) begin
         // if(commit_rename_valid_0 || commit_rename_valid_1) #1 begin
         //     for(integer i = 0; i < 34; i++) begin
         //         $display("reg %d : %d", i, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[i]]);
@@ -635,7 +645,7 @@ module MyCPU(
         end
         
     end
-    always @ (posedge clk) begin
+    always @ (posedge aclk) begin
         // if (sanityCheck0) begin
         //     $display("sanity check : reg %d is 0x%h", sanityCheck0ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck0ARF]]);
         // end
