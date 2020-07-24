@@ -77,9 +77,18 @@ typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
 `define CP0STATUSMASK   32'b11111010_01111000_11111111_00010111
 `define CP0CAUSEMASK    32'b00000000_11000000_00000011_00000000
 `define CP0EPCMASK      32'b11111111_11111111_11111111_11111111
-`define CP0EBASEMASK    32'b10111111_11111111_11110000_00000000
-`define CP0CONFIGMASK   32'b00000000_00000000_00000000_00000011
+`define CP0EBASEMASK    32'b11111111_11111111_11110000_00000000
+`define CP0CONFIGMASK   32'b00000000_00000000_00000000_00000111
 `define CP0ERROREPCMASK 32'b11111111_11111111_11111111_11111111
+
+// Cause ExcCode
+`define Exc_INT 5'h00
+`define Exc_ADEL 5'h04
+`define Exc_ADES 5'h05
+`define Exc_OV 5'h0c
+`define Exc_SYS 5'h08
+`define Exc_BP 5'h09
+`define Exc_RI 5'h0a
 
 `define CP0ADDR     4:0
 `define CP0SEL      2:0
@@ -659,7 +668,6 @@ interface CP0WRInterface;
     logic [31:0]        readData;
     logic [31:0]        writeData;
     logic               writeEn;
-
     modport req(output addr, writeData, writeEn, sel, input readData);
     modport cp0(input addr, writeData, writeEn, sel, output readData);
 endinterface //CP0WRInterface
@@ -675,6 +683,31 @@ interface CP0StatusRegs;
     modport cp0(output count, status, cause, ePc, eBase, random);
     modport recv(input count, status, cause, ePc, eBase, random);
 endinterface //CP0Status
+
+interface CP0Exception;
+    logic         causeExce;
+    ExceptionType exceType;
+    Word          excePC;
+    logic         isDS;
+    logic[5:0]    interrupt;
+    Word          reserved;
+    modport cp0(input causeExce, exceType, excePC, isDS, interrupt, output EPc);
+    modport exce(output causeExce, exceType, excePC, isDS, interrupt, input EPc);
+endinterface //CP0 ----- Exception
+
+interface CommitExce;
+    logic         causeExce;
+    ExceptionType exceType;
+    Word          excePC;
+    logic         isDS;
+    Word          reserved;
+    Word          redirectPC;
+    logic         redirectReq;
+    modport commit( input redirectPC, redirectReq,
+                    output causeExce, exceType, excePC, isDS, reserved);
+    modport exce( output redirectPC, redirectReq,
+                    input causeExce, exceType, excePC, isDS, reserved);    
+endinterface // Commit ---- Exception
 
 interface CP0_TLB;
     logic           writeEn;
