@@ -463,7 +463,10 @@ typedef enum bit[2:0] {
 
 typedef struct packed {
     // logic   [`UOP_WIDTH]    uOP;
+    logic   [31:0]          pc;
+    logic   [`ROB_ID_W]     id;
     uOP                     uOP;
+    
     ALUType                 aluType;
     logic   [4:0]           cacheOP;
     RS_Type                 rs_type;
@@ -495,8 +498,7 @@ typedef struct packed {
     ExceptionType           exception;
     logic   [19:0]          excCode;
 
-    logic   [`ROB_ID_W]     id;
-    logic   [31:0]          pc;
+
 
     logic                   isDS;
     logic                   isPriv;

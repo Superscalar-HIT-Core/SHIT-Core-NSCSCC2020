@@ -7,9 +7,6 @@ module AXIWarp(
     AXIWriteData.slave axiWriteData,
     AXIWriteResp.slave axiWriteResp,
 
-    output wire rsta_busy    ,      // dont care
-    output wire rstb_busy    ,      // dont care
-
     output wire [ 3:0]  awid      ,
     output wire [31:0]  awaddr    ,
     output wire [ 7:0]  awlen     ,

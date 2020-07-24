@@ -48,6 +48,8 @@ module mycpu_top(
     input  wire         rvalid    ,
     output wire         rready    
 );
+    wire clk;
+    assign clk = aclk;
     wire rst;
     assign rst = ~aresetn;
     
@@ -96,6 +98,23 @@ module mycpu_top(
     NLPUpdate           backend_nlp();
 
     ICache_TLB          iCache_tlb();
+
+    always_comb begin
+        if(iCache_tlb.virAddr0 > 32'hC0000000 || iCache_tlb.virAddr0 < 32'h3FFFFFFF) begin
+            iCache_tlb.phyAddr0 = iCache_tlb.virAddr0;
+        end else if (iCache_tlb.virAddr0 > 32'h9fff_ffff) begin
+            iCache_tlb.phyAddr0 = iCache_tlb.virAddr0 - 32'h9FFF_FFFF;
+        end else begin
+            iCache_tlb.phyAddr0 = iCache_tlb.virAddr0 - 32'h7FFF_FFFF;
+        end
+        if(iCache_tlb.virAddr1 > 32'hC0000000 || iCache_tlb.virAddr1 < 32'h3FFFFFFF) begin
+            iCache_tlb.phyAddr1 = iCache_tlb.virAddr1;
+        end else if (iCache_tlb.virAddr1 > 32'h9fff_ffff) begin
+            iCache_tlb.phyAddr1 = iCache_tlb.virAddr1 - 32'h9FFF_FFFF;
+        end else begin
+            iCache_tlb.phyAddr1 = iCache_tlb.virAddr1 - 32'h7FFF_FFFF;
+        end
+    end
     
     IFU_InstBuffer      ifu_instBuffer();
     InstBuffer_Backend  instBuffer_backend();
@@ -242,7 +261,7 @@ module mycpu_top(
     decode                  dec1(.regs_decode(regs_decode1), .decode_regs(decode_regs1));
     decode_rename_regs      dec_rename( .*, .decode0_regs(decode_regs0), .decode1_regs(decode_regs1));
     register_rename rr(
-        .aclk(aclk), 
+        .clk(aclk), 
         .rst(rst),
         .recover(renameRecover), 
         .inst0_ops_in(regs_rename.uOP0), 
@@ -258,7 +277,7 @@ module mycpu_top(
         .pauseRename(pauseRename)
     );
     rename_dispatch_reg r_d_reg(
-        .aclk(aclk),
+        .clk(aclk),
         .rst(rst),
         .pauseRename_dispatch_reg(pauseRename_dispatch_reg),
         .inst0_in(rename_dispatch_0), 
@@ -288,7 +307,7 @@ module mycpu_top(
         .dispatch_rob                       (dispatch_rob)
     );
     dispatch_iq_regs dispatch_iq(
-    .aclk                                (aclk),
+    .clk                                (aclk),
     .rst                                (rst),
     .flush                              (aluIQFlush),
     .pausereq                           (pauseDispatch_iq_reg),
@@ -316,7 +335,7 @@ module mycpu_top(
 
     ROB rob(.*);
     scoreboard_20r6w scoreboard_alu(
-        .aclk                                (aclk),
+        .clk                                (aclk),
         .rst                                (rst),
         .flush                              (aluIQFlush),
         // dispatched instructions
@@ -339,7 +358,7 @@ module mycpu_top(
         .busyvec_r                          (busyvec_r_sb2aluiq)
     );
     issue_unit_ALU issue_alu(
-        .aclk                                (aclk),
+        .clk                                (aclk),
         .rst                                (rst),
         .flush                              (aluIQFlush),
         .stall                              (0),
@@ -369,7 +388,7 @@ module mycpu_top(
     wire [9:0] busyvec_l_sb2lsuiq;
     wire [9:0] busyvec_r_sb2lsuiq;
     scoreboard_20r6w scoreboard_lsu(
-        .aclk                                (aclk),
+        .clk                                (aclk),
         .rst                                (rst),
         .flush                              (lsuIQFlush),
         // dispatched instructions
@@ -394,7 +413,7 @@ module mycpu_top(
 
 
     issue_unit_LSU issue_lsu(
-        .aclk                                (aclk),
+        .clk                                (aclk),
         .rst                                (rst),
         .flush                              (lsuIQFlush),
         .inst_Ops_0                         (dispatch_lsu_0),
@@ -417,7 +436,7 @@ module mycpu_top(
     wire [9:0] busyvec_l_sb2mduiq;
     wire [9:0] busyvec_r_sb2mduiq;
     scoreboard_20r6w scoreboard_mdu(
-        .aclk                                (aclk),
+        .clk                                (aclk),
         .rst                                (rst),
         .flush                              (mduIQFlush),
         // dispatched instructions
@@ -441,7 +460,7 @@ module mycpu_top(
     );
 
     issue_unit_MDU issue_mdu(
-        .aclk                                (aclk),
+        .clk                                (aclk),
         .rst                                (rst),
         .flush                              (mduIQFlush),
         .inst_Ops_0                         (dispatch_mdu_0),
