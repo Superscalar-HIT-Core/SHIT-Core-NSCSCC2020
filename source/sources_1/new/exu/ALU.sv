@@ -84,8 +84,8 @@ assign alu_rob.branchTaken = branch_taken;
 
 always_comb begin
     uops_o = uops;
-    uops_o.branchAddr = branch_target && uops.valid;
-    uops_o.branchTaken = branch_taken;
+    uops_o.branchAddr = branch_target;
+    uops_o.branchTaken = branch_taken && uops.valid;
 end
 
 always_comb begin

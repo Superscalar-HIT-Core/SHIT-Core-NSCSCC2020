@@ -3,6 +3,7 @@
 `include "defines/defines.svh"
 module dispatch(
     input UOPBundle inst_0_ops, inst_1_ops,
+    input pause,
     // input busy_dispatch_inst0_r0,
     // input busy_dispatch_inst0_r1,
     // input busy_dispatch_inst1_r0,
@@ -40,7 +41,7 @@ always_comb begin
 end
 assign dispatch_rob.uOP0 = inst_0_ops_dispatch;
 assign dispatch_rob.uOP1 = inst_1_ops_dispatch;
-assign dispatch_rob.valid = inst_0_ops.valid | inst_1_ops.valid;
+assign dispatch_rob.valid = (inst_0_ops.valid | inst_1_ops.valid) && (~pause);
 assign pause_req = ~dispatch_rob.ready;
 
 wire inst_0_is_alu = (inst_0_ops_dispatch.rs_type == RS_ALU) && inst_0_ops_dispatch.valid;
