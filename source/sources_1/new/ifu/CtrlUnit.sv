@@ -28,6 +28,7 @@ module CtrlUnit(
     assign ctrl_if0_1_regs.flush        = `FALSE; //backend_ctrl.flush || ctrl_if3.flushReq;
     assign ctrl_iCache.flush            = backend_ctrl.flush || ctrl_if3.flushReq;
     assign ctrl_if2_3_regs.flush        = backend_ctrl.flush || ctrl_if3.flushReq;
+    assign ctrl_if3.flush               = backend_ctrl.flush;
     assign ctrl_if3_output_regs.flush   = backend_ctrl.flush;
     assign ctrl_instBuffer.flush        = backend_ctrl.flush;
 endmodule

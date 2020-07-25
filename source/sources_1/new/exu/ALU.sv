@@ -72,9 +72,9 @@ Word branch_target;
 assign branch_taken =   ( uop == BEQ_U ) ? ( src0 == src1 ) :
                         ( uop == BNE_U ) ? ( src0 != src1 ) :
                         ( uop == BGEZ_U || uop == BGEZAL_U ) ? ( ~src0[31] ):
-                        ( uop == BGTZ_U || uop == BLTZAL_U ) ? ( ~src0[31] & (|src0[30:0]) ) :
+                        ( uop == BGTZ_U ) ? ( ~src0[31] & (|src0[30:0]) ) :
                         ( uop == BLEZ_U ) ? ~( ~src0[31] & (|src0[30:0]) ) :
-                        ( uop == BLTZ_U ) ? ( src0[31] ) : 
+                        ( uop == BLTZ_U || uop == BLTZAL_U ) ? ( src0[31] ) : 
                         ( uop == J_U || uop == JAL_U || uop == JR_U || uop == JALR_U ) ? 1 : 0;
 assign branch_target = ( uop == JR_U || uop == JALR_U ) ? src0 : uops.predAddr;
 
