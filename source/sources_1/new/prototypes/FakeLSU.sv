@@ -41,20 +41,23 @@ module FakeLSU(
 );
 
     typedef enum { sIdle, sLoadReq, sLoadResp, sSaveBlock, sSaveFire, sRecover, sReset } LsuState;
-    LsuState    state, nxtState;
-    UOPBundle   currentUOP;
-    PRFrData    currentOprands;
-    UOPBundle   lastUOP;
-    PRFrData    lastOprands;
-    logic       uOPIsLoad;
-    logic       uOPIsSave;
+    LsuState            state, nxtState;
+    UOPBundle           currentUOP;
+    PRFrData            currentOprands;
+    logic       [31:0]  currentLoadAddress;
+    UOPBundle           lastUOP;
+    PRFrData            lastOprands;
+    logic               uOPIsLoad;
+    logic               uOPIsSave;
 
-    logic [ 7:0] bytes [3:0];
-    logic [15:0] hws   [1:0];
-    logic       committed;
-    logic       clearCurrent;
+    logic       [ 7:0]  bytes [3:0];
+    logic       [15:0]  hws   [1:0];
+    logic               committed;
+    logic               clearCurrent;
 
     logic [31:0] reqAddrRaw;
+
+    assign currentLoadAddress = currentOprands.rs0_data + currentUOP.imm[15:0];
 
     assign uOPIsLoad = currentUOP.valid && (
         currentUOP.uOP == LB_U  || 
@@ -214,10 +217,10 @@ module FakeLSU(
                     wbData.wen                  = `TRUE;
                     wbData.rd                   = currentUOP.dstPAddr;
                     case (currentUOP.uOP)
-                        LB_U :  wbData.wdata    = {{24{bytes[dataReq.addr[1:0]][7]}}, bytes[dataReq.addr[1:0]]};
-                        LH_U :  wbData.wdata    = {{16{hws[dataReq.addr[1]]}}, hws[dataReq.addr[1]]};
-                        LBU_U:  wbData.wdata    = {24'b0, bytes[dataReq.addr[1:0]]};
-                        LHU_U:  wbData.wdata    = {16'b0, hws[dataReq.addr[1]]};
+                        LB_U :  wbData.wdata    = {{24{bytes[currentLoadAddress[1:0]][7]}}, bytes[currentLoadAddress[1:0]]};
+                        LH_U :  wbData.wdata    = {{16{hws[currentLoadAddress[1]]}}, hws[currentLoadAddress[1]]};
+                        LBU_U:  wbData.wdata    = {24'b0, bytes[currentLoadAddress[1:0]]};
+                        LHU_U:  wbData.wdata    = {16'b0, hws[currentLoadAddress[1]]};
                         LW_U :  wbData.wdata    = dataResp.data;
                     endcase
                     lsu_busy                    = `FALSE;

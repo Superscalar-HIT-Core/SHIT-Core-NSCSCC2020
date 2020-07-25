@@ -21,7 +21,7 @@ module dispatch_iq_regs(
     output LSU_Queue_Meta rs_lsu_dout_0, rs_lsu_dout_1
     );
 always @(posedge clk)   begin
-    if(rst) begin
+    if( rst || flush ) begin
         rs_alu_wen_0    <= 0;
         rs_alu_wen_1    <= 0;
         rs_mdu_wen_0    <= 0;
@@ -33,17 +33,17 @@ always @(posedge clk)   begin
         rs_lsu_dout_0   <= 0;
         rs_lsu_dout_1   <= 0;
     end else begin
-        rs_alu_wen_0    <= rs_alu_ready ? rs_alu_wen_0_i : rs_alu_wen_0;
-        rs_alu_wen_1    <= rs_alu_ready ? rs_alu_wen_1_i : rs_alu_wen_1;
-        rs_mdu_wen_0    <= rs_mdu_ready ? rs_mdu_wen_0_i : rs_mdu_wen_0;
-        rs_lsu_wen_0    <= rs_lsu_ready ? rs_lsu_wen_0_i : rs_lsu_wen_0;
-        rs_lsu_wen_1    <= rs_lsu_ready ? rs_lsu_wen_1_i : rs_lsu_wen_1;
+        rs_alu_wen_0    <= (rs_alu_ready && rs_mdu_ready && rs_lsu_ready) ? rs_alu_wen_0_i : rs_alu_wen_0;
+        rs_alu_wen_1    <= (rs_alu_ready && rs_mdu_ready && rs_lsu_ready) ? rs_alu_wen_1_i : rs_alu_wen_1;
+        rs_mdu_wen_0    <= (rs_alu_ready && rs_mdu_ready && rs_lsu_ready) ? rs_mdu_wen_0_i : rs_mdu_wen_0;
+        rs_lsu_wen_0    <= (rs_alu_ready && rs_mdu_ready && rs_lsu_ready) ? rs_lsu_wen_0_i : rs_lsu_wen_0;
+        rs_lsu_wen_1    <= (rs_alu_ready && rs_mdu_ready && rs_lsu_ready) ? rs_lsu_wen_1_i : rs_lsu_wen_1;
 
-        rs_alu_dout_0    <= rs_alu_ready ? rs_alu_dout_0_i : rs_alu_dout_0 ;
-        rs_alu_dout_1    <= rs_alu_ready ? rs_alu_dout_1_i : rs_alu_dout_1 ;
-        rs_mdu_dout_0    <= rs_mdu_ready ? rs_mdu_dout_0_i : rs_mdu_dout_0 ;
-        rs_lsu_dout_0    <= rs_lsu_ready ? rs_lsu_dout_0_i : rs_lsu_dout_0 ;
-        rs_lsu_dout_1    <= rs_lsu_ready ? rs_lsu_dout_1_i : rs_lsu_dout_1 ;
+        rs_alu_dout_0   <= (rs_alu_ready && rs_mdu_ready && rs_lsu_ready) ? rs_alu_dout_0_i : rs_alu_dout_0 ;
+        rs_alu_dout_1   <= (rs_alu_ready && rs_mdu_ready && rs_lsu_ready) ? rs_alu_dout_1_i : rs_alu_dout_1 ;
+        rs_mdu_dout_0   <= (rs_alu_ready && rs_mdu_ready && rs_lsu_ready) ? rs_mdu_dout_0_i : rs_mdu_dout_0 ;
+        rs_lsu_dout_0   <= (rs_alu_ready && rs_mdu_ready && rs_lsu_ready) ? rs_lsu_dout_0_i : rs_lsu_dout_0 ;
+        rs_lsu_dout_1   <= (rs_alu_ready && rs_mdu_ready && rs_lsu_ready) ? rs_lsu_dout_1_i : rs_lsu_dout_1 ;
     end
 end
 endmodule
