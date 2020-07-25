@@ -167,7 +167,7 @@ assign dout_0 = dout[deq0_idx];
 assign dout_1 = dout[deq1_idx];
 
 always @(posedge clk)   begin
-    if(rst) begin
+    if(rst || flush) begin
         tail <= `ALU_QUEUE_IDX_LEN'b0;
     end else if(freeze)begin
         tail <= tail - deq_req_0 - deq_req_1;

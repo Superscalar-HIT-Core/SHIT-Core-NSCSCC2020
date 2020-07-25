@@ -46,7 +46,7 @@ assign logic_res =  ( uop == OR_U   || uop == ORI_U || uop == LUI_U )   ? src0 |
 assign shift_res =  ( uop == SLL_U || uop == SLLV_U ) ? src0 << src1[4:0] :
                     ( uop == SRL_U || uop == SRLV_U ) ? src0 >> src1[4:0] :
                     ( uop == SRA_U || uop == SRAV_U ) ? 
-                    ( {32{src1[31]}} << (6'd32 - {1'b0, src0[4:0]}) ) | src1 >> src0[4:0] : 32'b0;
+                    ( {32{src0[31]}} << (6'd32 - {1'b0, src1[4:0]}) ) | src0 >> src1[4:0] : 32'b0;
 
 // 算术运算结果
 wire [31:0] src1_complement;
