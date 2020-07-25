@@ -717,7 +717,8 @@ module decode(
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
-                    uOP0.isPriv     = `TRUE;
+                    uOP0.causeExc   = `TRUE;
+                    uOP0.exception  = ExcEret;
                 end
                 `MFC0: begin
                     uOP0.uOP        = MFC0_U;

@@ -608,7 +608,6 @@ module MyCPU(
         .commitInfo                         (mdu_rob)
     );
     CP0 cp0(.*);
-    exception exce(.*);
     Commit commit(.*);
 
     // synopsys translate_off
