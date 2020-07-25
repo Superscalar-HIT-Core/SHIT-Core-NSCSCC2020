@@ -96,6 +96,14 @@ module mycpu_top(
     BackendRedirect     backend_if0();
     BPDUpdate           backend_bpd();
     NLPUpdate           backend_nlp();
+    
+    CP0WRInterface      alu0_cp0();
+    CP0WRInterface      alu1_cp0_fake();
+    CP0WRInterface      exception_cp0();
+    CP0Exception        exceInfo();
+    CommitExce          exce_commit();
+
+    CP0_TLB             cp0_tlb();
 
     ICache_TLB          iCache_tlb();
 
@@ -237,6 +245,7 @@ module mycpu_top(
     assign wake_reg_MDU = 0;
     // assign lsu_busy = 0;
 
+    wire           dispatch_pause_req;
     wire           aluIQReady;
     wire           lsuIQReady;
     wire           mduIQReady;
@@ -246,6 +255,7 @@ module mycpu_top(
     wire           lsuIQFlush;
     wire           mduIQFlush;
     wire           pauseRename;
+    wire           pauseDispatch;
     wire           pauseRename_dispatch_reg;
     wire           pauseDispatch_iq_reg;
     wire           fireStore;
@@ -287,9 +297,11 @@ module mycpu_top(
         .flush(renameRecover)
     );
     dispatch u_dispatch(
+        .clk                                (clk),
+        .rst                                (rst),
+        .pause                              (pauseDispatch),
         .inst_0_ops                         (dispatch_inst0_in), 
         .inst_1_ops                         (dispatch_inst1_in),
-        .pause                              (pauseDispatch_iq_reg),
         // To Pipeline Regs
         .rs_alu_wen_0                       (rs_alu_wen_0_reg), 
         .rs_alu_wen_1                       (rs_alu_wen_1_reg), 
@@ -305,7 +317,8 @@ module mycpu_top(
         .dispatch_inst1_wnum                (set_busy_num_1),
         .dispatch_inst0_wen                 (set_busy_0),
         .dispatch_inst1_wen                 (set_busy_1),
-        .dispatch_rob                       (dispatch_rob)
+        .dispatch_rob                       (dispatch_rob),
+        .pause_req                          (dispatch_pause_req)
     );
     dispatch_iq_regs dispatch_iq(
     .clk                                (aclk),
@@ -570,6 +583,7 @@ module mycpu_top(
     );
     ALU alu0(
         .uops                               (alu0UOPBundle),
+        .alu_cp0                            (alu0_cp0),
         .rdata                              (alu0Oprands),
         .bypass_alu0                        (alu0WBReq),
         .bypass_alu1                        (alu1WBReq),
@@ -578,6 +592,7 @@ module mycpu_top(
     );
     ALU alu1(
         .uops                               (alu1UOPBundle),
+        .alu_cp0                            (alu1_cp0_fake),
         .rdata                              (alu1Oprands),
         .bypass_alu0                        (alu0WBReq),
         .bypass_alu1                        (alu1WBReq),
@@ -630,6 +645,7 @@ module mycpu_top(
         .prfWReq                            (mduWBReq),
         .commitInfo                         (mdu_rob)
     );
+    CP0 cp0(.*);
     Commit commit(.*);
 
     // synopsys translate_off

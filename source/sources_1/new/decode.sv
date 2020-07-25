@@ -717,11 +717,13 @@ module decode(
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
-                    uOP0.isPriv     = `TRUE;
+                    uOP0.causeExc   = `TRUE;
+                    uOP0.exception  = ExcEret;
                 end
                 `MFC0: begin
                     uOP0.uOP        = MFC0_U;
-                    uOP0.rs_type    = CP0;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_CP0;
                     uOP0.dstLAddr   = rt;
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
@@ -732,7 +734,8 @@ module decode(
                 end
                 `MTC0: begin
                     uOP0.uOP        = MTC0_U;
-                    uOP0.rs_type    = CP0;
+                    uOP0.rs_type    = RS_ALU;
+                    uOP0.aluType    = ALU_CP0;
                     uOP0.op0LAddr   = rt;
                     uOP0.op0re      = `TRUE;
                     uOP0.op1re      = `FALSE;
