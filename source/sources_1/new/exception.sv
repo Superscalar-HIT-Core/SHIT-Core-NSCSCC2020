@@ -4,24 +4,33 @@ module exception(
     input clk,
     input rst,
     CommitExce.exce exce_commit, 
-    CP0Exception.exce exc_cp0,
-    input [5:0] ext_interrupt
+    CP0Exception.exce exceInfo,
+    input [5:0] ext_int
     );
     reg [5:0] ext_interrupt_signal;
     always @(posedge clk)   begin
         if(rst) begin
             ext_interrupt_signal <= 0;
         end else begin
-            ext_interrupt_signal <= ext_interrupt;
+            ext_interrupt_signal <= { exceInfo.Counter_Int, ext_int[4:0] };
         end
     end
-    assign exc_cp0.interrupt = ext_interrupt_signal;
-    assign exc_cp0.causeExce = exce_commit.causeExce;
-    assign exc_cp0.exceType = exce_commit.exceType;
-    assign exc_cp0.excePC = exce_commit.excePC;
-    assign exc_cp0.isDS = exce_commit.isDS;
-    assign exc_cp0.reserved = exce_commit.reserved;
+    // 触发硬件中断
+    always_comb begin
+        if( | ({ext_interrupt_signal, exceInfo.Cause_IP_SW} & {exceInfo.Status_IM, exceInfo.Status_IM_SW}) &&   
+            ( exceInfo.Status_IE == 1 ) && ( exceInfo.Status_EXL = 0 ) )   begin
+            exceInfo.causeExce = 1'b1;
+            exceInfo.exceType = ExcInterrupt;
+        end else begin
+            exceInfo.causeExce = exce_commit.causeExce;
+            exceInfo.exceType = exce_commit.exceType;
+        end
+    end
+    assign exceInfo.interrupt = ext_interrupt_signal;
+    assign exceInfo.excePC = exce_commit.excePC;
+    assign exceInfo.isDS = exce_commit.isDS;
+    assign exceInfo.reserved = exce_commit.reserved;
     
     assign exce_commit.redirectReq = exce_commit.causeExce;
-    assign exce_commit.redirectPC = ( exce_commit.exceType == ExcEret ) ? exc_cp0.EPc : 32'hBFC0_0380;
+    assign exce_commit.redirectPC = ( exce_commit.exceType == ExcEret ) ? exceInfo.EPc : 32'hBFC0_0380;
 endmodule

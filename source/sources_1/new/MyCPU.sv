@@ -4,7 +4,7 @@
 module MyCPU(
     input clk,
     input rst,
-
+    input [5:0] ext_int,
     output wire rsta_busy               ,
     output wire rstb_busy               ,
 
@@ -87,8 +87,10 @@ module MyCPU(
     CP0WRInterface      alu0_cp0();
     CP0WRInterface      alu1_cp0_fake();
     CP0WRInterface      exception_cp0();
+    CP0Exception        exceInfo();
+    CommitExce          exce_commit();
+
     CP0_TLB             cp0_tlb();
-    CP0StatusRegs       cp0Status();
 
     ICache_TLB          iCache_tlb();
     
@@ -606,6 +608,7 @@ module MyCPU(
         .commitInfo                         (mdu_rob)
     );
     CP0 cp0(.*);
+    exception exce(.*);
     Commit commit(.*);
 
     // synopsys translate_off

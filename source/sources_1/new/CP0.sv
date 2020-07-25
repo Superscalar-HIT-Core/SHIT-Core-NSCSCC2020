@@ -4,14 +4,16 @@
 module CP0(
     input wire          clk,
     input wire          rst,
-
-    
     CP0WRInterface.cp0  alu0_cp0,
     CP0_TLB.cp0         cp0_tlb,
-    CP0Exception.cp0    exceInfo,
-    CP0StatusRegs.cp0   cp0Status
+    CP0Exception.cp0    exceInfo
 );
-
+    assign exceInfo.Status_IE = Status[0];
+    assign exceInfo.Status_EXL = Status[1];
+    assign exceInfo.Status_IM = Status[15:10];
+    // 软件中断生成
+    assign exceInfo.Status_IM_SW = Status[9:8];
+    assign exceInfo.Cause_IP_SW = Status[9:8];
 
     logic           divClk;
 
@@ -47,6 +49,7 @@ module CP0(
     
     wire            CounterInterrupt;
     assign CounterInterrupt = (Count == Compare);
+    assign exceInfo.Counter_Int = CounterInterrupt;
     assign exceInfo.EPc = EPc;
     always_ff @ (posedge clk) begin
         if(rst) begin
@@ -94,7 +97,7 @@ module CP0(
             Config1 [    1] <= 1'b0;        // EJTAG impl
             Config1 [    0] <= 1'b0;
         end else begin
-            Cause[15:10]    <= {CounterInterrupt, exceInfo.interrupt[4:0]}; // IP7~IP2中断位
+            Cause[15:10]    <= exceInfo.interrupt; // IP7~IP2中断位
 			Random          <= Random + 1;
             divClk <= ~divClk;
             Count <= Count + divClk;
@@ -103,19 +106,18 @@ module CP0(
 
         // CP0 Set From Exception
         if(exceInfo.causeExce)  begin
-            if(execInfo.execType == ExcEret) begin
+            if(exceInfo.exceType == ExcEret) begin
                 Status[1] <= 1'b0;
             end else if (!Status[1]) begin
                 Status[1] <= 1'b1;
-                Cause[30] <= timer;
                 Cause[31] <= exceInfo.isDS;
                 EPc <= exceInfo.isDS ? ( exceInfo.excePC - 4 ) : exceInfo.excePC;
-                priority case(exceType)
+                priority case(exceInfo.exceType)
                     ExcInterrupt:   begin
                         Cause[6:2] 		<= `Exc_INT;
                     end
                     ExcAddressErrL: begin
-                        BadVAddr 		<= exceInfo.excePC[1:0] == 2'b0 ? reserved : exceInfo.excePC[1:0];
+                        BadVAddr 		<= exceInfo.excePC[1:0] == 2'b0 ? exceInfo.reserved : exceInfo.excePC[1:0];
                         Cause[6:2] 		<= `Exc_ADEL;
                     end
                     ExcReservedInst:    begin
@@ -132,7 +134,7 @@ module CP0(
                     end
                     ExcAddressErrS:     begin
                         Cause[6:2]      <= `Exc_ADES;
-                        BadVAddr 		<= reserved;
+                        BadVAddr 		<= exceInfo.reserved;
                     end
                     default:            begin
                         Cause[6:2]      <= 0;
@@ -140,25 +142,25 @@ module CP0(
                 endcase
             end
         end else if(alu0_cp0.writeEn) begin         // CP0写使能
-            case(exception_cp0.addr)
-                `CP0INDEX    : Index    <= (Index      & ~`CP0INDEXMASK     ) | (exception_cp0.writeData & `CP0INDEXMASK    );
-                `CP0ENTRYLO0 : EntryLo0 <= (EntryLo0   & ~`CP0ENTRYLO0MASK  ) | (exception_cp0.writeData & `CP0ENTRYLO0MASK );
-                `CP0ENTRYLO1 : EntryLo1 <= (EntryLo1   & ~`CP0ENTRYLO1MASK  ) | (exception_cp0.writeData & `CP0ENTRYLO1MASK );
-                `CP0CONTEXT  : Context  <= (Context    & ~`CP0CONTEXTMASK   ) | (exception_cp0.writeData & `CP0CONTEXTMASK  );
-                `CP0PAGEMASK : PageMask <= (PageMask   & ~`CP0PAGEMASKMASK  ) | (exception_cp0.writeData & `CP0PAGEMASKMASK );
-                `CP0WIRED    : Wired    <= (Wired      & ~`CP0WIREDMASK     ) | (exception_cp0.writeData & `CP0WIREDMASK    );
-                `CP0ENTRYHI  : EntryHi  <= (EntryHi    & ~`CP0ENTRYHIMASK   ) | (exception_cp0.writeData & `CP0ENTRYHIMASK  );
-                `CP0COMPARE  : Compare  <= (Compare    & ~`CP0COMPAREMASK   ) | (exception_cp0.writeData & `CP0COMPAREMASK  );
-                `CP0STATUS   : Status   <= (Status     & ~`CP0STATUSMASK    ) | (exception_cp0.writeData & `CP0STATUSMASK   );
+            case(alu0_cp0.addr)
+                `CP0INDEX    : Index    <= (Index      & ~`CP0INDEXMASK     ) | (alu0_cp0.writeData & `CP0INDEXMASK    );
+                `CP0ENTRYLO0 : EntryLo0 <= (EntryLo0   & ~`CP0ENTRYLO0MASK  ) | (alu0_cp0.writeData & `CP0ENTRYLO0MASK );
+                `CP0ENTRYLO1 : EntryLo1 <= (EntryLo1   & ~`CP0ENTRYLO1MASK  ) | (alu0_cp0.writeData & `CP0ENTRYLO1MASK );
+                `CP0CONTEXT  : Context  <= (Context    & ~`CP0CONTEXTMASK   ) | (alu0_cp0.writeData & `CP0CONTEXTMASK  );
+                `CP0PAGEMASK : PageMask <= (PageMask   & ~`CP0PAGEMASKMASK  ) | (alu0_cp0.writeData & `CP0PAGEMASKMASK );
+                `CP0WIRED    : Wired    <= (Wired      & ~`CP0WIREDMASK     ) | (alu0_cp0.writeData & `CP0WIREDMASK    );
+                `CP0ENTRYHI  : EntryHi  <= (EntryHi    & ~`CP0ENTRYHIMASK   ) | (alu0_cp0.writeData & `CP0ENTRYHIMASK  );
+                `CP0COMPARE  : Compare  <= (Compare    & ~`CP0COMPAREMASK   ) | (alu0_cp0.writeData & `CP0COMPAREMASK  );
+                `CP0STATUS   : Status   <= (Status     & ~`CP0STATUSMASK    ) | (alu0_cp0.writeData & `CP0STATUSMASK   );
                 `CP0CAUSE    : begin    // 因为Cause上面会写
-                    Cause[9:8] <= exception_cp0.writeData[9:8];
-                    Cause[22]  <= exception_cp0.writeData[22];
-                    Cause[23]  <= exception_cp0.writeData[23];
+                    Cause[9:8] <= alu0_cp0.writeData[9:8];
+                    Cause[22]  <= alu0_cp0.writeData[22];
+                    Cause[23]  <= alu0_cp0.writeData[23];
                 end
-                `CP0EPC      : EPc      <= (EPc        & ~`CP0EPCMASK       ) | (exception_cp0.writeData & `CP0EPCMASK      );
-                `CP0EBASE    : EBase    <= (EBase      & ~`CP0EBASEMASK     ) | (      alu0_cp0.writeData & `CP0EBASEMASK    );
-                `CP0CONFIG   : Config   <= (Config     & ~`CP0CONFIGMASK    ) | (exception_cp0.writeData & `CP0CONFIGMASK   );
-                `CP0ERROREPC : ErrorEPC <= (ErrorEPC   & ~`CP0ERROREPCMASK  ) | (exception_cp0.writeData & `CP0ERROREPCMASK );
+                `CP0EPC      : EPc      <= (EPc        & ~`CP0EPCMASK       ) | (alu0_cp0.writeData & `CP0EPCMASK      );
+                `CP0EBASE    : EBase    <= (EBase      & ~`CP0EBASEMASK     ) | (alu0_cp0.writeData & `CP0EBASEMASK    );
+                `CP0CONFIG   : Config   <= (Config     & ~`CP0CONFIGMASK    ) | (alu0_cp0.writeData & `CP0CONFIGMASK   );
+                `CP0ERROREPC : ErrorEPC <= (ErrorEPC   & ~`CP0ERROREPCMASK  ) | (alu0_cp0.writeData & `CP0ERROREPCMASK );
             endcase
         end
         if(cp0_tlb.writeEn) begin
@@ -170,13 +172,6 @@ module CP0(
     end
 
     always_comb begin
-        cp0Status.count     = Count;
-        cp0Status.status    = Status;
-        cp0Status.cause     = Cause;
-        cp0Status.ePc       = EPc;
-        cp0Status.eBase     = EBase;
-        cp0Status.random    = Random;
-
         case (alu0_cp0.addr)
             `CP0INDEX       : alu0_cp0.readData = Index;
             `CP0RANDOM      : alu0_cp0.readData = Random;
