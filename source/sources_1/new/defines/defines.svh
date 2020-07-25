@@ -347,7 +347,8 @@ typedef enum bit[7:0] {
     //misc_U,
     CACHE_U     ,
     WAIT_U      ,
-    MDBUBBLE_U
+    MDBUBBLE_U  ,
+    RESERVED_U
 } uOP;
 
 typedef enum bit [1:0] {
@@ -471,7 +472,10 @@ typedef enum bit[3:0] {
 
 typedef struct packed {
     // logic   [`UOP_WIDTH]    uOP;
+    logic   [31:0]          pc;
+    logic   [`ROB_ID_W]     id;
     uOP                     uOP;
+    
     ALUType                 aluType;
     logic   [4:0]           cacheOP;
     RS_Type                 rs_type;
@@ -503,8 +507,7 @@ typedef struct packed {
     ExceptionType           exception;
     logic   [19:0]          excCode;
 
-    logic   [`ROB_ID_W]     id;
-    logic   [31:0]          pc;
+
 
     logic                   isDS;
     logic                   isPriv;
@@ -572,6 +575,9 @@ interface FU_ROB;
     logic               branchTaken;
     logic [31:0]        branchAddr;
 
+    logic               setException;
+    ExceptionType       exceptionType;
+
     task automatic sendFinish(logic [`ROB_ID_W] idIn, ref logic clk);
         id          = idIn;
         setFinish   = `TRUE;
@@ -580,8 +586,8 @@ interface FU_ROB;
         end
     endtask //automatic
 
-    modport fu(output setFinish, id, setBranchStatus, branchTaken, branchAddr);
-    modport rob(input setFinish, id, setBranchStatus, branchTaken, branchAddr);
+    modport fu(output setFinish, id, setBranchStatus, branchTaken, branchAddr, setException, exceptionType);
+    modport rob(input setFinish, id, setBranchStatus, branchTaken, branchAddr, setException, exceptionType);
 endinterface //FU_ROB
 
 interface ROB_Commit;

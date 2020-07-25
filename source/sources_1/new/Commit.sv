@@ -14,7 +14,9 @@ module Commit(
     output logic                commit_rename_valid_0,
     output logic                commit_rename_valid_1,
     output commit_info          commit_rename_req_0,
-    output commit_info          commit_rename_req_1
+    output commit_info          commit_rename_req_1,
+
+    output logic                fireStore
 );
     reg [5:0] ext_interrupt_signal;
     logic causeInt;
@@ -49,12 +51,27 @@ module Commit(
     logic [19:0]    excCode;
     Word            excPC;
     logic           isDS;
-    assign inst0Good        = rob_commit.valid && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
-    assign inst1Good        = rob_commit.valid && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
+    logic           inst0Store;
+    logic           inst1Store;
+
+    assign inst0Good        = rob_commit.valid && rob_commit.ready && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
+    assign inst1Good        = rob_commit.valid && rob_commit.ready && rob_commit.uOP1.valid && !rob_commit.uOP1.committed && !rob_commit.uOP1.busy;
     assign takePredFailed   = inst0Good && rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP0.branchTaken != rob_commit.uOP0.predTaken;
     assign addrPredFailed   = inst0Good && !takePredFailed && (rob_commit.uOP0.branchAddr != rob_commit.uOP0.predAddr);
     assign target           = rob_commit.uOP0.branchTaken ? rob_commit.uOP0.branchAddr : rob_commit.uOP0.pc + 32'h8;
-    assign rob_commit.ready = `TRUE;
+    assign rob_commit.ready = ~ctrl_commit.flushReq;
+    assign inst0Store       = inst0Good&& (
+        rob_commit.uOP0.uOP == SB_U  || 
+        rob_commit.uOP0.uOP == SH_U  || 
+        rob_commit.uOP0.uOP == SW_U
+    );
+    assign inst1Store       = inst1Good&& (
+        rob_commit.uOP1.uOP == SB_U  || 
+        rob_commit.uOP1.uOP == SH_U  || 
+        rob_commit.uOP1.uOP == SW_U
+    );
+    assign fireStore        = inst0Store || inst1Store;
+
     always_ff @(posedge clk) begin
         if(rst) begin
             commit_rename_valid_0 <= 0;

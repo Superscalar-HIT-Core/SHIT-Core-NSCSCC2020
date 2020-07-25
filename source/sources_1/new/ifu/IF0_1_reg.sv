@@ -34,8 +34,8 @@ module IF0_1_reg(
     assign regs_iCache.onlyGetDS = headIsDS;
 
     always_ff @ (posedge clk) begin
-        if(rst || ctrl_if0_1_regs.flush) begin
-            PC          <=  32'h0;
+        if(rst) begin
+            PC          <=  32'hbfc00000;
             headIsDS    <=  `FALSE;
         end else if(backend_if0.redirect && backend_if0.valid) begin
             PC          <=  backend_if0.redirectPC;

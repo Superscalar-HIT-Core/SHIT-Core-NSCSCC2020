@@ -13,6 +13,10 @@ module Predecoder(
 );
 
     always_comb begin
+        isJ     = `FALSE;
+        isBr    = `FALSE;
+        jr      = `FALSE;
+        target  = 0;
         if(valid) begin
             casez (inst)
                 // quick redirect

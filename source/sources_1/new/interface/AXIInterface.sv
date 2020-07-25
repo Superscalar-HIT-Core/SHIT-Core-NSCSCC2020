@@ -106,7 +106,7 @@ module AXIInterface(
             dataReqWEn      = dataReq.write_en;
             dataReqStrobe   = dataReq.strobe;
             dataReqData     = dataReq.data;
-        end else if (rState == sRData || wState == sWDResp) begin
+        end else if (rState == sRData && lastRState == sRAddr || (wState == sWDResp && lastWState == sWData)) begin
             dataReqBusy     = `FALSE;
             dataReqWEn      = `FALSE;
         end
@@ -412,13 +412,13 @@ module AXIInterface(
         unique case(wState)
             sWAddr: begin
                 if(dCacheReqBusy && dCacheReqWEn) begin
-                    axiWriteAddr.id         = 4'h0;
+                    axiWriteAddr.id         = 4'h1;
                     axiWriteAddr.address    = dCacheReqAddr;
                     axiWriteAddr.length     = 4'b0011;
                     axiWriteAddr.size       = 3'b010;
                     axiWriteAddr.burst      = 2'b10;
                 end else begin
-                    axiWriteAddr.id         = 4'h0;
+                    axiWriteAddr.id         = 4'h1;
                     axiWriteAddr.address    = dataReqAddr;
                     axiWriteAddr.length     = 4'b0000;
                     axiWriteAddr.size       = 3'b010;
