@@ -106,10 +106,22 @@ assign alu_rob.setBranchStatus = uops.valid && uops.branchType != typeNormal;
 assign alu_rob.branchAddr = branch_target;
 assign alu_rob.branchTaken = branch_taken;
 
+// ADEL, Break和Syscall在前面处理了
 always_comb begin
     uops_o = uops;
     uops_o.branchAddr = branch_target;
     uops_o.branchTaken = branch_taken && uops.valid;
+    uops_o.causeExc = uops.causeExc | overflow;
+    uops_o.exception = uops.exception;
+    if(!uops.causeExc || overflow ) begin    // 如果之前已经有异常
+        if( uops.exception == ExcAddressErrL || 
+            uops.exception == ExcReservedInst || 
+            uops_o.exception == ExcEret ) begin      // 优先级更高的异常
+            uops_o.exception = uops.exception;
+        end else begin
+            uops_o.exception = ExcIntOverflow;
+        end
+    end
 end
 
 always_comb begin
@@ -197,20 +209,6 @@ assign overflow =   ( (!src0[31] & !src1_complement[31] & sum[31]) |
                     ( ( uop == ADD_U ) || ( uop == ADDI_U ) || ( uop == SUB_U ) ) ? 
                     1'b1 : 1'b0; 
 
-// ADEL, Break和Syscall在前面处理了
-always_comb begin
-    uops_o.causeExc = uops.causeExc | overflow;
-    uops_o.exception = uops.exception;
-    if(!uops.causeExc || overflow ) begin    // 如果之前已经有异常
-        if( uops.exception == ExcAddressErrL || 
-            uops.exception == ExcReservedInst || 
-            uops_o.exception == ExcEret ) begin      // 优先级更高的异常
-            uops_o.exception = uops.exception;
-        end else begin
-            uops_o.exception = ExcIntOverflow;
-        end
-    end
-end
 
 ALUType alutype;
 assign alutype = uops.aluType;

@@ -6,7 +6,6 @@ module dispatch(
     input rst,
     input pause,
     input UOPBundle inst_0_ops, inst_1_ops,
-    input pause,
     // input busy_dispatch_inst0_r0,
     // input busy_dispatch_inst0_r1,
     // input busy_dispatch_inst1_r0,

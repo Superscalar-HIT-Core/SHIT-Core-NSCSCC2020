@@ -1,6 +1,6 @@
+`include "../defs.sv"
 `ifndef DEFINES
 `define DEFINES
-`include "../defs.sv"
 `define REG_WIDTH 32
 `define PRF_NUM_WIDTH 6
 `define ARF_NUM_WIDTH 6
