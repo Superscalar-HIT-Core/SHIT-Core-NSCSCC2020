@@ -99,7 +99,7 @@ module mycpu_top(
 
     ICache_TLB          iCache_tlb();
 
-    always_comb begin
+    always_ff @ (posedge clk) begin
         if(iCache_tlb.virAddr0 > 32'hC0000000 || iCache_tlb.virAddr0 < 32'h3FFFFFFF) begin
             iCache_tlb.phyAddr0 = iCache_tlb.virAddr0;
         end else if (iCache_tlb.virAddr0 > 32'h9fff_ffff) begin
@@ -659,12 +659,12 @@ module mycpu_top(
         //     sanityCheck1 <= `TRUE;
         //     sanityCheck1ARF <= commit_rename_req_1.committed_arf;
         // end else sanityCheck1 <= `FALSE;
-        if (commit_rename_valid_0 && commit_rename_req_0.wr_reg_commit) begin
-            $display("1 %h %h %h", delayedCommitInfo0.pc, commit_rename_req_0.committed_arf, prf_u.prfs_bank0[commit_rename_req_0.committed_prf]);
-        end
-        if (commit_rename_valid_1 && commit_rename_req_1.wr_reg_commit) begin
-            $display("1 %h %h %h", delayedCommitInfo1.pc, commit_rename_req_1.committed_arf, prf_u.prfs_bank0[commit_rename_req_1.committed_prf]);
-        end
+        // if (commit_rename_valid_0 && commit_rename_req_0.wr_reg_commit) begin
+        //     $display("1 %h %h %h", delayedCommitInfo0.pc, commit_rename_req_0.committed_arf, prf_u.prfs_bank0[commit_rename_req_0.committed_prf]);
+        // end
+        // if (commit_rename_valid_1 && commit_rename_req_1.wr_reg_commit) begin
+        //     $display("1 %h %h %h", delayedCommitInfo1.pc, commit_rename_req_1.committed_arf, prf_u.prfs_bank0[commit_rename_req_1.committed_prf]);
+        // end
         
     end
     always @ (posedge aclk) begin
@@ -676,14 +676,14 @@ module mycpu_top(
         // end
     end
 
-    always @ (negedge ctrl_commit.flushReq) #1 begin
-        $display("Detect branch prediction failed. redirecting...");
-        #1
-        $display("========== arf after refresh ==========");
-        for(integer i = 0; i < 34; i++) begin
-            $display("reg %d : 0x%h", i, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[i]]);
-        end
-        $display("========== arf disp finished ==========");
-    end
+    // always @ (negedge ctrl_commit.flushReq) #1 begin
+    //     $display("Detect branch prediction failed. redirecting...");
+    //     #1
+    //     $display("========== arf after refresh ==========");
+    //     for(integer i = 0; i < 34; i++) begin
+    //         $display("reg %d : 0x%h", i, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[i]]);
+    //     end
+    //     $display("========== arf disp finished ==========");
+    // end
     // synopsys translate_on
 endmodule
