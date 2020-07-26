@@ -121,6 +121,7 @@ module ROB(
             if(alu0_rob.setException) begin
                 data0[alu0_rob.id >> 1'b1].causeExc    <= `TRUE;
                 data0[alu0_rob.id >> 1'b1].exception   <= alu0_rob.exceptionType;
+                data0[alu0_rob.id >> 1'b1].BadVAddr    <= alu0_rob.BadVAddr;
             end
         end else if(alu0_rob.setFinish && alu0_rob.id[0] == 1'b1) begin
             data1[alu0_rob.id >> 1'b1].busy <= `FALSE;
@@ -131,6 +132,7 @@ module ROB(
             if(alu0_rob.setException) begin
                 data1[alu0_rob.id >> 1'b1].causeExc    <= `TRUE;
                 data1[alu0_rob.id >> 1'b1].exception   <= alu0_rob.exceptionType;
+                data1[alu0_rob.id >> 1'b1].BadVAddr    <= alu0_rob.BadVAddr;
             end
         end
         
@@ -143,6 +145,7 @@ module ROB(
             if(alu1_rob.setException) begin
                 data0[alu1_rob.id >> 1'b1].causeExc    <= `TRUE;
                 data0[alu1_rob.id >> 1'b1].exception   <= alu1_rob.exceptionType;
+                data0[alu1_rob.id >> 1'b1].BadVAddr    <= alu1_rob.BadVAddr;
             end
         end else if(alu1_rob.setFinish && alu1_rob.id[0] == 1'b1) begin
             data1[alu1_rob.id >> 1'b1].busy <= `FALSE;
@@ -153,6 +156,7 @@ module ROB(
             if(alu1_rob.setException) begin
                 data1[alu1_rob.id >> 1'b1].causeExc    <= `TRUE;
                 data1[alu1_rob.id >> 1'b1].exception   <= alu1_rob.exceptionType;
+                data1[alu1_rob.id >> 1'b1].BadVAddr    <= alu1_rob.BadVAddr;
             end
         end
         
@@ -167,12 +171,14 @@ module ROB(
             if(lsu_rob.setException) begin
                 data0[lsu_rob.id >> 1'b1].causeExc     <= `TRUE;
                 data0[lsu_rob.id >> 1'b1].exception    <= lsu_rob.exceptionType;
+                data0[lsu_rob.id >> 1'b1].BadVAddr     <= lsu_rob.BadVAddr;
             end
         end else if(lsu_rob.setFinish && lsu_rob.id[0] == 1'b1) begin
             data1[lsu_rob.id >> 1'b1].busy <= `FALSE;
             if(lsu_rob.setException) begin
                 data1[lsu_rob.id >> 1'b1].causeExc     <= `TRUE;
                 data1[lsu_rob.id >> 1'b1].exception    <= lsu_rob.exceptionType;
+                data1[lsu_rob.id >> 1'b1].BadVAddr     <= lsu_rob.BadVAddr;
             end
         end
         

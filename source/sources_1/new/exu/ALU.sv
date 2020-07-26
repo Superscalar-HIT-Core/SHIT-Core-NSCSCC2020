@@ -10,11 +10,36 @@ module ALU(
     output UOPBundle uops_o,              // 传递给下一级的
     FU_ROB.fu   alu_rob
     );
+wire overflow;
 
 assign alu_rob.setFinish = uops.valid;
 assign alu_rob.id = uops.id;
+assign alu_rob.setException = uops.causeExc || overflow;
+// 取指不对齐异常，优先级最高
+assign alu_rob.BadVAddr    = uops.pc;
+
+// ADEL, Break和Syscall在前面处理了
+always_comb begin
+    uops_o = uops;
+    uops_o.branchAddr = branch_target;
+    uops_o.branchTaken = branch_taken && uops.valid;
+    uops_o.causeExc = uops.causeExc | overflow;
+    uops_o.exception = uops.exception;
+    if(!uops.causeExc || overflow ) begin    // 如果之前已经有异常
+        if( uops.exception == ExcAddressErrL || 
+            uops.exception == ExcReservedInst || 
+            uops_o.exception == ExcEret ) begin      // 优先级更高的异常
+            uops_o.exception = uops.exception;
+        end else begin
+            uops_o.exception = ExcIntOverflow;
+        end
+    end
+end
 
 // Result Select
+
+// 分支指令结果
+Word branch_target;
 Word move_res;
 Word arithmetic_res;
 Word branch_res;
@@ -69,8 +94,6 @@ assign arithmetic_res = ( uop == SLT_U || uop == SLTI_U || uop == SLTU_U || uop 
 // 移动指令结果
 assign move_res = src0; // HILO寄存器被重命名，无论是MF还是MT，都是第一个操作数
 
-// 分支指令结果
-Word branch_target;
 // Word branch_target;
 assign branch_taken =   ( uop == BEQ_U ) ? ( src0 == src1 ) :
                         ( uop == BNE_U ) ? ( src0 != src1 ) :
@@ -106,23 +129,7 @@ assign alu_rob.setBranchStatus = uops.valid && uops.branchType != typeNormal;
 assign alu_rob.branchAddr = branch_target;
 assign alu_rob.branchTaken = branch_taken;
 
-// ADEL, Break和Syscall在前面处理了
-always_comb begin
-    uops_o = uops;
-    uops_o.branchAddr = branch_target;
-    uops_o.branchTaken = branch_taken && uops.valid;
-    uops_o.causeExc = uops.causeExc | overflow;
-    uops_o.exception = uops.exception;
-    if(!uops.causeExc || overflow ) begin    // 如果之前已经有异常
-        if( uops.exception == ExcAddressErrL || 
-            uops.exception == ExcReservedInst || 
-            uops_o.exception == ExcEret ) begin      // 优先级更高的异常
-            uops_o.exception = uops.exception;
-        end else begin
-            uops_o.exception = ExcIntOverflow;
-        end
-    end
-end
+
 
 always_comb begin
     casex(src0)
@@ -203,7 +210,6 @@ end
 assign count_res = uop == CLZ_U ? clz_res : clo_res;
 
 // 溢出的检查
-wire overflow;
 assign overflow =   ( (!src0[31] & !src1_complement[31] & sum[31]) | 
                     ( src0[31] & src1_complement[31] & !sum[31]) ) & 
                     ( ( uop == ADD_U ) || ( uop == ADDI_U ) || ( uop == SUB_U ) ) ? 

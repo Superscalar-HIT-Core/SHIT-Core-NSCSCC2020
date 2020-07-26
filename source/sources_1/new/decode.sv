@@ -607,7 +607,7 @@ module decode(
                     uOP0.dstwe      = `FALSE;
                     uOP0.causeExc   = `TRUE;
                     uOP0.exception  = ExcSysCall;
-                    uOP0.excCode    = inst[25:6];
+                    uOP0.BadVAddr = 0;
                 end
                 `BREAK: begin
                     uOP0.uOP        = BREAK_U;
@@ -618,7 +618,7 @@ module decode(
                     uOP0.dstwe      = `FALSE;
                     uOP0.causeExc   = `TRUE;
                     uOP0.exception  = ExcBreak;
-                    uOP0.excCode    = inst[25:6];
+                    uOP0.BadVAddr = 0;
                 end
                 `LB: begin
                     uOP0.uOP        = LB_U;

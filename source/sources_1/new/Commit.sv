@@ -48,7 +48,7 @@ module Commit(
     logic [31:0]    lastTarget;
     logic           causeExce;
     ExceptionType   exception;
-    logic [19:0]    excCode;
+    logic [19:0]    BadVAddr;
     Word            excPC;
     logic           isDS;
     logic           inst0Store;
@@ -97,8 +97,8 @@ module Commit(
                                                     (rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid) ;
             exception                           <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
                                                     rob_commit.uOP0.exception : rob_commit.uOP0.exception;
-            excCode                             <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
-                                                    rob_commit.uOP0.excCode : rob_commit.uOP1.excCode;
+            BadVAddr                             <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
+                                                    rob_commit.uOP0.BadVAddr : rob_commit.uOP1.BadVAddr;
             excPC                               <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
                                                     rob_commit.uOP0.pc : rob_commit.uOP1.pc;
             isDS                                <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
@@ -150,7 +150,7 @@ module Commit(
 
     assign exceInfo.causeExce = causeExce;
     assign exceInfo.exceType = exception;
-    assign exceInfo.reserved = excCode;
+    assign exceInfo.reserved = BadVAddr;
     assign exceInfo.excePC = excPC;
     assign exceInfo.isDS = isDS;
     assign exceInfo.interrupt = ext_interrupt_signal;

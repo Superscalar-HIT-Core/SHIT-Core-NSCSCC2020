@@ -30,6 +30,8 @@ module FU_Output_regs(
             commitInfo.setBranchStatus  <= fuCommitInfo.setBranchStatus;
             commitInfo.branchTaken      <= fuCommitInfo.branchTaken;
             commitInfo.branchAddr       <= fuCommitInfo.branchAddr;
+            commitInfo.setException     <= fuCommitInfo.setException;
+            commitInfo.BadVAddr         <= fuCommitInfo.BadVAddr;
         end
     end
 

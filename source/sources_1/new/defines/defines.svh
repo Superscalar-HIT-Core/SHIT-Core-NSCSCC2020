@@ -505,7 +505,7 @@ typedef struct packed {
 
     logic                   causeExc;
     ExceptionType           exception;
-    logic   [19:0]          excCode;
+    logic   [31:0]          BadVAddr;
 
 
 
@@ -577,6 +577,7 @@ interface FU_ROB;
 
     logic               setException;
     ExceptionType       exceptionType;
+    logic [31:0]        BadVAddr;
 
     task automatic sendFinish(logic [`ROB_ID_W] idIn, ref logic clk);
         id          = idIn;
@@ -586,8 +587,8 @@ interface FU_ROB;
         end
     endtask //automatic
 
-    modport fu(output setFinish, id, setBranchStatus, branchTaken, branchAddr, setException, exceptionType);
-    modport rob(input setFinish, id, setBranchStatus, branchTaken, branchAddr, setException, exceptionType);
+    modport fu(output setFinish, id, setBranchStatus, branchTaken, branchAddr, setException, exceptionType, BadVAddr);
+    modport rob(input setFinish, id, setBranchStatus, branchTaken, branchAddr, setException, exceptionType, BadVAddr);
 endinterface //FU_ROB
 
 interface ROB_Commit;
