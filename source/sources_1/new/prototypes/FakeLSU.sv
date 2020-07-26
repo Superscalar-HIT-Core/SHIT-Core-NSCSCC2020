@@ -186,7 +186,6 @@ module FakeLSU(
     always_comb begin
         dataReq.data                = 0;
         dataReq.strobe              = 0;
-        dataReq.addr                = 0;
         dataReq.write_en            = 0;
         dataReq.valid               = `FALSE;
         dataResp.ready              = `FALSE;
