@@ -184,6 +184,8 @@ module FakeLSU(
     end
 
     always_comb begin
+        dataReq.data                = 0;
+        dataReq.strobe              = 0;
         dataReq.addr                = 0;
         dataReq.write_en            = 0;
         dataReq.valid               = `FALSE;
@@ -192,6 +194,7 @@ module FakeLSU(
         lsu_commit_reg.id           = 0;
         wbData                      = 0;
         reqAddrRaw                  = 0;
+        lsu_busy                    = 0;
         case(state)
             sIdle: begin
                 dataReq.valid                   = `FALSE;
@@ -218,7 +221,7 @@ module FakeLSU(
                     wbData.rd                   = currentUOP.dstPAddr;
                     case (currentUOP.uOP)
                         LB_U :  wbData.wdata    = {{24{bytes[currentLoadAddress[1:0]][7]}}, bytes[currentLoadAddress[1:0]]};
-                        LH_U :  wbData.wdata    = {{16{hws[currentLoadAddress[1]]}}, hws[currentLoadAddress[1]]};
+                        LH_U :  wbData.wdata    = {{16{hws[currentLoadAddress[1]][15]}}, hws[currentLoadAddress[1]]};
                         LBU_U:  wbData.wdata    = {24'b0, bytes[currentLoadAddress[1:0]]};
                         LHU_U:  wbData.wdata    = {16'b0, hws[currentLoadAddress[1]]};
                         LW_U :  wbData.wdata    = dataResp.data;

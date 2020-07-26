@@ -140,6 +140,8 @@ module InstBuffer(
     end
 
     always_comb begin
+        instBuffer_backend.inst0 = 0;
+        instBuffer_backend.inst1 = 0;
         if(passThrough) begin
             instBuffer_backend.inst0        = ifu_instBuffer.inst0;
             instBuffer_backend.inst1        = ifu_instBuffer.inst1;

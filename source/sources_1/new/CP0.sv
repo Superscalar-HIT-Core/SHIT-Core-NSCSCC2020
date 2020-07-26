@@ -8,12 +8,7 @@ module CP0(
     CP0_TLB.cp0         cp0_tlb,
     CP0Exception.cp0    exceInfo
 );
-    assign exceInfo.Status_IE = Status[0];
-    assign exceInfo.Status_EXL = Status[1];
-    assign exceInfo.Status_IM = Status[15:10];
-    // 软件中断生成
-    assign exceInfo.Status_IM_SW = Status[9:8];
-    assign exceInfo.Cause_IP_SW = Status[9:8];
+
 
     logic           divClk;
 
@@ -48,6 +43,12 @@ module CP0(
     logic [31:0]    DESave;
     
     wire            CounterInterrupt;
+    assign exceInfo.Status_IE = Status[0];
+    assign exceInfo.Status_EXL = Status[1];
+    assign exceInfo.Status_IM = Status[15:10];
+    // 软件中断生成
+    assign exceInfo.Status_IM_SW = Status[9:8];
+    assign exceInfo.Cause_IP_SW = Status[9:8];
     assign CounterInterrupt = (Count == Compare);
     assign exceInfo.Counter_Int = CounterInterrupt;
     assign exceInfo.EPc = EPc;

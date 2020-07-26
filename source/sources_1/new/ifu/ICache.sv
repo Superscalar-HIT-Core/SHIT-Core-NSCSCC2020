@@ -154,7 +154,7 @@ module ICache(
         collision2          <= tag2IO.address != compInputPC[9:4];
         collision3          <= tag3IO.address != compInputPC[9:4];
         if(rst) begin
-            for (integer i = 0; i < 64; i++) begin
+            for (integer i = 0; i < 3; i++) begin
                 valid[i]    <= 0;
                 age  [i]    <= 0;
             end
@@ -210,6 +210,7 @@ module ICache(
     assign tag          = PCReg[31:10];
 
     always_comb begin
+        nxtState = sReset;
         case(state)
             sRunning: begin
                 if(rst) begin
@@ -276,6 +277,11 @@ module ICache(
     end
 
     always_comb begin
+        ctrl_iCache.pauseReq    = `FALSE;
+        instReq.valid           = `FALSE;
+        instResp.ready          = `FALSE;
+        instReq.pc              = `FALSE;
+        
         nxtValid                    = valid;
         nxtAge                      = age;
 
@@ -300,6 +306,10 @@ module ICache(
         tag1IO.writeEn              = `FALSE;
         tag2IO.writeEn              = `FALSE;
         tag3IO.writeEn              = `FALSE;
+        data0IO.dataIn              = 0;
+        data1IO.dataIn              = 0;
+        data2IO.dataIn              = 0;
+        data3IO.dataIn              = 0;
 
         data0IO.address             = compInputPC[9:4];
         data1IO.address             = compInputPC[9:4];
@@ -370,7 +380,7 @@ module ICache(
                             data0IO.dataIn          = instResp.cacheLine;
                             nxtAge[lineAddress][0]  = 1'b0;
                             nxtAge[lineAddress][1]  = 1'b0;
-                            valid[0][lineAddress]   = `TRUE;
+                            nxtValid[0][lineAddress]   = `TRUE;
                         end
                         3'b?01: begin   // replace hit1
                             tag1IO.writeEn          = `TRUE;
@@ -381,7 +391,7 @@ module ICache(
                             data1IO.dataIn          = instResp.cacheLine;
                             nxtAge[lineAddress][0]  = 1'b0;
                             nxtAge[lineAddress][1]  = 1'b1;
-                            valid[1][lineAddress]   = `TRUE;
+                            nxtValid[1][lineAddress]   = `TRUE;
                         end
                         3'b1?0: begin   // replace hit2
                             tag2IO.writeEn          = `TRUE;
@@ -392,7 +402,7 @@ module ICache(
                             data2IO.dataIn          = instResp.cacheLine;
                             nxtAge[lineAddress][0]  = 1'b1;
                             nxtAge[lineAddress][2]  = 1'b0;
-                            valid[2][lineAddress]   = `TRUE;
+                            nxtValid[2][lineAddress]   = `TRUE;
                         end
                         3'b0?0: begin   // replace hit3
                             tag3IO.writeEn          = `TRUE;
@@ -403,7 +413,7 @@ module ICache(
                             data3IO.dataIn          = instResp.cacheLine;
                             nxtAge[lineAddress][0]  = 1'b1;
                             nxtAge[lineAddress][2]  = 1'b1;
-                            valid[3][lineAddress]   = `TRUE;
+                            nxtValid[3][lineAddress]   = `TRUE;
                         end
                     endcase
                 end else begin

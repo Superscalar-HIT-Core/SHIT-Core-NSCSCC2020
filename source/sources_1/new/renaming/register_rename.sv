@@ -70,20 +70,28 @@ map_table u_map_table(
 
 
 always_comb begin
-    inst0_ops_out = inst0_ops_in;
-    inst0_ops_out.op0PAddr = rnamet_output_inst0.prf_rs1;
-    inst0_ops_out.op1PAddr = rnamet_output_inst0.prf_rs2;
-    inst0_ops_out.dstPAddr = free_prf_0;
-    inst0_ops_out.dstPStale = rnamet_output_inst0.prf_rd_stale;
+    if(allocatable) begin
+        inst0_ops_out = inst0_ops_in;
+        inst0_ops_out.op0PAddr = rnamet_output_inst0.prf_rs1;
+        inst0_ops_out.op1PAddr = rnamet_output_inst0.prf_rs2;
+        inst0_ops_out.dstPAddr = free_prf_0;
+        inst0_ops_out.dstPStale = rnamet_output_inst0.prf_rd_stale;
+    end else begin
+        inst0_ops_out = 0;
+    end
 end
 
 
 always_comb begin
-    inst1_ops_out = inst1_ops_in;
-    inst1_ops_out.op0PAddr = rnamet_output_inst1.prf_rs1;
-    inst1_ops_out.op1PAddr = rnamet_output_inst1.prf_rs2;
-    inst1_ops_out.dstPAddr = free_prf_1;
-    inst1_ops_out.dstPStale = rnamet_output_inst1.prf_rd_stale;
+    if(allocatable) begin
+        inst1_ops_out = inst1_ops_in;
+        inst1_ops_out.op0PAddr = rnamet_output_inst1.prf_rs1;
+        inst1_ops_out.op1PAddr = rnamet_output_inst1.prf_rs2;
+        inst1_ops_out.dstPAddr = free_prf_1;
+        inst1_ops_out.dstPStale = rnamet_output_inst1.prf_rd_stale;
+    end else begin
+        inst1_ops_out = 0;
+    end
 end
 
 `ifdef DEBUG

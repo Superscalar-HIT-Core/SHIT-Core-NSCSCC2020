@@ -151,6 +151,8 @@ module MDU(
     end
 
     always_comb begin
+        mdu_rob.id = 0;
+        wbData     = 0;
         case(state)
             idle: begin
                 wbData.wen          = `FALSE;

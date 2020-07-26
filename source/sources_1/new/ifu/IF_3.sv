@@ -168,6 +168,7 @@ module IF_3(
     end
 
     always_comb begin
+        if3_nlp.update = 0;
         if(if3_regs.inst0.valid && (if3_regs.inst0.bpdInfo.valid || (if3_regs.inst0.isJ && (!inst0Jr || (inst0Jr && if3_regs.inst0.nlpInfo.valid))))) begin
             if3_nlp.update.pc          = if3_regs.inst0.pc;
             if3_nlp.update.target      = if3_regs.inst0.predAddr;

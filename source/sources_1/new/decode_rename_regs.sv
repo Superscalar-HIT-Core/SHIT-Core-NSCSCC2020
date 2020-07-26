@@ -43,6 +43,8 @@ module decode_rename_regs(
     end
 
     always_comb begin
+        regs_rename.uOP0 = 0;
+        regs_rename.uOP1 = 0;
         if(lastIsFull) begin
             regs_rename.uOP0  = uOP2;
             regs_rename.uOP1  = uOP3;
