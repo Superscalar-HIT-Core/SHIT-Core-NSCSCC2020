@@ -149,7 +149,7 @@ endgenerate
 assign dout_0 = dout[deq0_idx];
 
 always @(posedge clk)   begin
-    if(rst) begin
+    if(rst || flush) begin
         tail <= `MDU_QUEUE_IDX_LEN'b0;
     end else if(freeze)begin
         tail <= tail - deq_req_0;

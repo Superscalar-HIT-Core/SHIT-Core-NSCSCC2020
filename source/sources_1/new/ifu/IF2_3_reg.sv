@@ -21,8 +21,14 @@ module IF2_3_reg(
     assign postPause = delayPause && !ctrl_if2_3_regs.pause;
 
     always_ff @ (posedge clk) begin
-        if(ctrl_if2_3_regs.flush || rst) begin
-            regs_if3.inst0          <= regs_if3.rescueDS ? regs_if3.inst0 : 0;
+        if(rst) begin
+            regs_if3.inst0          <= 0;
+            regs_if3.inst1          <= 0;
+        end else if(ctrl_if2_3_regs.flush && regs_if3.rescueDS) begin
+            regs_if3.inst0          <= iCache_regs.inst0;
+            regs_if3.inst1          <= 0;
+        end else if(ctrl_if2_3_regs.flush) begin
+            regs_if3.inst0          <= 0;
             regs_if3.inst1          <= 0;
         end else if(ctrl_if2_3_regs.pause && iCache_regs.overrun && !saveOverrun) begin
             regs_if3.inst0          <= regs_if3.inst0;

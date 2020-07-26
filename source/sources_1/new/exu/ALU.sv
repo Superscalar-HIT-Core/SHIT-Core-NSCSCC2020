@@ -74,7 +74,7 @@ assign logic_res =  ( uop == OR_U   || uop == ORI_U || uop == LUI_U )   ? src0 |
 assign shift_res =  ( uop == SLL_U || uop == SLLV_U ) ? src0 << src1[4:0] :
                     ( uop == SRL_U || uop == SRLV_U ) ? src0 >> src1[4:0] :
                     ( uop == SRA_U || uop == SRAV_U ) ? 
-                    ( {32{src1[31]}} << (6'd32 - {1'b0, src0[4:0]}) ) | src1 >> src0[4:0] : 32'b0;
+                    ( {32{src0[31]}} << (6'd32 - {1'b0, src1[4:0]}) ) | src0 >> src1[4:0] : 32'b0;
 
 // 算术运算结果
 wire [31:0] src1_complement;
@@ -98,9 +98,9 @@ assign move_res = src0; // HILO寄存器被重命名，无论是MF还是MT，都
 assign branch_taken =   ( uop == BEQ_U ) ? ( src0 == src1 ) :
                         ( uop == BNE_U ) ? ( src0 != src1 ) :
                         ( uop == BGEZ_U || uop == BGEZAL_U ) ? ( ~src0[31] ):
-                        ( uop == BGTZ_U || uop == BLTZAL_U ) ? ( ~src0[31] & (|src0[30:0]) ) :
+                        ( uop == BGTZ_U ) ? ( ~src0[31] & (|src0[30:0]) ) :
                         ( uop == BLEZ_U ) ? ~( ~src0[31] & (|src0[30:0]) ) :
-                        ( uop == BLTZ_U ) ? ( src0[31] ) : 
+                        ( uop == BLTZ_U || uop == BLTZAL_U ) ? ( src0[31] ) : 
                         ( uop == J_U || uop == JAL_U || uop == JR_U || uop == JALR_U ) ? 1 : 0;
 assign branch_target = ( uop == JR_U || uop == JALR_U ) ? src0 : uops.predAddr;
 
@@ -129,7 +129,23 @@ assign alu_rob.setBranchStatus = uops.valid && uops.branchType != typeNormal;
 assign alu_rob.branchAddr = branch_target;
 assign alu_rob.branchTaken = branch_taken;
 
-
+// ADEL, Break和Syscall在前面处理了
+always_comb begin
+    uops_o = uops;
+    uops_o.branchAddr = branch_target;
+    uops_o.branchTaken = branch_taken && uops.valid;
+    uops_o.causeExc = uops.causeExc | overflow;
+    uops_o.exception = uops.exception;
+    if(!uops.causeExc || overflow ) begin    // 如果之前已经有异常
+        if( uops.exception == ExcAddressErrL || 
+            uops.exception == ExcReservedInst || 
+            uops_o.exception == ExcEret ) begin      // 优先级更高的异常
+            uops_o.exception = uops.exception;
+        end else begin
+            uops_o.exception = ExcIntOverflow;
+        end
+    end
+end
 
 always_comb begin
     casex(src0)

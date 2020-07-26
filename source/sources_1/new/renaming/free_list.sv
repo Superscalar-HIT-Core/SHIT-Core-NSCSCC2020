@@ -69,7 +69,7 @@ always @(posedge clk)   begin
     end else if(recover)    begin
         free_list_1 <= committed_fl | `PRF_NUM'b1;
     end else if(pause)  begin
-        free_list_1 <= free_list2_after_free;   // 暂停时，只允许释放，不进行分配
+        free_list_1 <= free_list2_after_free | `PRF_NUM'b1;   // 暂停时，只允许释放，不进行分配
     end else begin
         free_list_1 <= free_list_5 | `PRF_NUM'b1;
     end

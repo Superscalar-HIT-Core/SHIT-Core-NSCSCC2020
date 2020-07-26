@@ -73,7 +73,7 @@ module ROB(
     // assign out0Busy = data0[head].valid && !data0[head].committed && data0[head].busy;
     // assign out1Busy = data1[head].valid && !data1[head].committed && data1[head].busy;
 
-    assign out0Good = data0[head].valid && !data0[head].committed && !data0[head].busy;
+    assign out0Good = data0[head].valid && !data0[head].committed && !data0[head].busy && ( (data1[head].isDS && !data1[head].busy) || (!data1[head].isDS) );
     assign out1Good = data1[head].valid && !data1[head].committed && !data1[head].busy && out0Done;
 
     assign out0Done = !data0[head].valid || data0[head].committed || (out0Good && rob_commit.ready && rob_commit.valid);

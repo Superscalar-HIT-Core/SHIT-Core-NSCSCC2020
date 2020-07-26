@@ -2,6 +2,10 @@
 `include "../defs.sv"
 
 module IF_3(
+    input wire              clk,
+    input wire              rst,
+
+    ICache_Regs.regs        iCache_regs,
     Regs_IF3.if3            regs_if3,
     BPD_IF3.if3             bpd_if3,
 
@@ -10,18 +14,21 @@ module IF_3(
     NLPUpdate.if3           if3_nlp,
     Ctrl.slave              ctrl_if3    // only care aboud flushReq
 );
-    logic       inst0Jr;
-    logic       inst1Jr;
-    logic       inst0J;
-    logic       inst1J;
-    logic       inst0Br;
-    logic       inst1Br;
+    logic           inst0Jr;
+    logic           inst1Jr;
+    logic           inst0J;
+    logic           inst1J;
+    logic           inst0Br;
+    logic           inst1Br;
 
-    logic       inst0NLPTaken;
-    logic       inst1NLPTaken;
+    logic           inst0NLPTaken;
+    logic           inst1NLPTaken;
 
-    logic [31:0]decodeTarget0;
-    logic [31:0]decodeTarget1;
+    logic [31:0]    decodeTarget0;
+    logic [31:0]    decodeTarget1;
+
+    logic           waitDS, lastWaitDS;
+    logic [31:0]    waitDSRedirectTarget;
 
     Predecoder pre0(
         .pc     (regs_if3.inst0.pc      ),
@@ -95,31 +102,68 @@ module IF_3(
         end else begin                          // both miss
             if3_regs.inst1.predTaken = `FALSE;
         end
-
-        if(if3_regs.inst0.predTaken && !inst0NLPTaken) begin
+        
+        ctrl_if3.pauseReq   = `FALSE;
+        ctrl_if3.flushReq   = `FALSE;
+        if3_0.redirect      = `FALSE;
+        if3_0.redirectPC    = 0;
+        if (rst || ctrl_if3.flush) begin
+            ctrl_if3.flushReq   = `FALSE;
+            if3_0.redirect      = `FALSE;
+            if3_0.redirectPC    = 0;
+        end else if(waitDS) begin
+            ctrl_if3.flushReq   = if3_regs.inst0.valid;
+            if3_0.redirect      = if3_regs.inst0.valid;
+            if3_0.redirectPC    = waitDSRedirectTarget;
+        end else if(if3_regs.inst0.predTaken && !inst0NLPTaken) begin
+            ctrl_if3.flushReq   = `TRUE;
             if3_0.redirect      = `TRUE;
             if3_0.redirectPC    = if3_regs.inst0.predAddr;
-            ctrl_if3.flushReq   = `TRUE;
-            regs_if3.rescueDS   = `FALSE;
         end else if(!if3_regs.inst0.predTaken && inst0NLPTaken) begin
+            ctrl_if3.flushReq   = `TRUE;
             if3_0.redirect      = `TRUE;
             if3_0.redirectPC    = if3_regs.inst0.pc + 8;
-            ctrl_if3.flushReq   = `TRUE;
-            regs_if3.rescueDS   = `FALSE;
-        end else if(if3_regs.inst1.predTaken && !inst1NLPTaken) begin
-            if3_0.redirect      = `TRUE;
-            if3_0.redirectPC    = if3_regs.inst1.predAddr;
-            ctrl_if3.flushReq   = `TRUE;
-            regs_if3.rescueDS   = `TRUE;
-        end else if(!if3_regs.inst1.predTaken && inst1NLPTaken) begin
-            if3_0.redirect      = `TRUE;
-            if3_0.redirectPC    = if3_regs.inst1.pc + 8;
-            ctrl_if3.flushReq   = `TRUE;
-            regs_if3.rescueDS   = `TRUE;
         end else begin
-            if3_0.redirect      = `FALSE;
+            ctrl_if3.pauseReq   = `FALSE;
             ctrl_if3.flushReq   = `FALSE;
-            regs_if3.rescueDS   = `FALSE;
+            if3_0.redirect      = `FALSE;
+            if3_0.redirectPC    = 0;
+        end
+
+        if(waitDS || lastWaitDS) begin
+            if3_regs.inst1.valid = `FALSE;
+        end
+    end
+
+    always_ff @ (posedge clk) begin
+        if(rst || ctrl_if3.flush) begin
+            waitDSRedirectTarget <= 0;
+        end else if(if3_regs.inst1.predTaken && !inst1NLPTaken) begin
+            waitDSRedirectTarget <= if3_regs.inst1.predAddr;
+        end else if(!if3_regs.inst1.predTaken && inst1NLPTaken) begin
+            waitDSRedirectTarget <= if3_regs.inst1.pc + 8;
+        end
+
+        if(rst || ctrl_if3.flush) begin
+            lastWaitDS           <= `FALSE;
+        end else begin
+            lastWaitDS           <= waitDS;
+        end
+        
+        if (rst || ctrl_if3.flush) begin
+            waitDS              <= `FALSE;
+        end else if (waitDS) begin
+            waitDS              <= ~if3_regs.inst0.valid;
+        end else if(if3_regs.inst0.predTaken && !inst0NLPTaken) begin
+            waitDS              <= `FALSE;
+        end else if(!if3_regs.inst0.predTaken && inst0NLPTaken) begin
+            waitDS              <= `FALSE;
+        end else if(if3_regs.inst1.predTaken && !inst1NLPTaken) begin
+            waitDS              <= `TRUE;
+        end else if(!if3_regs.inst1.predTaken && inst1NLPTaken) begin
+            waitDS              <= inst1J || inst1Br;
+        end else begin
+            waitDS              <= `FALSE;
         end
     end
 
