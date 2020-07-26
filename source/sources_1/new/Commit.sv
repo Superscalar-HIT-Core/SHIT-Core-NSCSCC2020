@@ -54,8 +54,8 @@ module Commit(
     logic           inst0Store;
     logic           inst1Store;
 
-    assign inst0Good        = rob_commit.valid && ~ctrl_commit.flushReq && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
-    assign inst1Good        = rob_commit.valid && ~ctrl_commit.flushReq && rob_commit.uOP1.valid && !rob_commit.uOP1.committed && !rob_commit.uOP1.busy;
+    assign inst0Good        = rob_commit.valid && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
+    assign inst1Good        = rob_commit.valid && rob_commit.uOP1.valid && !rob_commit.uOP1.committed && !rob_commit.uOP1.busy;
     assign takePredFailed   = inst0Good && rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP0.branchTaken != rob_commit.uOP0.predTaken;
     assign addrPredFailed   = inst0Good && !takePredFailed && (rob_commit.uOP0.branchAddr != rob_commit.uOP0.predAddr);
     assign target           = rob_commit.uOP0.branchTaken ? rob_commit.uOP0.branchAddr : rob_commit.uOP0.pc + 32'h8;
@@ -78,9 +78,13 @@ module Commit(
             commit_rename_valid_1 <= 0;
             commit_rename_req_0 <= 0;
             commit_rename_req_1 <= 0;
+            waitDS              <= 0;
+            lastWaitDs          <= 0;
         end else begin
-            if( takePredFailed ||   // 只有预测跳转的时候，才需要检查地址
-                (~takePredFailed && (rob_commit.uOP0.branchTaken == `TRUE) && addrPredFailed ) ) begin
+            if( !predFailed && !(lastWaitDs && !waitDS) && !causeExce &&
+                (takePredFailed ||   // 只有预测跳转的时候，才需要检查地址
+                (~takePredFailed && (rob_commit.uOP0.branchTaken == `TRUE) && addrPredFailed ))
+            ) begin
                 predFailed                      <= `TRUE;
                 waitDS                          <= rob_commit.uOP1.uOP == MDBUBBLE_U;
             end else begin
@@ -104,8 +108,8 @@ module Commit(
             isDS                                <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
                                                     rob_commit.uOP0.isDS : rob_commit.uOP1.isDS;
 
-            commit_rename_valid_0               <= inst0Good;
-            commit_rename_valid_1               <= inst1Good;
+            commit_rename_valid_0               <= inst0Good & ~ctrl_commit.flushReq;
+            commit_rename_valid_1               <= inst1Good & ~ctrl_commit.flushReq;
 
             commit_rename_req_0.committed_arf   <= rob_commit.uOP0.dstLAddr;
             commit_rename_req_0.committed_prf   <= rob_commit.uOP0.dstPAddr;
