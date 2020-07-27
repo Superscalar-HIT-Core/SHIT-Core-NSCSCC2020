@@ -46,8 +46,17 @@ module mycpu_top(
     input  wire [ 1:0]  rresp     ,
     input  wire         rlast     ,
     input  wire         rvalid    ,
-    output wire         rready    
+    output wire         rready    ,
+    output wire [31:0]  debug_wb_pc            ,
+    output wire [3:0]   debug_wb_rf_wen        ,
+    output wire [4:0]   debug_wb_rf_wnum       ,
+    output wire [31:0]  debug_wb_rf_wdata      
 );
+    // In order to pass the synthesis
+    assign debug_wb_pc       = 0;
+    assign debug_wb_rf_wen   = 0;
+    assign debug_wb_rf_wnum  = 0;
+    assign debug_wb_rf_wdata = 0;
     wire clk;
     assign clk = aclk;
     wire rst;
