@@ -54,7 +54,7 @@ module Commit(
             pendingInt <= `FALSE;
         end else if( (|int_gen)  &&   
             ( exceInfo.Status_IE == 1 ) && ( exceInfo.Status_EXL == 0 ) && 
-            ( inst0Good || inst1Good ) && ( !ctrl_rob.flush ))   begin
+            ( inst0Good || inst1Good ))   begin
             pendingInt <= 1'b1;
         end else if (causeInt) begin
             pendingInt <= `FALSE;
@@ -111,7 +111,7 @@ module Commit(
             //     causeExce <= `TRUE;
             //     exception <= ExcInterrupt;
             // end else 
-            if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) begin
+            if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF) begin
                 causeExce <= `TRUE;
                 exception <= rob_commit.uOP0.exception;
                 BadVAddr  <= rob_commit.uOP0.BadVAddr;
@@ -119,6 +119,10 @@ module Commit(
                 causeExce <= `TRUE;
                 exception <= rob_commit.uOP1.exception;
                 BadVAddr  <= rob_commit.uOP1.BadVAddr;
+            end else if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception == ExcAddressErrIF) begin
+                causeExce <= `TRUE;
+                exception <= ExcAddressErrIF;
+                BadVAddr  <= rob_commit.uOP0.branchAddr;
             end else begin
                 causeExce <= `FALSE;
             end
@@ -129,7 +133,7 @@ module Commit(
                 end else if (inst1Good) begin
                     excPC <= rob_commit.uOP1.pc;
                 end
-            end else if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && ~rob_commit.uOP0.exception == ExcAddressErrIF) begin
+            end else if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF) begin
                 excPC <= rob_commit.uOP0.pc;
             end else if (rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid) begin
                 excPC <= rob_commit.uOP1.pc;
@@ -139,8 +143,9 @@ module Commit(
                 excPC <= rob_commit.uOP0.pc;
             end
             
-            isDS                                <=  (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
-                                                    rob_commit.uOP0.isDS : rob_commit.uOP1.isDS;
+            // isDS                                <=  (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
+            //                                         rob_commit.uOP0.isDS : rob_commit.uOP1.isDS;
+            isDS                                <=  rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid && rob_commit.uOP1.isDS && !(rob_commit.uOP0.causeExc && rob_commit.uOP0.exception != ExcAddressErrIF);
 
             commit_rename_valid_0               <= inst0Good & ~ctrl_commit.flushReq & ~causeInt;
             commit_rename_valid_1               <= inst1Good & ~ctrl_commit.flushReq & ~causeInt;
