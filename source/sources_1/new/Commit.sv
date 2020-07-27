@@ -36,6 +36,7 @@ module Commit(
     logic           inst1Store;
     reg [5:0] ext_interrupt_signal;
     logic causeInt;
+    logic           pendingInt;
     always @(posedge clk)   begin
         if(rst) begin
             ext_interrupt_signal <= 0;
@@ -44,23 +45,25 @@ module Commit(
         end
     end
     // Ext Interrupt
-    wire [7:0] int_sig = {ext_interrupt_signal, exceInfo.Cause_IP_SW};
-    wire [7:0] int_mask = {exceInfo.Status_IM, exceInfo.Status_IM_SW};
-    wire [7:0] int_gen = int_sig & int_mask;
+    wire [5:0] int_sig = {ext_interrupt_signal, exceInfo.Cause_IP_SW};
+    wire [5:0] int_mask = {exceInfo.Status_IM, exceInfo.Status_IM_SW};
+    wire [5:0] int_gen = int_sig & int_mask;
+
     always_ff @(posedge clk) begin
         if(rst) begin
-            causeInt <= 1'b0;
-        end
-        else if( (|int_gen)  &&   
+            pendingInt <= `FALSE;
+        end else if( (|int_gen)  &&   
             ( exceInfo.Status_IE == 1 ) && ( exceInfo.Status_EXL == 0 ) && 
-            ( inst0Good || inst1Good ) )   begin
-            causeInt <= 1'b1;
+            ( inst0Good || inst1Good ) && ( !ctrl_rob.flush ))   begin
+            pendingInt <= 1'b1;
+        end else if (causeInt) begin
+            pendingInt <= `FALSE;
         end else begin
-            causeInt <= 1'b0;
+            pendingInt <= pendingInt;
         end
     end
 
-
+    assign causeInt = pendingInt && (inst0Good || inst1Good);
 
     assign inst0Good        = rob_commit.valid && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
     assign inst1Good        = rob_commit.valid && rob_commit.uOP1.valid && !rob_commit.uOP1.committed && !rob_commit.uOP1.busy;
@@ -81,7 +84,7 @@ module Commit(
     assign fireStore        = (inst0Store || inst1Store) && ! ctrl_commit.flushReq;
 
     always_ff @(posedge clk) begin
-        if(rst) begin
+        if(rst || causeInt) begin
             commit_rename_valid_0 <= 0;
             commit_rename_valid_1 <= 0;
             commit_rename_req_0 <= 0;
@@ -104,36 +107,43 @@ module Commit(
             lastTarget                          <= waitDS ? lastTarget : target;
 
             // 在有外部中断的情况下，所有的都被清了
-            causeExce                           <=  causeInt ? ExcInterrupt : 
-                                                    (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) || 
-                                                    (rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid) ;
-            exception                           <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
-                                                    rob_commit.uOP0.exception : rob_commit.uOP1.exception;
-            BadVAddr                             <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
-                                                    rob_commit.uOP0.BadVAddr : rob_commit.uOP1.BadVAddr;
-            // excPC                               <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
-            //                                         rob_commit.uOP0.pc : rob_commit.uOP1.pc;
-            excPC = rob_commit.uOP0.pc;
+            // if( causeInt )    begin
+            //     causeExce <= `TRUE;
+            //     exception <= ExcInterrupt;
+            // end else 
+            if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) begin
+                causeExce <= `TRUE;
+                exception <= rob_commit.uOP0.exception;
+                BadVAddr  <= rob_commit.uOP0.BadVAddr;
+            end else if (rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid) begin
+                causeExce <= `TRUE;
+                exception <= rob_commit.uOP1.exception;
+                BadVAddr  <= rob_commit.uOP1.BadVAddr;
+            end else begin
+                causeExce <= `FALSE;
+            end
+
             if(causeInt) begin
                 if( inst0Good ) begin
-                    excPC = rob_commit.uOP0.pc;
+                    excPC <= rob_commit.uOP0.pc;
                 end else if (inst1Good) begin
-                    excPC = rob_commit.uOP1.pc;
+                    excPC <= rob_commit.uOP1.pc;
                 end
-            end else if (rob_commit.uOP0.causeExc && rob_commit.uOP0.exception == ExcAddressErrIF && inst0Good && rob_commit.uOP0.valid) begin
-                excPC = rob_commit.uOP0.BadVAddr;
-            end else if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) begin
-                excPC = rob_commit.uOP0.pc;
-            end else if (rob_commit.uOP1.causeExc && rob_commit.uOP1.exception == ExcAddressErrIF && inst1Good && rob_commit.uOP1.valid) begin
-                excPC = rob_commit.uOP1.BadVAddr;
+            end else if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && ~rob_commit.uOP0.exception == ExcAddressErrIF) begin
+                excPC <= rob_commit.uOP0.pc;
+            end else if (rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid) begin
+                excPC <= rob_commit.uOP1.pc;
+            end else if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception == ExcAddressErrIF) begin
+                excPC <= rob_commit.uOP0.BadVAddr;
             end else begin
-                excPC = rob_commit.uOP1.pc;
+                excPC <= rob_commit.uOP0.pc;
             end
-            isDS                                <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
+            
+            isDS                                <=  (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
                                                     rob_commit.uOP0.isDS : rob_commit.uOP1.isDS;
 
-            commit_rename_valid_0               <= inst0Good & ~ctrl_commit.flushReq;
-            commit_rename_valid_1               <= inst1Good & ~ctrl_commit.flushReq;
+            commit_rename_valid_0               <= inst0Good & ~ctrl_commit.flushReq & ~causeInt;
+            commit_rename_valid_1               <= inst1Good & ~ctrl_commit.flushReq & ~causeInt;
 
             commit_rename_req_0.committed_arf   <= rob_commit.uOP0.dstLAddr;
             commit_rename_req_0.committed_prf   <= rob_commit.uOP0.dstPAddr;
@@ -162,7 +172,12 @@ module Commit(
         backend_if0.redirect    = `FALSE;
         backend_if0.valid       = `FALSE;
         backend_if0.redirectPC  = lastTarget;
-        if ( causeExce ) begin                  // 如果分支指令引发了异常，那么先处理异常，再重新做分支指令，其延迟槽也不能被提交
+        if ( causeInt ) begin
+            ctrl_commit.flushReq    = `TRUE;
+            backend_if0.redirect    = `TRUE;
+            backend_if0.valid       = `TRUE;
+            backend_if0.redirectPC  = 32'hBFC0_0380;
+        end else if ( causeExce ) begin                  // 如果分支指令引发了异常，那么先处理异常，再重新做分支指令，其延迟槽也不能被提交
         // TODO: 如果延迟槽引发了异常呢？
             ctrl_commit.flushReq    = `TRUE;
             backend_if0.redirect    = `TRUE;
@@ -176,11 +191,34 @@ module Commit(
         end 
     end
 
-    assign exceInfo.causeExce = causeExce;
-    assign exceInfo.exceType = ( exception == ExcEret && exceInfo.EPc[1:0] != 2'b0 ) ? ExcAddressErrIF : exception;
+    assign exceInfo.causeExce = causeExce || causeInt;
+    assign exceInfo.exceType = causeInt ? ExcInterrupt : (( exception == ExcEret && exceInfo.EPc[1:0] != 2'b0 ) ? ExcAddressErrIF : exception);
     assign exceInfo.reserved = ( exception == ExcEret && exceInfo.EPc[1:0] != 2'b0 ) ? exceInfo.EPc : BadVAddr;
-    assign exceInfo.excePC = ( exception == ExcEret && exceInfo.EPc[1:0] != 2'b0 ) ? exceInfo.EPc : excPC;
-    assign exceInfo.isDS = isDS;
+    always_comb begin
+        exceInfo.excePC = 0;
+        if (causeInt) begin
+            if(inst0Good) begin
+                exceInfo.excePC = rob_commit.uOP0.pc;          
+            end else begin
+                exceInfo.excePC = rob_commit.uOP1.pc;          
+            end
+        end else if ( exception == ExcEret && exceInfo.EPc[1:0] != 2'b0 ) begin
+            exceInfo.excePC = exceInfo.EPc;
+        end else begin
+            exceInfo.excePC = excPC;
+        end
+    end
+    // assign exceInfo.isDS = isDS;
+    always_comb begin
+        exceInfo.isDS = isDS;
+        if(causeInt && inst0Good) begin
+            exceInfo.isDS = rob_commit.uOP0.isDS;
+        end else if(causeInt && inst1Good) begin
+            exceInfo.isDS = rob_commit.uOP1.isDS;
+        end else begin
+            exceInfo.isDS = isDS;
+        end
+    end
     assign exceInfo.interrupt = ext_interrupt_signal;
 
 endmodule

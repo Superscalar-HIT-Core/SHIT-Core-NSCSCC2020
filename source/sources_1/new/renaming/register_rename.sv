@@ -19,8 +19,8 @@ free_list u_free_list(
 	.clk         (clk         ),
     .rst         (rst         ),
     .recover     (recover     ),
-    .inst_0_req  (inst0_ops_in.dstwe && inst0_ops_in.valid ),
-    .inst_1_req  (inst1_ops_in.dstwe && inst1_ops_in.valid ),
+    .inst_0_req  (inst0_ops_in.dstwe && inst0_ops_in.valid && (inst0_ops_in.dstLAddr != 6'd0)),
+    .inst_1_req  (inst1_ops_in.dstwe && inst1_ops_in.valid && (inst1_ops_in.dstLAddr != 6'd0)),
     .inst_0_prf      (free_prf_0      ),
     .inst_1_prf      (free_prf_1      ),
     .commit_valid_0     (commit_valid_0),
@@ -36,12 +36,12 @@ rename_req rename_req0, rename_req1;
 assign rename_req0.ars1 = inst0_ops_in.op0LAddr;
 assign rename_req0.ars2 = inst0_ops_in.op1LAddr;
 assign rename_req0.ard = inst0_ops_in.dstLAddr;
-assign rename_req0.wen = inst0_ops_in.dstwe;
+assign rename_req0.wen = inst0_ops_in.dstwe && (inst0_ops_in.dstLAddr != 6'd0) ;
 
 assign rename_req1.ars1 = inst1_ops_in.op0LAddr;
 assign rename_req1.ars2 = inst1_ops_in.op1LAddr;
 assign rename_req1.ard = inst1_ops_in.dstLAddr;
-assign rename_req1.wen = inst1_ops_in.dstwe;
+assign rename_req1.wen = inst1_ops_in.dstwe && (inst1_ops_in.dstLAddr != 6'd0) ;
 
 assign rnamet_input_inst0.req = rename_req0;
 assign rnamet_input_inst0.prf_rd_new = free_prf_0;
@@ -76,6 +76,7 @@ always_comb begin
         inst0_ops_out.op1PAddr = rnamet_output_inst0.prf_rs2;
         inst0_ops_out.dstPAddr = free_prf_0;
         inst0_ops_out.dstPStale = rnamet_output_inst0.prf_rd_stale;
+        inst0_ops_out.dstwe = inst0_ops_in.dstwe && (inst0_ops_in.dstLAddr != 6'd0);
     end else begin
         inst0_ops_out = 0;
     end
@@ -89,6 +90,7 @@ always_comb begin
         inst1_ops_out.op1PAddr = rnamet_output_inst1.prf_rs2;
         inst1_ops_out.dstPAddr = free_prf_1;
         inst1_ops_out.dstPStale = rnamet_output_inst1.prf_rd_stale;
+        inst1_ops_out.dstwe = inst1_ops_in.dstwe && (inst1_ops_in.dstLAddr != 6'd0);
     end else begin
         inst1_ops_out = 0;
     end
