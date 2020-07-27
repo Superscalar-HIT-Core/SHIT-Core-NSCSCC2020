@@ -140,8 +140,8 @@ module CP0(
                     ExcInterrupt:   begin
                         Cause[6:2] 		<= `Exc_INT;
                     end
-                    ExcAddressErrL: begin
-                        BadVAddr 		<= exceInfo.excePC[1:0] == 2'b0 ? exceInfo.reserved : exceInfo.excePC[1:0];
+                    ExcAddressErrL, ExcAddressErrIF: begin
+                        BadVAddr 		<= exceInfo.reserved;
                         Cause[6:2] 		<= `Exc_ADEL;
                     end
                     ExcReservedInst:    begin

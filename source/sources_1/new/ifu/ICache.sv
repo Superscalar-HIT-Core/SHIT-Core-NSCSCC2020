@@ -228,9 +228,9 @@ module ICache(
             sRunning: begin
                 if(rst) begin
                     nxtState = sReset;
-                end else if (flush && !instReq.valid) begin
+                end else if (flush && !instReq.valid && !requestSent) begin
                     nxtState = sRunning;
-                end else if(flush && instReq.valid) begin
+                end else if(flush && (instReq.valid || requestSent)) begin
                     nxtState = sRecover;
                 end else if(ctrl_iCache.pause || hit) begin
                     nxtState = sRunning;

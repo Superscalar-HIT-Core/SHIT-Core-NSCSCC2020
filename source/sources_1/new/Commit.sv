@@ -18,25 +18,6 @@ module Commit(
 
     output logic                fireStore
 );
-    reg [5:0] ext_interrupt_signal;
-    logic causeInt;
-    always @(posedge clk)   begin
-        if(rst) begin
-            ext_interrupt_signal <= 0;
-        end else begin
-            ext_interrupt_signal <= { exceInfo.Counter_Int, ext_int[4:0] };
-        end
-    end
-    // Ext Interrupt
-    always_comb begin
-        if( | ({ext_interrupt_signal, exceInfo.Cause_IP_SW} & {exceInfo.Status_IM, exceInfo.Status_IM_SW}) &&   
-            ( exceInfo.Status_IE == 1 ) && ( exceInfo.Status_EXL = 0 ) )   begin
-            causeInt = 1'b1;
-        end else begin
-            causeInt = 1'b0;
-        end
-    end
-
     logic           inst0Good;
     logic           inst1Good;
     logic           takePredFailed;
@@ -53,6 +34,33 @@ module Commit(
     logic           isDS;
     logic           inst0Store;
     logic           inst1Store;
+    reg [5:0] ext_interrupt_signal;
+    logic causeInt;
+    always @(posedge clk)   begin
+        if(rst) begin
+            ext_interrupt_signal <= 0;
+        end else begin
+            ext_interrupt_signal <= { exceInfo.Counter_Int, ext_int[4:0] };
+        end
+    end
+    // Ext Interrupt
+    wire [7:0] int_sig = {ext_interrupt_signal, exceInfo.Cause_IP_SW};
+    wire [7:0] int_mask = {exceInfo.Status_IM, exceInfo.Status_IM_SW};
+    wire [7:0] int_gen = int_sig & int_mask;
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            causeInt <= 1'b0;
+        end
+        else if( (|int_gen)  &&   
+            ( exceInfo.Status_IE == 1 ) && ( exceInfo.Status_EXL == 0 ) && 
+            ( inst0Good || inst1Good ) )   begin
+            causeInt <= 1'b1;
+        end else begin
+            causeInt <= 1'b0;
+        end
+    end
+
+
 
     assign inst0Good        = rob_commit.valid && rob_commit.uOP0.valid && !rob_commit.uOP0.committed && !rob_commit.uOP0.busy;
     assign inst1Good        = rob_commit.valid && rob_commit.uOP1.valid && !rob_commit.uOP1.committed && !rob_commit.uOP1.busy;
@@ -70,7 +78,7 @@ module Commit(
         rob_commit.uOP1.uOP == SH_U  || 
         rob_commit.uOP1.uOP == SW_U
     );
-    assign fireStore        = inst0Store || inst1Store;
+    assign fireStore        = (inst0Store || inst1Store) && ! ctrl_commit.flushReq;
 
     always_ff @(posedge clk) begin
         if(rst) begin
@@ -107,7 +115,11 @@ module Commit(
             //                                         rob_commit.uOP0.pc : rob_commit.uOP1.pc;
             excPC = rob_commit.uOP0.pc;
             if(causeInt) begin
-                excPC = rob_commit.uOP0.pc;
+                if( inst0Good ) begin
+                    excPC = rob_commit.uOP0.pc;
+                end else if (inst1Good) begin
+                    excPC = rob_commit.uOP1.pc;
+                end
             end else if (rob_commit.uOP0.causeExc && rob_commit.uOP0.exception == ExcAddressErrIF && inst0Good && rob_commit.uOP0.valid) begin
                 excPC = rob_commit.uOP0.BadVAddr;
             end else if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) begin
@@ -155,7 +167,7 @@ module Commit(
             ctrl_commit.flushReq    = `TRUE;
             backend_if0.redirect    = `TRUE;
             backend_if0.valid       = `TRUE;
-            backend_if0.redirectPC  = ( exception == ExcEret ) ? exceInfo.EPc : 32'hBFC0_0380;;
+            backend_if0.redirectPC  = ( exception == ExcEret && exceInfo.EPc[1:0] == 2'b0 ) ? exceInfo.EPc :  32'hBFC0_0380;
         end else if( (predFailed && !waitDS) || (lastWaitDs && !waitDS) ) begin
             ctrl_commit.flushReq    = `TRUE;
             backend_if0.redirect    = `TRUE;
@@ -165,9 +177,9 @@ module Commit(
     end
 
     assign exceInfo.causeExce = causeExce;
-    assign exceInfo.exceType = exception;
-    assign exceInfo.reserved = BadVAddr;
-    assign exceInfo.excePC = excPC;
+    assign exceInfo.exceType = ( exception == ExcEret && exceInfo.EPc[1:0] != 2'b0 ) ? ExcAddressErrIF : exception;
+    assign exceInfo.reserved = ( exception == ExcEret && exceInfo.EPc[1:0] != 2'b0 ) ? exceInfo.EPc : BadVAddr;
+    assign exceInfo.excePC = ( exception == ExcEret && exceInfo.EPc[1:0] != 2'b0 ) ? exceInfo.EPc : excPC;
     assign exceInfo.isDS = isDS;
     assign exceInfo.interrupt = ext_interrupt_signal;
 

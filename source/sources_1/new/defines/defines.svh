@@ -425,7 +425,7 @@ typedef struct packed {
 //     Word imm;
 //     ALUOP alu_op;
 //     logic is_ds_i; // 是否为延迟槽指令
-//     logic is_special_i;  // 是否是特殊的指令，例如CP0等等，需要单独的发射
+//     logic is_special_i;  // 是否是特殊的指令，例如0等等，需要单独的发射
 // } ALU_Inst_Ops;
 
 typedef struct packed {

@@ -40,7 +40,7 @@ module FakeLSU(
     DataResp.lsu        dataResp
 );
 
-    typedef enum { sIdle, sException, sLoadReq, sLoadResp, sSaveBlock, sSaveFire, sRecover, sReset } LsuState;
+    typedef enum { sIdle, sException, sWaitFlush, sLoadReq, sLoadResp, sSaveBlock, sSaveFire, sRecover, sReset } LsuState;
     LsuState            state, nxtState;
     UOPBundle           currentUOP;
     PRFrData            currentOprands;
@@ -163,7 +163,14 @@ module FakeLSU(
                 if(rst || ctrl_lsu.flush) begin
                     nxtState = sReset;
                 end else begin
-                    nxtState = sIdle;
+                    nxtState = sWaitFlush;
+                end
+            end
+            sWaitFlush: begin
+                if(rst || ctrl_lsu.flush) begin
+                    nxtState = sReset;
+                end else begin
+                    nxtState = sWaitFlush;
                 end
             end
             sLoadReq: begin
@@ -244,18 +251,24 @@ module FakeLSU(
             sIdle: begin
                 dataReq.valid                   = `FALSE;
                 dataResp.ready                  = `FALSE;
-                lsu_commit_reg.setFinish        = `FALSE;
                 lsu_busy                        = currentUOP.valid;
-                lsu_commit_reg.setFinish        = uOPIsSave;
+                lsu_commit_reg.setFinish        = uOPIsSave && !uOPCauseExce;
                 lsu_commit_reg.id               = currentUOP.id;
             end
             sException: begin
-                lsu_busy                        = `TRUE;
+                lsu_busy                        = `FALSE;
                 lsu_commit_reg.setFinish        = `TRUE;
                 lsu_commit_reg.id               = currentUOP.id;
                 lsu_commit_reg.setException     = `TRUE;
                 lsu_commit_reg.exceptionType    = uOPIsLoad ? ExcAddressErrL : ExcAddressErrS;
                 lsu_commit_reg.BadVAddr         = (currentOprands.rs0_data + currentUOP.imm);
+            end
+            sWaitFlush: begin
+                lsu_busy                        = `TRUE;
+                lsu_commit_reg.setFinish        = `FALSE;
+                lsu_commit_reg.setException     = `FALSE;
+                dataReq.valid                   = `FALSE;
+                dataResp.ready                  = `FALSE;
             end
             sLoadReq: begin
                 dataReq.valid                   = `TRUE;
