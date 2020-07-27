@@ -51,6 +51,7 @@ typedef struct packed {
     BPDPredInfo     bpdInfo;
     logic           predTaken;
     logic   [31:0]  predAddr;
+    logic           jBadAddr;
 } InstBundle;
 
 `endif

@@ -5,7 +5,7 @@ module mycpu_top(
     input aclk,
     input aresetn,
 
-    input ext_int,
+    input [5:0] ext_int,
 
     output wire [ 3:0]  awid      ,
     output wire [31:0]  awaddr    ,
@@ -104,6 +104,7 @@ module mycpu_top(
     CommitExce          exce_commit();
 
     CP0_TLB             cp0_tlb();
+    CP0StatusRegs       cp0StatusRegs();
 
     ICache_TLB          iCache_tlb();
 
@@ -647,6 +648,7 @@ module mycpu_top(
     );
     CP0 cp0(.*);
     Commit commit(.*);
+
 
     // synopsys translate_off
     logic sanityCheck0;

@@ -110,7 +110,7 @@ module CtrlUnitBackend(
     assign  aluIQFlush                          = flushReq_dly || ctrl_commit.flushReq;
     assign  lsuIQFlush                          = flushReq_dly || ctrl_commit.flushReq;
     assign  mduIQFlush                          = flushReq_dly || ctrl_commit.flushReq;
-    assign  backend_ctrl.flush                  = flushReq_dly || ctrl_commit.flushReq;
+    assign  backend_ctrl.flush                  = ctrl_commit.flushReq;
     assign  renameRecover                       = flushReq_dly;
     assign  backend_ctrl.pause                  = `FALSE;
 

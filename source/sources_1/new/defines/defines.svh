@@ -373,6 +373,7 @@ typedef enum bit[3:0] {
     ExcTLBErrL,
     ExcTLBErrS,
     ExcTLBModified,
+    ExcAddressErrIF,
     ExcAddressErrL,
     ExcAddressErrS,
     ExcEret
@@ -686,9 +687,10 @@ interface CP0StatusRegs;
     logic [31:0]    ePc;
     logic [31:0]    eBase;
     logic [31:0]    random;
+    logic           counterInt;
 
-    modport cp0(output count, status, cause, ePc, eBase, random);
-    modport recv(input count, status, cause, ePc, eBase, random);
+    modport cp0(output count, status, cause, ePc, eBase, random, counterInt);
+    modport recv(input count, status, cause, ePc, eBase, random, counterInt);
 endinterface //CP0Status
 
 interface CP0Exception;

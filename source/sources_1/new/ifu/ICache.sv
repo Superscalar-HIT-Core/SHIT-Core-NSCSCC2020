@@ -59,6 +59,7 @@ module ICache(
     logic           collision1;
     logic           collision2;
     logic           collision3;
+    logic           requestSent;
 
     logic  [63 :0]  valid   [3 :0];
     logic  [63 :0]  nxtValid[3 :0];
@@ -170,6 +171,18 @@ module ICache(
             age             <= nxtAge;
             inst0           <= regs_iCache.inst0;
             inst1           <= regs_iCache.inst1;
+        end
+    end
+
+    always_ff @ (posedge clk) begin
+        if(rst) begin
+            requestSent <= `FALSE;
+        end else if (state == sRunning && instReq.valid) begin
+            requestSent <= `TRUE;
+        end else if (state == sBlock || state == sRecover || state == sReset) begin
+            requestSent <= `FALSE;
+        end else begin
+            requestSent <= requestSent;
         end
     end
 
@@ -351,7 +364,7 @@ module ICache(
                     iCache_regs.inst0.valid = `FALSE;
                     iCache_regs.inst1.valid = `FALSE;
                     ctrl_iCache.pauseReq    = `TRUE;
-                    instReq.valid           = `TRUE;
+                    instReq.valid           = ~requestSent;
                     instReq.pc              = iCache_tlb.phyAddr0 & 32'hffff_fffc;
                     instResp.ready          = `TRUE;
                 end

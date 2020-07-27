@@ -11,12 +11,16 @@ module ALU(
     FU_ROB.fu   alu_rob
     );
 wire overflow;
+logic j2BadVaddr;
 
+// trigger on taken bad jump addr. If error is a ExcAddressErrIF, SET BOTH EPC AND BADVADDR TO BADVADDR
+assign j2BadVaddr = alu_rob.setBranchStatus &&  alu_rob.branchTaken && (|alu_rob.branchAddr[1:0]);
 assign alu_rob.setFinish = uops.valid;
 assign alu_rob.id = uops.id;
-assign alu_rob.setException = uops.causeExc || overflow;
+assign alu_rob.setException = uops.valid && (j2BadVaddr || (!uops.causeExc && overflow));
+assign alu_rob.exceptionType = j2BadVaddr ? ExcAddressErrIF : ExcIntOverflow;
 // 取指不对齐异常，优先级最高
-assign alu_rob.BadVAddr    = uops.pc;
+assign alu_rob.BadVAddr    = alu_rob.branchAddr;
 
 
 // Result Select
@@ -46,6 +50,7 @@ assign src1 = uops.op1re ?  ( bypass_alu0_src1_en ? bypass_alu0.wdata :
 uOP uop;
 assign uop = uops.uOP;
 // ADEL, Break和Syscall在前面处理了
+// What about JR into bad vaddr?
 always_comb begin
     uops_o = uops;
     uops_o.branchAddr = branch_target;
@@ -53,8 +58,8 @@ always_comb begin
     uops_o.causeExc = uops.causeExc | overflow;
     uops_o.exception = uops.exception;
     if(!uops.causeExc || overflow ) begin    // 如果之前已经有异常
-        if( uops.exception == ExcAddressErrL || 
-            uops.exception == ExcReservedInst || 
+        if( uops.exception == ExcAddressErrL    || 
+            uops.exception == ExcReservedInst   || 
             uops.exception == ExcEret ) begin      // 优先级更高的异常
             uops_o.exception = uops.exception;
         end else begin

@@ -106,7 +106,7 @@ module AXIInterface(
             dataReqWEn      = dataReq.write_en;
             dataReqStrobe   = dataReq.strobe;
             dataReqData     = dataReq.data;
-        end else if (rState == sRData && lastRState == sRAddr || (wState == sWDResp && lastWState == sWData)) begin
+        end else if (rState == sRAddr && lastRState == sRData || (wState == sWAddr && lastWState == sWDResp)) begin
             dataReqBusy     = `FALSE;
             dataReqWEn      = `FALSE;
         end

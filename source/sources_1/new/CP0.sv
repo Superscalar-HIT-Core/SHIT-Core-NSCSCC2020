@@ -6,7 +6,8 @@ module CP0(
     input wire          rst,
     CP0WRInterface.cp0  alu0_cp0,
     CP0_TLB.cp0         cp0_tlb,
-    CP0Exception.cp0    exceInfo
+    CP0Exception.cp0    exceInfo,
+    CP0StatusRegs.cp0   cp0StatusRegs
 );
 
 
@@ -48,40 +49,59 @@ module CP0(
     assign exceInfo.Status_IM = Status[15:10];
     // 软件中断生成
     assign exceInfo.Status_IM_SW = Status[9:8];
-    assign exceInfo.Cause_IP_SW = Status[9:8];
+    assign exceInfo.Cause_IP_SW = Cause[9:8];  // should be cause?
     assign CounterInterrupt = (Count == Compare);
     assign exceInfo.Counter_Int = CounterInterrupt;
     assign exceInfo.EPc = EPc;
+
+    assign cp0StatusRegs.count      = Count;
+    assign cp0StatusRegs.status     = Status;
+    assign cp0StatusRegs.cause      = Cause;
+    assign cp0StatusRegs.ePc        = EPc;
+    assign cp0StatusRegs.eBase      = EBase;
+    assign cp0StatusRegs.random     = Random;
+    assign cp0StatusRegs.counterInt = CounterInterrupt;
+
     always_ff @ (posedge clk) begin
         if(rst) begin
             divClk          <= `FALSE;
             Random  [31: 5] <= 27'h0;
-            Random  [ 4: 0] <= 5'b11111;
+            Random  [4 : 0] <= 5'b11111;
             EntryLo0[31:30] <= 2'b00;
             Context [31: 0] <= 32'h0;       // 0
             PageMask[31: 0] <= 32'h0;       // page mask
             Count   [31: 0] <= 32'h0;       // Count
+
             Status  [31:28] <= 4'b0001;     // Coprocesser useability
+            Status  [27:23] <= 5'h0;        // 0
             Status  [   26] <= 1'b0;        // FR
             Status  [   23] <= 1'b0;        // PX
             Status  [   22] <= 1'b1;        // Boot env
             Status  [   21] <= 1'b0;        // TS
+            Status  [20:16] <= 5'b0;        // 0
+            Status  [15: 8] <= 8'b0;        // IM7..0
+            Status  [7 : 4] <= 4'b0;        // 0
             Status  [    3] <= 1'b0;        // R0
             Status  [    2] <= 1'b1;        // ERL
             Status  [    1] <= 1'b0;        // EXL
             Status  [    0] <= 1'b0;        // IE
+
             Cause   [31: 0] <= 32'h0;       // CAUSE
+
             PRId    [23:16] <= 8'hff;       // Company ID
             PRId    [15: 8] <= 8'h00;       // Processer ID
             PRId    [ 7: 0] <= 8'h00;       // Revision
+            
             EBase   [   31] <= 1'b1;        // 1
             EBase   [   30] <= 1'b0;        // 0
             EBase   [29:12] <= 18'h0;       // Exception Base
+
             Config  [   31] <= 1'b1;        // M
             Config  [   15] <= 1'b0;        // little endian
             Config  [14:13] <= 2'b0;        // mips32
             Config  [12:10] <= 2'b0;        // Revision 1
             Config  [ 9: 7] <= 2'b1;        // Standard TLB
+
             Config1 [   31] <= 1'b0;        // M
             Config1 [30:25] <= 31;          // MMU Size - 1
             Config1 [24:22] <= 3'd1;        // ICache sets per way (64 sets)
@@ -97,11 +117,13 @@ module CP0(
             Config1 [    2] <= 1'b0;        // Code compression impl
             Config1 [    1] <= 1'b0;        // EJTAG impl
             Config1 [    0] <= 1'b0;
+
+            Compare [31: 0] <= 32'h0;       // fuck state X
         end else begin
             Cause[15:10]    <= exceInfo.interrupt; // IP7~IP2中断位
 			Random          <= Random + 1;
-            divClk <= ~divClk;
-            Count <= Count + divClk;
+            divClk          <= ~divClk;
+            Count           <= Count + divClk;
             Cause[30]       <= CounterInterrupt;            // Cause.TI 计时器中断
         end
 

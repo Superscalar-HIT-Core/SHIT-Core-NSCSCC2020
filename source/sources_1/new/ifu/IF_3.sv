@@ -65,6 +65,7 @@ module IF_3(
         if3_regs.inst0.isJ      = inst0J;
         if3_regs.inst0.isBr     = inst0Br;
         if3_regs.inst0.predAddr = inst0Jr ? if3_regs.inst0.nlpInfo.target : decodeTarget0;
+        if3_regs.inst0.jBadAddr = (inst0J && !inst0Jr) && |decodeTarget0[1:0]; // only handle j here
         
         if3_regs.inst1.pc       = regs_if3.inst1.pc;
         if3_regs.inst1.inst     = regs_if3.inst1.inst;
@@ -74,6 +75,7 @@ module IF_3(
         if3_regs.inst1.isJ      = inst1J;
         if3_regs.inst1.isBr     = inst1Br;
         if3_regs.inst1.predAddr = inst1Jr ? if3_regs.inst1.nlpInfo.target : decodeTarget1;
+        if3_regs.inst0.jBadAddr = (inst1J && !inst1Jr) && |decodeTarget1[1:0];
 
         if(!if3_regs.inst0.valid) begin                  // invalid inst
             if3_regs.inst0.predTaken = `FALSE;

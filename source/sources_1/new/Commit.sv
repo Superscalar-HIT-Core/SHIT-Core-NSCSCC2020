@@ -48,7 +48,7 @@ module Commit(
     logic [31:0]    lastTarget;
     logic           causeExce;
     ExceptionType   exception;
-    logic [19:0]    BadVAddr;
+    logic [31:0]    BadVAddr;
     Word            excPC;
     logic           isDS;
     logic           inst0Store;
@@ -100,11 +100,23 @@ module Commit(
                                                     (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) || 
                                                     (rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid) ;
             exception                           <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
-                                                    rob_commit.uOP0.exception : rob_commit.uOP0.exception;
+                                                    rob_commit.uOP0.exception : rob_commit.uOP1.exception;
             BadVAddr                             <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
                                                     rob_commit.uOP0.BadVAddr : rob_commit.uOP1.BadVAddr;
-            excPC                               <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
-                                                    rob_commit.uOP0.pc : rob_commit.uOP1.pc;
+            // excPC                               <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
+            //                                         rob_commit.uOP0.pc : rob_commit.uOP1.pc;
+            excPC = rob_commit.uOP0.pc;
+            if(causeInt) begin
+                excPC = rob_commit.uOP0.pc;
+            end else if (rob_commit.uOP0.causeExc && rob_commit.uOP0.exception == ExcAddressErrIF && inst0Good && rob_commit.uOP0.valid) begin
+                excPC = rob_commit.uOP0.BadVAddr;
+            end else if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) begin
+                excPC = rob_commit.uOP0.pc;
+            end else if (rob_commit.uOP1.causeExc && rob_commit.uOP1.exception == ExcAddressErrIF && inst1Good && rob_commit.uOP1.valid) begin
+                excPC = rob_commit.uOP1.BadVAddr;
+            end else begin
+                excPC = rob_commit.uOP1.pc;
+            end
             isDS                                <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
                                                     rob_commit.uOP0.isDS : rob_commit.uOP1.isDS;
 

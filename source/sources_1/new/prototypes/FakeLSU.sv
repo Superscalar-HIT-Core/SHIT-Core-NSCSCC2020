@@ -40,7 +40,7 @@ module FakeLSU(
     DataResp.lsu        dataResp
 );
 
-    typedef enum { sIdle, sLoadReq, sLoadResp, sSaveBlock, sSaveFire, sRecover, sReset } LsuState;
+    typedef enum { sIdle, sException, sLoadReq, sLoadResp, sSaveBlock, sSaveFire, sRecover, sReset } LsuState;
     LsuState            state, nxtState;
     UOPBundle           currentUOP;
     PRFrData            currentOprands;
@@ -49,6 +49,8 @@ module FakeLSU(
     PRFrData            lastOprands;
     logic               uOPIsLoad;
     logic               uOPIsSave;
+    logic               uOPCauseExce;
+    logic               flushInStore;
 
     logic       [ 7:0]  bytes [3:0];
     logic       [15:0]  hws   [1:0];
@@ -75,6 +77,17 @@ module FakeLSU(
         currentUOP.uOP == SWR_U
     );
 
+    always_comb begin
+        uOPCauseExce = `FALSE;
+        if(currentUOP.valid) begin
+            case(currentUOP.uOP)
+                LW_U, SW_U        : uOPCauseExce = |currentLoadAddress[1:0];
+                LH_U, LHU_U, SH_U : uOPCauseExce =  currentLoadAddress[ 0 ];
+                default           : uOPCauseExce = `FALSE;
+            endcase
+        end
+    end
+
     assign bytes[0] = dataResp.data[ 7: 0];
     assign bytes[1] = dataResp.data[15: 8];
     assign bytes[2] = dataResp.data[23:16];
@@ -93,20 +106,41 @@ module FakeLSU(
         end
     end
 
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            state           <= sReset;
+        end else begin
+            state           <= nxtState;
+        end
+    end
+
     always_ff @ (posedge clk) begin
         if(rst) begin
             lastUOP         <= 0;
             lastOprands     <= 0;
-            state           <= sReset;
+        end else if (ctrl_lsu.flush && state == sSaveFire && !flushInStore) begin
+            lastUOP         <= uOP;
+            lastOprands     <= oprands;
         end else begin
-            lastUOP         <= state != sIdle ? lastUOP : uOP;
-            lastOprands     <= state != sIdle ? lastOprands : oprands;
-            state           <= nxtState;
+            lastUOP         <= lastUOP;
+            lastOprands     <= lastOprands;
+        end
+    end
+
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            flushInStore    <= `FALSE;
+        end else if (dataReq.ready) begin
+            flushInStore    <= `FALSE;
+        end else if (ctrl_lsu.flush && state == sSaveFire && !dataReq.ready) begin
+            flushInStore    <= `TRUE;
+        end else begin
+            flushInStore    <= flushInStore;
         end
     end
     
-    assign currentUOP      =  uOP;
-    assign currentOprands  =  oprands;
+    assign currentUOP      = flushInStore ? lastUOP : uOP;
+    assign currentOprands  = flushInStore ? lastOprands : oprands;
 
     always_ff @ (posedge clk) committed <= (state == sIdle && uOPIsSave) ? `FALSE : `TRUE;
 
@@ -115,10 +149,19 @@ module FakeLSU(
             sIdle: begin
                 if(rst || ctrl_lsu.flush) begin
                     nxtState = sReset;
+                end else if(uOPCauseExce) begin
+                    nxtState = sException;
                 end else if(uOPIsLoad) begin
                     nxtState = sLoadReq;
                 end else if (uOPIsSave) begin
                     nxtState = sSaveBlock;
+                end else begin
+                    nxtState = sIdle;
+                end
+            end
+            sException: begin
+                if(rst || ctrl_lsu.flush) begin
+                    nxtState = sReset;
                 end else begin
                     nxtState = sIdle;
                 end
@@ -153,7 +196,7 @@ module FakeLSU(
                 end
             end
             sSaveFire: begin
-                if(rst || ctrl_lsu.flush) begin
+                if(rst) begin   // definitive
                     nxtState = sReset;
                 end else if (dataReq.ready) begin
                     nxtState = sIdle;
@@ -184,16 +227,19 @@ module FakeLSU(
     end
 
     always_comb begin
-        dataReq.data                = 0;
-        dataReq.strobe              = 0;
-        dataReq.write_en            = 0;
-        dataReq.valid               = `FALSE;
-        dataResp.ready              = `FALSE;
-        lsu_commit_reg.setFinish    = `FALSE;
-        lsu_commit_reg.id           = 0;
-        wbData                      = 0;
-        reqAddrRaw                  = 0;
-        lsu_busy                    = 0;
+        dataReq.data                    = 0;
+        dataReq.strobe                  = 0;
+        dataReq.write_en                = 0;
+        dataReq.valid                   = `FALSE;
+        dataResp.ready                  = `FALSE;
+        lsu_commit_reg.setFinish        = `FALSE;
+        lsu_commit_reg.id               = 0;
+        lsu_commit_reg.setException     = `FALSE;
+        lsu_commit_reg.exceptionType    = ExcAddressErrL;
+        lsu_commit_reg.BadVAddr         = 0;
+        wbData                          = 0;
+        reqAddrRaw                      = 0;
+        lsu_busy                        = 0;
         case(state)
             sIdle: begin
                 dataReq.valid                   = `FALSE;
@@ -202,6 +248,14 @@ module FakeLSU(
                 lsu_busy                        = currentUOP.valid;
                 lsu_commit_reg.setFinish        = uOPIsSave;
                 lsu_commit_reg.id               = currentUOP.id;
+            end
+            sException: begin
+                lsu_busy                        = `TRUE;
+                lsu_commit_reg.setFinish        = `TRUE;
+                lsu_commit_reg.id               = currentUOP.id;
+                lsu_commit_reg.setException     = `TRUE;
+                lsu_commit_reg.exceptionType    = uOPIsLoad ? ExcAddressErrL : ExcAddressErrS;
+                lsu_commit_reg.BadVAddr         = (currentOprands.rs0_data + currentUOP.imm[15:0]);
             end
             sLoadReq: begin
                 dataReq.valid                   = `TRUE;
@@ -242,13 +296,28 @@ module FakeLSU(
                 case (currentUOP.uOP)
                     SB_U :  begin
                         case (dataReq.addr[1:0])
-                            2'b00: dataReq.strobe = 4'b0001;
-                            2'b01: dataReq.strobe = 4'b0010;
-                            2'b10: dataReq.strobe = 4'b0100;
-                            2'b11: dataReq.strobe = 4'b1000;
+                            2'b00: begin
+                                dataReq.strobe = 4'b0001;
+                                dataReq.data   = currentOprands.rs1_data << 0;
+                            end
+                            2'b01: begin
+                                dataReq.strobe = 4'b0010;
+                                dataReq.data   = currentOprands.rs1_data << 8;
+                            end
+                            2'b10: begin
+                                dataReq.strobe = 4'b0100;
+                                dataReq.data   = currentOprands.rs1_data << 16;
+                            end
+                            2'b11: begin
+                                dataReq.strobe = 4'b1000;
+                                dataReq.data   = currentOprands.rs1_data << 24;
+                            end
                         endcase
                     end
-                    SH_U :  dataReq.strobe = dataReq.addr[1] ? 4'b1100 : 4'b0011;
+                    SH_U :  begin
+                        dataReq.strobe = dataReq.addr[1] ? 4'b1100 : 4'b0011;
+                        dataReq.data   = dataReq.addr[1] ? currentOprands.rs1_data << 16 : currentOprands.rs1_data;
+                    end
                     SW_U :  dataReq.strobe = 4'b1111;
                 endcase
             end

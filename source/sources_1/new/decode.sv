@@ -607,7 +607,7 @@ module decode(
                     uOP0.dstwe      = `FALSE;
                     uOP0.causeExc   = `TRUE;
                     uOP0.exception  = ExcSysCall;
-                    uOP0.BadVAddr = 0;
+                    uOP0.BadVAddr   = 0;
                 end
                 `BREAK: begin
                     uOP0.uOP        = BREAK_U;
@@ -618,7 +618,7 @@ module decode(
                     uOP0.dstwe      = `FALSE;
                     uOP0.causeExc   = `TRUE;
                     uOP0.exception  = ExcBreak;
-                    uOP0.BadVAddr = 0;
+                    uOP0.BadVAddr   = 0;
                 end
                 `LB: begin
                     uOP0.uOP        = LB_U;
@@ -793,6 +793,12 @@ module decode(
                     uOP0.valid      = `FALSE;
                 end
             endcase
+            // inst fetch bad vaddr, high priority
+            if(inst.jBadAddr) begin
+                uOP0.causeExc       = `TRUE;
+                uOP0.exception      = ExcAddressErrIF;
+                uOP0.BadVAddr       = inst.predAddr;    // wont trigger on Jr, only when predecode get wrong addr
+            end
         end else begin
             uOP0.valid      = `FALSE;
             uOP1.valid      = `FALSE;
