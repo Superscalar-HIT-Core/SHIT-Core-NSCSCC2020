@@ -59,7 +59,7 @@ module FakeLSU(
 
     logic [31:0] reqAddrRaw;
 
-    assign currentLoadAddress = currentOprands.rs0_data + currentUOP.imm[15:0];
+    assign currentLoadAddress = currentOprands.rs0_data + currentUOP.imm;
 
     assign uOPIsLoad = currentUOP.valid && (
         currentUOP.uOP == LB_U  || 
@@ -255,11 +255,11 @@ module FakeLSU(
                 lsu_commit_reg.id               = currentUOP.id;
                 lsu_commit_reg.setException     = `TRUE;
                 lsu_commit_reg.exceptionType    = uOPIsLoad ? ExcAddressErrL : ExcAddressErrS;
-                lsu_commit_reg.BadVAddr         = (currentOprands.rs0_data + currentUOP.imm[15:0]);
+                lsu_commit_reg.BadVAddr         = (currentOprands.rs0_data + currentUOP.imm);
             end
             sLoadReq: begin
                 dataReq.valid                   = `TRUE;
-                reqAddrRaw                      = (currentOprands.rs0_data + currentUOP.imm[15:0]) & 32'hfffffffc;
+                reqAddrRaw                      = (currentOprands.rs0_data + currentUOP.imm) & 32'hfffffffc;
                 dataReq.write_en                = `FALSE;
                 dataResp.ready                  = `FALSE;
                 lsu_busy                        = `TRUE;
@@ -289,7 +289,7 @@ module FakeLSU(
             sSaveFire: begin
                 lsu_busy                        = ~dataReq.ready;
                 dataReq.valid                   = `TRUE;
-                reqAddrRaw                      = currentOprands.rs0_data + currentUOP.imm[15:0];
+                reqAddrRaw                      = currentOprands.rs0_data + currentUOP.imm;
                 dataReq.data                    = currentOprands.rs1_data;
                 dataReq.write_en                = `TRUE;
                 wbData.wen                      = `FALSE;
