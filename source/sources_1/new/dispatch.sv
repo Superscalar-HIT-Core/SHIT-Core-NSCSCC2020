@@ -103,7 +103,7 @@ always_comb begin   // 在此处完成reorder
         end
         WR_ROB_SLOT0:     begin
             pause_req_cp0 = 1;
-            inst_0_ops_reordered = inst_0_ops;
+            inst_0_ops_reordered = inst_0_ops.valid ? inst_0_ops : inst_1_ops;
             inst_1_ops_reordered = 0;
         end
         WAIT_ROB_SLOT1:   begin

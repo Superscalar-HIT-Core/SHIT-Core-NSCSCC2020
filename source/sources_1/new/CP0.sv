@@ -47,6 +47,7 @@ module CP0(
     assign exceInfo.Status_IE = Status[0];
     assign exceInfo.Status_EXL = Status[1];
     assign exceInfo.Status_IM = Status[15:10];
+    // assign exceInfo.Status_BEV = Status[22];
     // 软件中断生成
     assign exceInfo.Status_IM_SW = Status[9:8];
     assign exceInfo.Cause_IP_SW = Cause[9:8];  // should be cause?
@@ -76,7 +77,7 @@ module CP0(
             Status  [27:23] <= 5'h0;        // 0
             Status  [   26] <= 1'b0;        // FR
             Status  [   23] <= 1'b0;        // PX
-            Status  [   22] <= 1'b1;        // Boot env
+            Status  [   22] <= 1'b1;        // Boot env BEV = 1, TODO: Write enable
             Status  [   21] <= 1'b0;        // TS
             Status  [20:16] <= 5'b0;        // 0
             Status  [15: 8] <= 8'b0;        // IM7..0
