@@ -159,7 +159,7 @@ module Commit(
             commit_rename_req_1.stale_prf       <= rob_commit.uOP1.dstPStale;
 
             // 如果指令0造成异常，则指令1也不能提交
-            commit_rename_req_0.wr_reg_commit   <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 0 : rob_commit.uOP0.dstwe;
+            commit_rename_req_0.wr_reg_commit   <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF) ? 0 : rob_commit.uOP0.dstwe;
             commit_rename_req_1.wr_reg_commit   <=  causeInt || ( (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) || 
                                                     (rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid) ) ?  
                                                     0 : rob_commit.uOP1.dstwe;
