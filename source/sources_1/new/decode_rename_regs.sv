@@ -54,7 +54,7 @@ module decode_rename_regs(
                 regs_rename.uOP1 = uOP1;
             end else begin
                 regs_rename.uOP1.uOP        = MDBUBBLE_U;
-                regs_rename.uOP1.isDS       = uOP2.isDS;
+                // regs_rename.uOP1.isDS       = uOP2.isDS;
                 regs_rename.uOP1.pc         = uOP2.pc;
                 regs_rename.uOP1.isPriv     = `FALSE;
                 regs_rename.uOP1.branchType = typeNormal;

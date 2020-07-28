@@ -157,7 +157,11 @@ module Commit(
             
             // isDS                                <=  (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) ? 
             //                                         rob_commit.uOP0.isDS : rob_commit.uOP1.isDS;
-            isDS                                <=  rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid && rob_commit.uOP1.isDS && !(rob_commit.uOP0.causeExc && rob_commit.uOP0.exception != ExcAddressErrIF);
+            isDS                                <=  rob_commit.uOP1.causeExc &&
+                                                    inst1Good &&
+                                                    rob_commit.uOP1.valid &&
+                                                    (rob_commit.uOP1.isDS || (inst0Good && rob_commit.uOP0.branch != typeNormal && rob_commit.uOP1.uOP == MDBUBBLE_U)) &&
+                                                    !(rob_commit.uOP0.causeExc && rob_commit.uOP0.exception != ExcAddressErrIF);
 
             commit_rename_valid_0               <= inst0Good & ~ctrl_commit.flushReq & ~causeInt;
             commit_rename_valid_1               <= inst1Good & ~ctrl_commit.flushReq & ~causeInt;
