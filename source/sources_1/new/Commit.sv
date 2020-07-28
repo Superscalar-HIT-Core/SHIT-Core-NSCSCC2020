@@ -123,7 +123,9 @@ module Commit(
             //     causeExce <= `TRUE;
             //     exception <= ExcInterrupt;
             // end else 
-            if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF) begin
+            if (backend_if0.redirect) begin
+                causeExce <= `FALSE;
+            end else if (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF) begin
                 causeExce <= `TRUE;
                 exception <= rob_commit.uOP0.exception;
                 BadVAddr  <= rob_commit.uOP0.BadVAddr;
@@ -160,7 +162,7 @@ module Commit(
             isDS                                <=  rob_commit.uOP1.causeExc &&
                                                     inst1Good &&
                                                     rob_commit.uOP1.valid &&
-                                                    (rob_commit.uOP1.isDS || (inst0Good && rob_commit.uOP0.branch != typeNormal && rob_commit.uOP1.uOP == MDBUBBLE_U)) &&
+                                                    (rob_commit.uOP1.isDS || (inst0Good && rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP1.uOP == MDBUBBLE_U)) &&
                                                     !(rob_commit.uOP0.causeExc && rob_commit.uOP0.exception != ExcAddressErrIF);
 
             commit_rename_valid_0               <= inst0Good & ~ctrl_commit.flushReq & ~causeInt;
