@@ -73,7 +73,7 @@ module CP0(
             PageMask[31: 0] <= 32'h0;       // page mask
             Count   [31: 0] <= 32'h0;       // Count
 
-            Status  [31:28] <= 4'b0001;     // Coprocesser useability
+            Status  [31:28] <= 4'b0000;     // Coprocesser useability
             Status  [27:23] <= 5'h0;        // 0
             Status  [   26] <= 1'b0;        // FR
             Status  [   23] <= 1'b0;        // PX
@@ -83,7 +83,7 @@ module CP0(
             Status  [15: 8] <= 8'b0;        // IM7..0
             Status  [7 : 4] <= 4'b0;        // 0
             Status  [    3] <= 1'b0;        // R0
-            Status  [    2] <= 1'b1;        // ERL
+            Status  [    2] <= 1'b0;        // ERL
             Status  [    1] <= 1'b0;        // EXL
             Status  [    0] <= 1'b0;        // IE
 
