@@ -230,7 +230,7 @@ module ICache(
                     nxtState = sReset;
                 end else if (flush && !instReq.valid && !requestSent) begin
                     nxtState = sRunning;
-                end else if(flush && (instReq.valid || requestSent)) begin
+                end else if(flush && (instReq.valid || requestSent) && !instResp.valid) begin
                     nxtState = sRecover;
                 end else if(hit) begin
                     nxtState = sRunning;
