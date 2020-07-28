@@ -707,8 +707,8 @@ interface CP0Exception;
     logic[1:0]    Status_IM_SW;
     logic[1:0]    Cause_IP_SW;
     Word          EPc;
-    modport cp0(input causeExce, exceType, excePC, isDS, interrupt, output reserved, EPc, Status_IE, Status_EXL, Status_IM, Status_IM_SW, Cause_IP_SW, Counter_Int);
-    modport exce(output causeExce, exceType, excePC, isDS, interrupt, input reserved, EPc, Status_IE, Status_EXL, Status_IM, Status_IM_SW, Cause_IP_SW, Counter_Int);
+    modport cp0(input causeExce, exceType, excePC, isDS, interrupt, reserved, output EPc, Status_IE, Status_EXL, Status_IM, Status_IM_SW, Cause_IP_SW, Counter_Int);
+    modport exce(output causeExce, exceType, excePC, isDS, interrupt,  reserved, input EPc, Status_IE, Status_EXL, Status_IM, Status_IM_SW, Cause_IP_SW, Counter_Int);
 endinterface //CP0 ----- Exception
 
 interface CommitExce;
