@@ -81,7 +81,15 @@ module Commit(
         rob_commit.uOP1.uOP == SH_U  || 
         rob_commit.uOP1.uOP == SW_U
     );
-    assign fireStore        = (inst0Store || inst1Store) && ! ctrl_commit.flushReq;
+    always_comb begin
+        if(inst0Store) begin
+            fireStore = `TRUE;
+        end else if(inst1Store && !causeInt && !(rob_commit.uOP0.causeExc && inst0Good)) begin
+            fireStore = `TRUE;
+        end else begin
+            fireStore = `FALSE;
+        end
+    end 
 
     always_ff @(posedge clk) begin
         if(rst || causeInt) begin
