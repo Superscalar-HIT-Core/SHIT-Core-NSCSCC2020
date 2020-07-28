@@ -135,7 +135,9 @@ module CP0(
             end else if (!Status[1]) begin
                 Status[1] <= 1'b1;
                 Cause[31] <= exceInfo.isDS;
-                EPc <= exceInfo.isDS ? ( exceInfo.excePC - 4 ) : exceInfo.excePC;
+                // EPc <= exceInfo.isDS ? ( exceInfo.excePC - 4 ) : exceInfo.excePC;
+                if (exceInfo.isDS)  EPc <= exceInfo.excePC - 4;
+                else                EPc <= exceInfo.excePC;
                 priority case(exceInfo.exceType)
                     ExcInterrupt:   begin
                         Cause[6:2] 		<= `Exc_INT;

@@ -100,11 +100,15 @@ module Commit(
                 waitDS                          <= rob_commit.uOP1.uOP == MDBUBBLE_U;
             end else begin
                 predFailed                      <= `FALSE;
-                waitDS                          <= inst1Good ? `FALSE : waitDS;
+                // waitDS                          <= inst1Good ? `FALSE : waitDS;
+                if (inst1Good)  waitDS <= `FALSE;
+                else            waitDS <= waitDS;
             end
 
             lastWaitDs                          <= waitDS;
-            lastTarget                          <= waitDS ? lastTarget : target;
+            // lastTarget                          <= waitDS ? lastTarget : target;
+            if(waitDS) lastTarget <= lastTarget;
+            else       lastTarget <= target;
 
             // 在有外部中断的情况下，所有的都被清了
             // if( causeInt )    begin
@@ -159,10 +163,22 @@ module Commit(
             commit_rename_req_1.stale_prf       <= rob_commit.uOP1.dstPStale;
 
             // 如果指令0造成异常，则指令1也不能提交
-            commit_rename_req_0.wr_reg_commit   <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF) ? 0 : rob_commit.uOP0.dstwe;
-            commit_rename_req_1.wr_reg_commit   <=  causeInt || ( (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) || 
-                                                    (rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid) ) ?  
-                                                    0 : rob_commit.uOP1.dstwe;
+            // commit_rename_req_0.wr_reg_commit   <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF) ? 0 : rob_commit.uOP0.dstwe;
+            if (causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF)) begin
+                commit_rename_req_0.wr_reg_commit <= 0;
+            end else begin
+                commit_rename_req_0.wr_reg_commit <= rob_commit.uOP0.dstwe;
+            end
+            
+            // commit_rename_req_1.wr_reg_commit   <=  causeInt || ( (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) || 
+            //                                         (rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid) ) ?  
+            //                                         0 : rob_commit.uOP1.dstwe;
+            if(causeInt || ((rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid) || 
+                            (rob_commit.uOP1.causeExc && inst1Good && rob_commit.uOP1.valid) )) begin
+                commit_rename_req_1.wr_reg_commit <= 0;
+            end else begin
+                commit_rename_req_1.wr_reg_commit <= rob_commit.uOP1.dstwe;
+            end
 
             backend_nlp.update.valid            <= inst0Good && rob_commit.uOP0.branchType != typeNormal;
             backend_nlp.update.pc               <= rob_commit.uOP0.pc;
