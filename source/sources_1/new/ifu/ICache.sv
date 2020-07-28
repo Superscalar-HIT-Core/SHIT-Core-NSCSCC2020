@@ -232,7 +232,7 @@ module ICache(
                     nxtState = sRunning;
                 end else if(flush && (instReq.valid || requestSent)) begin
                     nxtState = sRecover;
-                end else if(ctrl_iCache.pause || hit) begin
+                end else if(hit) begin
                     nxtState = sRunning;
                 end else begin
                     nxtState = sBlock;
