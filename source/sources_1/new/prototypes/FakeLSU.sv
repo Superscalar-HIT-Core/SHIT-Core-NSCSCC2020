@@ -185,7 +185,7 @@ module FakeLSU(
             sLoadResp: begin
                 if(rst) begin
                     nxtState = sReset;
-                end else if(ctrl_lsu.flush) begin
+                end else if(ctrl_lsu.flush && !dataResp.valid) begin
                     nxtState = sRecover;
                 end else if (dataResp.valid) begin
                     nxtState = sIdle;
@@ -271,7 +271,7 @@ module FakeLSU(
                 dataResp.ready                  = `FALSE;
             end
             sLoadReq: begin
-                dataReq.valid                   = `TRUE;
+                dataReq.valid                   = ~ctrl_lsu.flush;
                 reqAddrRaw                      = (currentOprands.rs0_data + currentUOP.imm) & 32'hfffffffc;
                 dataReq.write_en                = `FALSE;
                 dataResp.ready                  = `FALSE;
