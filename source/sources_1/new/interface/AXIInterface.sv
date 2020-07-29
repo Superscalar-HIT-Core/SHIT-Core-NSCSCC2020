@@ -33,11 +33,13 @@ module AXIInterface(
     logic [31:0]    dataReqAddr;
     logic [31:0]    dataReqData;
     logic           dataReqWEn;
-    logic [3:0]     dataReqStrobe;
+    logic [3 :0]    dataReqStrobe;
+    logic [2 :0]    dataReqSize;
     logic [31:0]    lastDataReqAddr;
     logic [31:0]    lastDataReqData;
     logic           lastDataReqWEn;
-    logic [3:0]     lastDataReqStrobe;
+    logic [3 :0]    lastDataReqStrobe;
+    logic [2 :0]    lastDataReqSize;
 
     logic           dCacheReqBusy;
     logic [31:0]    dCacheReqAddr;
@@ -96,6 +98,7 @@ module AXIInterface(
         dataReqAddr         = lastDataReqAddr;
         dataReqData         = lastDataReqData;
         dataReqStrobe       = lastDataReqStrobe;
+        dataReqSize         = lastDataReqSize;
         dataReqWEn          = lastDataReqWEn;
         if(rst) begin
             dataReqBusy     = `FALSE;
@@ -106,6 +109,7 @@ module AXIInterface(
             dataReqWEn      = dataReq.write_en;
             dataReqStrobe   = dataReq.strobe;
             dataReqData     = dataReq.data;
+            dataReqSize     = dataReq.size;
         end else if (rState == sRAddr && lastRState == sRData || (wState == sWAddr && lastWState == sWDResp)) begin
             dataReqBusy     = `FALSE;
             dataReqWEn      = `FALSE;
@@ -142,6 +146,7 @@ module AXIInterface(
         lastDataReqData     <= dataReqData;
         lastDataReqStrobe   <= dataReqStrobe;
         lastDataReqWEn      <= dataReqWEn;
+        lastDataReqSize     <= dataReqSize;
 
         lastDCacheBusy      <= dCacheReqBusy;
         lastDCacheReqAddr   <= dCacheReqAddr;
@@ -340,7 +345,7 @@ module AXIInterface(
                     axiReadAddr.id      = 4'h1;
                     axiReadAddr.address = dataReqAddr;
                     axiReadAddr.length  = 4'b0000;  // no burst
-                    axiReadAddr.size    = 3'b010;
+                    axiReadAddr.size    = dataReqSize;
                     axiReadAddr.burst   = 2'b10;
                 end else if(instReqBusy) begin
                     axiReadAddr.id      = 4'h0;
@@ -421,7 +426,7 @@ module AXIInterface(
                     axiWriteAddr.id         = 4'h1;
                     axiWriteAddr.address    = dataReqAddr;
                     axiWriteAddr.length     = 4'b0000;
-                    axiWriteAddr.size       = 3'b010;
+                    axiWriteAddr.size       = dataReqSize;
                     axiWriteAddr.burst      = 2'b01;
                 end
 

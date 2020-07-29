@@ -784,6 +784,15 @@ interface MDUTestInterface_MUL;
     endtask //automatic
 endinterface //MDUTestInterface_MUL
 
+interface UncachedLoadInfo;
+    UOPBundle   head0;
+    UOPBundle   head1;
+    logic       isEmpty;
+
+    modport rob(output head0, head1, isEmpty);
+    modport lsu(input head0, head1, isEmpty);
+endinterface
+
 interface MDUTestInterface_DIV;
     wire         clk;
     UOPBundle    uopHi;

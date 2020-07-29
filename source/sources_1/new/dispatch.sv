@@ -176,7 +176,7 @@ assign inst1_rdy.prs2_rdy = ~(inst1_r1_ren);
 assign dispatch_inst0_wnum = inst_0_ops_reordered.dstPAddr;
 assign dispatch_inst1_wnum = inst_1_ops_reordered.dstPAddr;
 assign dispatch_inst0_wen = inst_0_ops_reordered.dstwe && inst_0_ops_reordered.valid;
-assign dispatch_inst1_wen = inst_1_ops_reordered.dstwe && inst_0_ops_reordered.valid;
+assign dispatch_inst1_wen = inst_1_ops_reordered.dstwe && inst_1_ops_reordered.valid;
 
 
 

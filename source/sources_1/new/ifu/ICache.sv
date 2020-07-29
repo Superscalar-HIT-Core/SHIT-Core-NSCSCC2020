@@ -76,6 +76,8 @@ module ICache(
     logic  [127:0]  hitLine;
     logic  [31 :0]  hitInsts[3 :0];
 
+    logic           instValid;
+
     ICacheState     state, nxtState;
 
     tag_ram tag0 (
@@ -155,8 +157,10 @@ module ICache(
         collision2          <= tag2IO.address != compInputPC[9:4];
         collision3          <= tag3IO.address != compInputPC[9:4];
         if(rst) begin
-            for (integer i = 0; i < 3; i++) begin
+            for (integer i = 0; i < 4; i++) begin
                 valid[i]    <= 0;
+            end
+            for (integer i = 0; i < 64; i++) begin
                 age  [i]    <= 0;
             end
             inst0           <= 0;
@@ -183,6 +187,16 @@ module ICache(
             requestSent <= `FALSE;
         end else begin
             requestSent <= requestSent;
+        end
+    end
+
+    always_ff @(posedge clk) begin
+        if(rst || ctrl_iCache.flush) begin
+            instValid <= `FALSE;
+        end else if (!ctrl_iCache.pause) begin
+            instValid <= `TRUE;
+        end else begin
+            instValid <= `FALSE;
         end
     end
 
@@ -336,11 +350,11 @@ module ICache(
         case(state)
             sRunning: begin
                 if(hit) begin
-                    iCache_regs.inst0.valid = ~PCReg[2] && !flush;
+                    iCache_regs.inst0.valid = ~PCReg[2] && !flush && (instValid || !ctrl_iCache.pause);
                     iCache_regs.inst0.inst  = hitInsts[{PCReg[3], 1'b0}];
                     iCache_regs.inst0.pc    = PCReg & 32'hffff_fffc;
 
-                    iCache_regs.inst1.valid = !regs_iCache.onlyGetDS && !flush;
+                    iCache_regs.inst1.valid = !regs_iCache.onlyGetDS && !flush && (instValid || !ctrl_iCache.pause);
                     iCache_regs.inst1.inst  = hitInsts[{PCReg[3], 1'b1}];
                     iCache_regs.inst1.pc    = PCReg | 32'h0000_0004;
                     ctrl_iCache.pauseReq    = `FALSE;

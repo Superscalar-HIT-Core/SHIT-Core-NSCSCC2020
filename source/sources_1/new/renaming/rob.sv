@@ -2,17 +2,18 @@
 `timescale 1ns / 1ps
 
 module ROB(
-    input wire          clk,
-    input wire          rst,
-    
-    Ctrl.slave          ctrl_rob,
-    Dispatch_ROB.rob    dispatch_rob,
-    FU_ROB.rob          alu0_rob,
-    FU_ROB.rob          alu1_rob,
-    FU_ROB.rob          mdu_rob,
-    FU_ROB.rob          lsu_rob,
+    input wire              clk,
+    input wire              rst,
 
-    ROB_Commit.rob      rob_commit
+    Ctrl.slave              ctrl_rob,
+    Dispatch_ROB.rob        dispatch_rob,
+    FU_ROB.rob              alu0_rob,
+    FU_ROB.rob              alu1_rob,
+    FU_ROB.rob              mdu_rob,
+    FU_ROB.rob              lsu_rob,
+    UncachedLoadInfo.rob    uncachedLoadInfo,
+
+    ROB_Commit.rob          rob_commit
 );
 
     // 0             ROB_SIZE  ROB_SIZE+1       2*ROB_SIZE
@@ -199,6 +200,11 @@ module ROB(
             head    <= head + 1'b1;
         end
     end
+
+    // uncached load info
+    assign uncachedLoadInfo.head0   = data0[head];
+    assign uncachedLoadInfo.head1   = data1[head];
+    assign uncachedLoadInfo.isEmpty = empty;
     
 
 endmodule

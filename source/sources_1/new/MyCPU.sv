@@ -195,6 +195,8 @@ module mycpu_top(
     wire                lsu_busy;
     wire                mul_busy, div_busy;
 
+    wire                hasPendingUncachedLoad;
+
     UOPBundle           alu0RFBundle;
     UOPBundle           alu1RFBundle;
     UOPBundle           lsuRFBundle;
@@ -231,6 +233,8 @@ module mycpu_top(
     FU_ROB              alu1_rob();
     FU_ROB              mdu_rob();
     FU_ROB              lsu_rob();
+
+    UncachedLoadInfo    uncachedLoadInfo();
 
     ROB_Commit          rob_commit();
 

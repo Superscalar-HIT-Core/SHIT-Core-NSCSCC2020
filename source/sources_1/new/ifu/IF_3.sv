@@ -109,7 +109,7 @@ module IF_3(
         ctrl_if3.flushReq   = `FALSE;
         if3_0.redirect      = `FALSE;
         if3_0.redirectPC    = 0;
-        if (rst || ctrl_if3.flush) begin
+        if (rst || ctrl_if3.flush || ctrl_if3.pause) begin
             ctrl_if3.flushReq   = `FALSE;
             if3_0.redirect      = `FALSE;
             if3_0.redirectPC    = 0;
@@ -154,6 +154,8 @@ module IF_3(
         
         if (rst || ctrl_if3.flush) begin
             waitDS              <= `FALSE;
+        end else if (ctrl_if3.pause) begin
+            waitDS              <= waitDS;
         end else if (waitDS) begin
             waitDS              <= ~if3_regs.inst0.valid;
         end else if(if3_regs.inst0.predTaken && !inst0NLPTaken) begin
