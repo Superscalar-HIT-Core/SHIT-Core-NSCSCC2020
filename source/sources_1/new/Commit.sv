@@ -16,7 +16,8 @@ module Commit(
     output commit_info          commit_rename_req_0,
     output commit_info          commit_rename_req_1,
 
-    output logic                fireStore
+    output logic                fireStore,
+    output logic                fireStore1
 );
     logic           inst0Good;
     logic           inst1Good;
@@ -81,15 +82,18 @@ module Commit(
         rob_commit.uOP1.uOP == SH_U  || 
         rob_commit.uOP1.uOP == SW_U
     );
-    always_comb begin
-        if(inst0Store) begin
-            fireStore = `TRUE;
-        end else if(inst1Store && !causeInt && !(rob_commit.uOP0.causeExc && inst0Good)) begin
-            fireStore = `TRUE;
-        end else begin
-            fireStore = `FALSE;
-        end
-    end 
+    // always_comb begin
+    //     if(inst0Store) begin
+    //         fireStore = `TRUE;
+    //     end else if(inst1Store && !causeInt && !(rob_commit.uOP0.causeExc && inst0Good)) begin
+    //         fireStore = `TRUE;
+    //     end else begin
+    //         fireStore = `FALSE;
+    //     end
+    // end 
+    assign fireStore  = inst0Store && !rob_commit.uOP0.causeExc;
+    assign fireStore1 = inst1Store && !causeInt && !(rob_commit.uOP0.causeExc && inst0Good) && !rob_commit.uOP1.causeExc;
+
 
     always_ff @(posedge clk) begin
         if(rst || causeInt) begin
@@ -101,7 +105,7 @@ module Commit(
             lastWaitDs          <= 0;
         end else begin
             if( !predFailed && !(lastWaitDs && !waitDS) && !causeExce &&
-                (takePredFailed ||   // 只有预测跳转的时候，才需要检查地址
+                (takePredFailed ||   // 只有预测跳转的时候，才需要检查地�?
                 (~takePredFailed && (rob_commit.uOP0.branchTaken == `TRUE) && addrPredFailed ))
             ) begin
                 predFailed                      <= `TRUE;
@@ -176,7 +180,7 @@ module Commit(
             commit_rename_req_1.committed_prf   <= rob_commit.uOP1.dstPAddr;
             commit_rename_req_1.stale_prf       <= rob_commit.uOP1.dstPStale;
 
-            // 如果指令0造成异常，则指令1也不能提交
+            // 如果指令0造成异常，则指令1也不能提�?
             // commit_rename_req_0.wr_reg_commit   <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF) ? 0 : rob_commit.uOP0.dstwe;
             if (causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF)) begin
                 commit_rename_req_0.wr_reg_commit <= 0;
@@ -212,7 +216,7 @@ module Commit(
             backend_if0.redirect    = `TRUE;
             backend_if0.valid       = `TRUE;
             backend_if0.redirectPC  = 32'hBFC0_0380;
-        end else if ( causeExce ) begin                  // 如果分支指令引发了异常，那么先处理异常，再重新做分支指令，其延迟槽也不能被提交
+        end else if ( causeExce ) begin                  // 如果分支指令引发了异常，那么先处理异常，再重新做分支指令，其延迟槽也不能被提�?
         // TODO: 如果延迟槽引发了异常呢？
             ctrl_commit.flushReq    = `TRUE;
             backend_if0.redirect    = `TRUE;

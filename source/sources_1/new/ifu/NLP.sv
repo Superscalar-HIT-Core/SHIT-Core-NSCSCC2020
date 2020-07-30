@@ -21,20 +21,17 @@ module NLP(
     logic       [3:0]   currentHead;
     logic               backendUpdateMatch;
     logic               if3UpdateMatch;
-    logic               req0Found;
-    logic               req1Found;
 
     always_comb begin
 `ifndef DISABLE_NLP
-        req0Found = `FALSE;
-        req1Found = `FALSE;
+        nlp_if0.nlpInfo0 = 0;
+        nlp_if0.nlpInfo1 = 0;
         for(integer i = 0; i < 16; i++) begin
             if(data[i].valid && data[i].pc == (regs_nlp.PC & 32'hffff_fffc)) begin
                 nlp_if0.nlpInfo0.target     = data[i].targetAddr;
                 nlp_if0.nlpInfo0.bimState   = data[i].bimState;
                 nlp_if0.nlpInfo0.valid      = `TRUE;
                 nlp_if0.nlpInfo0.taken      = data[i].bimState[1];
-                req0Found                   = `TRUE;
                 break;
             end
         end
@@ -44,17 +41,8 @@ module NLP(
                 nlp_if0.nlpInfo1.bimState   = data[i].bimState;
                 nlp_if0.nlpInfo1.valid      = `TRUE;
                 nlp_if0.nlpInfo1.taken      = data[i].bimState[1];
-                req1Found                   = `TRUE;
                 break;
             end
-        end
-
-        if(!req0Found) begin
-            nlp_if0.nlpInfo0 = 0;
-        end
-
-        if(!req1Found) begin
-            nlp_if0.nlpInfo1 = 0;
         end
 
         backendUpdateMatch  = `FALSE;

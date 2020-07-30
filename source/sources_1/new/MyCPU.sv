@@ -273,6 +273,7 @@ module mycpu_top(
     wire           pauseRename_dispatch_reg;
     wire           pauseDispatch_iq_reg;
     wire           fireStore;
+    wire           fireStore1;
 
     CtrlUnit                cu(.*);
     CtrlUnitBackend         cub(.*);
@@ -613,7 +614,7 @@ module mycpu_top(
         .wbData                             (alu1WBOut),
         .alu_rob                            (alu1_commit_reg)
     );
-    FakeLSU flsu(
+    LSU lsu(
         .*,
         .uOP                                (lsuUOPBundle),
         .oprands                            (lsuOprands),
