@@ -54,6 +54,7 @@ module ICache(
     logic           delayedFlush;
     InstBundle      inst0;
     InstBundle      inst1;
+    logic           onlyGetDSReg;
 
     logic           collision0;
     logic           collision1;
@@ -163,18 +164,12 @@ module ICache(
             for (integer i = 0; i < 64; i++) begin
                 age  [i]    <= 0;
             end
-            inst0           <= 0;
-            inst1           <= 0;
         end else if (ctrl_iCache.pause) begin
             valid           <= valid;
             age             <= age;
-            inst0           <= inst0;
-            inst1           <= inst1;
         end else begin
             valid           <= nxtValid;
             age             <= nxtAge;
-            inst0           <= regs_iCache.inst0;
-            inst1           <= regs_iCache.inst1;
         end
     end
 
@@ -203,11 +198,20 @@ module ICache(
     // IF-1, reg
     always_ff @ (posedge clk) begin
         if(rst || ctrl_iCache.flush) begin
-            PCReg <= 0;
+            PCReg           <= 0;
+            inst0           <= 0;
+            inst1           <= 0;
+            onlyGetDSReg    <= 0;
         end else if(ctrl_iCache.pause || ctrl_iCache.pauseReq) begin
-            PCReg <= PCReg;
+            PCReg           <= PCReg;
+            inst0           <= inst0;
+            inst1           <= inst1;
+            onlyGetDSReg    <= onlyGetDSReg;
         end else begin
-            PCReg <= regs_iCache.PC;
+            PCReg           <= regs_iCache.PC;
+            inst0           <= regs_iCache.inst0;
+            inst1           <= regs_iCache.inst1;
+            onlyGetDSReg    <= regs_iCache.onlyGetDS;
         end
     end
 
@@ -365,7 +369,7 @@ module ICache(
                     iCache_regs.inst0.inst  = hitInsts[{PCReg[3], 1'b0}];
                     iCache_regs.inst0.pc    = PCReg & 32'hffff_fffc;
 
-                    iCache_regs.inst1.valid = !regs_iCache.onlyGetDS && !flush && (instValid || !ctrl_iCache.pause);
+                    iCache_regs.inst1.valid = !onlyGetDSReg && !flush && (instValid || !ctrl_iCache.pause);
                     iCache_regs.inst1.inst  = hitInsts[{PCReg[3], 1'b1}];
                     iCache_regs.inst1.pc    = PCReg | 32'h0000_0004;
                     ctrl_iCache.pauseReq    = `FALSE;
@@ -404,7 +408,7 @@ module ICache(
                     iCache_regs.inst0.inst  = hitInsts[{PCReg[3], 1'b0}];
                     iCache_regs.inst0.pc    = PCReg & 32'hffff_fffc;
 
-                    iCache_regs.inst1.valid = !regs_iCache.onlyGetDS && !flush;
+                    iCache_regs.inst1.valid = !onlyGetDSReg && !flush;
                     iCache_regs.inst1.inst  = hitInsts[{PCReg[3], 1'b1}];
                     iCache_regs.inst1.pc    = PCReg | 32'h0000_0004;
 
@@ -491,7 +495,7 @@ module ICache(
                 iCache_regs.inst0.inst          = hitInsts[{PCReg[3], 1'b0}];
                 iCache_regs.inst0.pc            = PCReg & 32'hffff_fffc;
 
-                iCache_regs.inst1.valid         = !regs_iCache.onlyGetDS && !flush;
+                iCache_regs.inst1.valid         = !onlyGetDSReg && !flush;
                 iCache_regs.inst1.inst          = hitInsts[{PCReg[3], 1'b1}];
                 iCache_regs.inst1.pc            = PCReg | 32'h0000_0004;
             end

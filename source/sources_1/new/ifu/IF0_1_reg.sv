@@ -26,6 +26,11 @@ module IF0_1_reg(
     assign regs_nlp.PC      = PC;
     assign regs_bpd.PC      = PC;
     assign regs_iCache.PC   = PC;
+    
+    assign regs_iCache.inst0.nlpInfo    = nlp_if0.nlpInfo0;
+    assign regs_iCache.inst1.nlpInfo    = nlp_if0.nlpInfo1;
+    assign regs_iCache.inst0.pc         = PC & 32'hffff_fffc;
+    assign regs_iCache.inst1.pc         = PC | 32'h0000_0004;
 
     assign ctrl_if0_1_regs.pauseReq     = `FALSE;
 
@@ -44,26 +49,24 @@ module IF0_1_reg(
         end else if(if3_0.redirect) begin
             PC          <=  if3_0.redirectPC;
             headIsDS    <=  `FALSE;
+        end else if(ctrl_if0_1_regs.pause) begin
+            PC          <=  PC;
+            headIsDS    <=  headIsDS;
+            dsAddr      <=  dsAddr;
         end else if(headIsDS) begin
             PC          <=  dsAddr;
             headIsDS    <=  `FALSE;
-        end else if(nlp_if0.nlpInfo0.valid && nlp_if0.nlpInfo0.taken) begin
+        end else if(nlp_if0.nlpInfo0.valid && nlp_if0.nlpInfo0.taken && !PC[2]) begin
             PC          <=  nlp_if0.nlpInfo0.target;
             headIsDS    <=  `FALSE;
         end else if(nlp_if0.nlpInfo1.valid && nlp_if0.nlpInfo1.taken) begin
             PC          <=  if0_regs.nPC;
             headIsDS    <=  `TRUE;
             dsAddr      <=  nlp_if0.nlpInfo1.target;
-        end else if(ctrl_if0_1_regs.pause) begin
-            PC          <=  PC;
-            headIsDS    <=  headIsDS;
-            dsAddr      <=  dsAddr;
         end else begin
             PC          <=  if0_regs.nPC;
             headIsDS    <=  `FALSE;
         end
-        regs_iCache.inst0.nlpInfo    <= nlp_if0.nlpInfo0;
-        regs_iCache.inst1.nlpInfo    <= nlp_if0.nlpInfo1;
     end
 
     // synopsys translate_off
