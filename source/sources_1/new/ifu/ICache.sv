@@ -393,7 +393,7 @@ module ICache(
                     iCache_regs.inst0.valid = `FALSE;
                     iCache_regs.inst1.valid = `FALSE;
                     ctrl_iCache.pauseReq    = `TRUE;
-                    instReq.valid           = ~requestSent;
+                    instReq.valid           = ~requestSent && !flush;
                     instReq.pc              = iCache_tlb.phyAddr0 & 32'hffff_fffc;
                     instResp.ready          = `TRUE;
                 end
