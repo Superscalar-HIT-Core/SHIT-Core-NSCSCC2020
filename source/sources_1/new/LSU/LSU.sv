@@ -33,12 +33,14 @@ module LSU(
     logic cache;
     assign cache = ~(vaddr[31:28] == 4'ha | vaddr[31:28] == 4'hb);
     Size size;
-    always_comb 
+    always_comb begin
+        size = s_word;
         case(uOP.uOP)
         LB_U,LBU_U,SB_U: size = s_byte;
         LH_U,LHU_U,SH_U: size = s_half;
         LW_U,SW_U:  size = s_word;
         endcase
+    end
 
     logic addr_err;
     always_comb 
