@@ -19,6 +19,7 @@
     - 执行
     - 写回
 
+- file copy -force ../../../soft/perf_func/obj/stream_copy/axi_ram.mif ./mycpu.sim/sim_1/behav/xsim/axi_ram.mif; restart; run all;
 
 ## 更新日志
 
