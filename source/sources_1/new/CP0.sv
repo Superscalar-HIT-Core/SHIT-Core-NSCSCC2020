@@ -124,8 +124,8 @@ module CP0(
             Cause[15:10]    <= exceInfo.interrupt; // IP7~IP2中断位
 			Random          <= Random + 1;
             divClk          <= ~divClk;
-            Count           <= Count + divClk;
-            // Count           <= 32'h27cca;
+            // Count           <= Count + divClk;
+            Count           <= 32'hABCD0000;
             Cause[30]       <= CounterInterrupt;            // Cause.TI 计时器中断
         end
 

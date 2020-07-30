@@ -398,8 +398,9 @@ module FakeLSU(
 
     always_comb begin
         dataReq.data                    = 0;
-        dataReq.strobe                  = 0;
+        dataReq.strobe                  = 4'b1111;
         dataReq.write_en                = 0;
+        dataReq.size                    = 3'b010;
         dataReq.valid                   = `FALSE;
         dataResp.ready                  = `FALSE;
         lsu_commit_reg.setFinish        = `FALSE;

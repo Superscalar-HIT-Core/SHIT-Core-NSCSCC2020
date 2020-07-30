@@ -30,7 +30,7 @@ module ICache(
 
     ICache_Regs.iCache  iCache_regs
 );
-    typedef enum  { sRunning, sBlock, sWaitUnpause, sRecover, sReset } ICacheState;
+    typedef enum  { sRunning, sBlock, sIdle, sWaitUnpause, sRecover, sReset } ICacheState;
 
     typedef struct packed {
         logic           writeEn;
@@ -272,10 +272,21 @@ module ICache(
             sRecover: begin
                 if(rst) begin
                     nxtState = sReset;
-                end else if(instResp.valid) begin
+                end else if(instResp.valid && ctrl_iCache.pause) begin
+                    nxtState = sIdle;
+                end else if(instResp.valid && !ctrl_iCache.pause) begin
                     nxtState = sRunning;
                 end else begin
                     nxtState = sRecover;
+                end
+            end
+            sIdle: begin
+                if(rst || ctrl_iCache.flush) begin
+                    nxtState = sReset;
+                end else if(!ctrl_iCache.pause) begin
+                    nxtState = sRunning;
+                end else begin
+                    nxtState = sIdle;
                 end
             end
             sWaitUnpause:begin
@@ -463,6 +474,13 @@ module ICache(
                     iCache_regs.inst0.valid     = `FALSE;
                     iCache_regs.inst1.valid     = `FALSE;
                 end
+            end
+            sIdle: begin
+                instReq.valid                   = `FALSE;
+                instResp.ready                  = `FALSE;
+                iCache_regs.inst0.valid         = `FALSE;
+                iCache_regs.inst1.valid         = `FALSE;
+                
             end
             sWaitUnpause: begin
                 ctrl_iCache.pauseReq            = `FALSE;

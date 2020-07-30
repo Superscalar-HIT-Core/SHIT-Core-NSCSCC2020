@@ -699,12 +699,12 @@ module mycpu_top(
         
     end
     always @ (posedge aclk) begin
-        // if (sanityCheck0) begin
-        //     $display("sanity check : reg %d is 0x%h", sanityCheck0ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck0ARF]]);
-        // end
-        // if (sanityCheck1) begin
-        //     $display("sanity check : reg %d is 0x%h", sanityCheck1ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck1ARF]]);
-        // end
+        if (sanityCheck0) begin
+            $fdisplay("sanity check : reg %d is 0x%h", sanityCheck0ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck0ARF]]);
+        end
+        if (sanityCheck1) begin
+            $fdisplay("sanity check : reg %d is 0x%h", sanityCheck1ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck1ARF]]);
+        end
     end
 
     // always @ (negedge ctrl_commit.flushReq) #1 begin
