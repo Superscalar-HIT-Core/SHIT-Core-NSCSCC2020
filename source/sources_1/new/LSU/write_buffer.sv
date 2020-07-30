@@ -25,9 +25,11 @@ module write_buffer(
     );
 
     WBUF_LINE wbuffer[`WBUFROW];
-    logic [`WBUFPOINTER] wpointer,cpointer,fpointer;
-    logic finish = ((wp2wb.op == dop_w) & wp2wb.hit & wbuffer[fpointer].cache) |
+    logic [`WBUFPOINTER] wpointer,cpointer,cpointer1,fpointer;
+    wire finish = ((wp2wb.op == dop_w) & wp2wb.hit & wbuffer[fpointer].cache) |
                    (wb2uh.w & wb2uh.ready & ~wbuffer[fpointer].cache);
+    wire do_com = (lsu2wb.com | lsu2wb.com1) & ~lsu2wb.rb;
+    wire do_dcom = lsu2wb.com & lsu2wb.com1 & ~lsu2wb.rb;
 
     always_ff @(posedge g.clk)
         if(!g.resetn)
@@ -40,8 +42,20 @@ module write_buffer(
     always_ff @(posedge g.clk)
         if(!g.resetn)
             cpointer <= 3'b0;
-        else if(lsu2wb.com & wbuffer[cpointer].valid)
-            cpointer <= cpointer + 3'b1;
+        else if(do_dcom & wbuffer[cpointer1].valid)
+            cpointer <= cpointer + 3'h2;
+        else if(do_com & wbuffer[cpointer].valid)
+            cpointer <= cpointer + 3'h1;
+            
+    always_ff @(posedge g.clk)
+        if(!g.resetn)
+            cpointer1 <= cpointer + 3'h1;
+        else if(do_dcom & wbuffer[cpointer1].valid)
+            cpointer1 <= cpointer + 3'h3;
+        else if(do_com & wbuffer[cpointer].valid)
+            cpointer1 <= cpointer + 3'h2;
+        else
+            cpointer1 <= cpointer + 3'h1;
 
     always_ff @(posedge g.clk)
         if(!g.resetn)
@@ -49,7 +63,7 @@ module write_buffer(
         else if(finish & wbuffer[fpointer].valid)
             fpointer <= fpointer + 3'b1;
 
-    logic loaded = wb2da.load & wb2da.laddr == wbuffer[fpointer].addr[31:4];
+    wire loaded = wb2da.load & wb2da.laddr == wbuffer[fpointer].addr[31:4];
     logic [7:0] do_write;
     generate
         genvar i;
@@ -70,7 +84,9 @@ module write_buffer(
             always_ff @(posedge g.clk) 
                 if(lsu2wb.req & i == wpointer & ~wbuffer[i].valid)
                     wbuffer[i].com <= 1'b0;
-                else if(lsu2wb.com & i == cpointer)
+                else if(do_dcom & i == cpointer1)
+                    wbuffer[i].com <= 1'b1;
+                else if(do_com & i == cpointer)
                     wbuffer[i].com <= 1'b1;
             
             always_ff @(posedge g.clk)
@@ -102,6 +118,6 @@ module write_buffer(
 
     assign wb2uh.w = wbuffer[fpointer].valid & wbuffer[fpointer].com & ~wbuffer[fpointer].issued & ~wbuffer[fpointer].cache;
     assign wb2uh.waddr = wbuffer[fpointer].addr;
-    assign wb2da.data = wbuffer[fpointer].data;
-    assign wb2da.size = wbuffer[fpointer].size;
+    assign wb2uh.data = wbuffer[fpointer].data;
+    assign wb2uh.size = wbuffer[fpointer].size;
 endmodule

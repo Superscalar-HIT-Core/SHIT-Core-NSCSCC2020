@@ -107,7 +107,7 @@ interface DCACHE2MEMORY;
     logic           dready;
     logic           mready;
     logic           mvalid;
-    logic           mdata;
+    logic   [127:0] mdata;
     modport dcache(output dvalid,addr,wen,ddata,dready, input mready,mvalid,mdata);
     modport memory(input dvalid,addr,wen,ddata,dready, output mready,mvalid,mdata);
 endinterface //LSU2MEM
@@ -129,10 +129,11 @@ interface LSU2WBUFFER;
     Size            size;
     logic   [31:0]  data;
     logic           com;
+    logic           com1;
     logic           rb;
     logic           busy;
-    modport lsu(output req,id,cache,addr,size,data,com,rb, input busy);
-    modport wbuf(input req,id,cache,addr,size,data,com,rb, output busy);
+    modport lsu(output req,id,cache,addr,size,data,com,com1,rb, input busy);
+    modport wbuf(input req,id,cache,addr,size,data,com,com1,rb, output busy);
 endinterface
 
 interface LSU2RTALKER;
@@ -141,7 +142,7 @@ interface LSU2RTALKER;
     logic           addr_err;
     logic   [6:0]   id;
     logic           rfin;
-    logic           rid;
+    logic   [6:0]   rid;
     logic   [31:0]  bad_addr;
     logic           halt;
     modport lsu (output wreq,rreq,addr_err,id,rfin,rid,bad_addr, input halt);
@@ -150,7 +151,7 @@ endinterface //LSU2RTALKER
 
 interface LSU2ROB;
     logic           valid;
-    logic           id;
+    logic   [6:0]   id;
     logic           set_ex;
     logic           ls;
     logic   [31:0]  bad_addr;
@@ -164,6 +165,7 @@ interface LSU2RBUFFER;
     logic           cache;
     logic   [31:0]  addr;
     Size            size;
+    logic           isSigned;
     logic   [5:0]   regid;
     logic           flush;
     logic   [6:0]   rid0;
@@ -171,8 +173,8 @@ interface LSU2RBUFFER;
     logic           valid0;
     logic           commit0;
     logic           busy;
-    modport lsu (output valid,regid,cache,addr,size,id,flush,rid0,rid1,valid0,commit0, input busy);
-    modport rbuf(input valid,regid,cache,addr,size,id,flush,rid0,rid1,valid0,commit0, output busy);
+    modport lsu (output valid,regid,cache,addr,size,isSigned,id,flush,rid0,rid1,valid0,commit0, input busy);
+    modport rbuf(input valid,regid,cache,addr,size,isSigned,id,flush,rid0,rid1,valid0,commit0, output busy);
 endinterface //LSU2RBUFFER
 
 interface LSU2PRF;
@@ -191,7 +193,7 @@ interface RBUFFER2UHANDLER;
     logic           rready;
     logic           uready;
     logic           uvalid;
-    logic           udata;
+    logic   [31:0]  udata;
     modport rbuf (output rvalid,raddr,rsize,rready, input uready,uvalid,udata);
     modport uhandler (input rvalid,raddr,rsize,rready, output uready,uvalid,udata);
 endinterface

@@ -9,7 +9,6 @@ module uncache_handler(
 
     logic rbusy;
     logic rready = 1'b1;
-    logic [31:0] raddr = rb2uh.raddr;
     assign rb2uh.uready = uc2mem.mready & ~rbusy;
     
     always_ff @(posedge g.clk)
@@ -20,14 +19,12 @@ module uncache_handler(
         else if(rb2uh.uvalid & rb2uh.rready)
             rbusy <= 1'b0;
 
-    reg [1:0] raddr_reg;
-    Size size_reg;
-    always @(posedge g.clk) if(rb2uh.rvalid & rb2uh.uready) raddr_reg <= raddr[1:0];
-    always @(posedge g.clk) if(rb2uh.rvalid & rb2uh.uready) size_reg <= rb2uh.rsize;
+    logic [1:0] raddr_reg;
+    always @(posedge g.clk) if(rb2uh.rvalid & rb2uh.uready) raddr_reg <= rb2uh.raddr[1:0];
 
     assign wb2uh.ready = rb2uh.uready & ~rb2uh.rvalid;
 
-    assign uc2mem.uvalid = (rb2uh.rvalid | wb2uh.w) & rb2uh.uready;
+    assign uc2mem.uvalid = rb2uh.rvalid | wb2uh.w;
     assign uc2mem.uwen = wb2uh.w;
     assign uc2mem.uaddr = wb2uh.w ? {wb2uh.waddr[31:2],2'b0} : {rb2uh.raddr[31:2],2'b0};
     assign uc2mem.udata = wb2uh.data;
@@ -54,18 +51,10 @@ module uncache_handler(
     always_ff @(posedge g.clk)
         if(!g.resetn)
             rb2uh.uvalid <= 1'b0;
-        else if(uc2mem.uvalid)
+        else if(uc2mem.mvalid)
             rb2uh.uvalid <= 1'b1;
         else if(rb2uh.rready)
             rb2uh.uvalid <= 1'b0;
 
-    logic [31:0] data = uc2mem.mdata >> {raddr_reg,3'b0};
-    always_ff @(posedge g.clk)
-        if(uc2mem.mvalid)
-            case(size_reg)
-            s_word: rb2uh.udata <= data;
-            s_half: rb2uh.udata <= {{16{data[15]}},data[15:0]};
-            s_byte: rb2uh.udata <= {{24{data[7]}},data[7:0]};
-            default: rb2uh.udata <= 32'hx;
-            endcase 
+    always_ff @(posedge g.clk) rb2uh.udata <= uc2mem.mdata >> {raddr_reg,3'b0};
 endmodule

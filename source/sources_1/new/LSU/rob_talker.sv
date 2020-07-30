@@ -27,7 +27,7 @@ module rob_talker(
     always_ff @(posedge g.clk) if(!lsu2rt.halt) bad_addr_reg <= lsu2rt.bad_addr;
     assign lsu2rt.halt = wreq_reg | rreq_reg;
     assign lsu2rob.valid = lsu2rt.rfin | lsu2rt.wreq | wreq_reg | (lsu2rt.rreq & lsu2rt.addr_err) | rreq_reg;
-    assign ido = lsu2rt.rfin ? lsu2rt.rid :
+    assign lsu2rob.id = lsu2rt.rfin ? lsu2rt.rid :
                  (wreq_reg | rreq_reg) ? id_reg : lsu2rt.id;
     always_comb 
         if(lsu2rt.wreq)
@@ -39,6 +39,6 @@ module rob_talker(
         else if(rreq_reg)
             lsu2rob.ls = `EXP_ADDR_L;
     
-    assign lsu2rob.set_ex = lsu2rt.addr_err | addr_err_reg;
-    assign lsu2rob.bad_addr = bad_addr_reg;
+    assign lsu2rob.set_ex = (lsu2rt.addr_err | addr_err_reg) & ~ lsu2rt.rfin;
+    assign lsu2rob.bad_addr = addr_err_reg ? bad_addr_reg : lsu2rt.bad_addr;
 endmodule

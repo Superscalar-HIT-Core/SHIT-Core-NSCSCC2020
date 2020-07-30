@@ -8,14 +8,33 @@ typedef struct packed {
     logic [18:0] tag;
 }TB_CONTENT;
 
+typedef struct packed{
+    logic           clk;
+    logic           en;
+    logic   [8:0]   addr;
+    TB_CONTENT      tag;
+}TB_IO;
+
+typedef struct packed{
+    logic           clk;
+    logic           en;
+    logic   [8:0]   addr;
+    logic   [127:0] data;
+}DB_RD;
+
+typedef struct packed{
+    logic           clk;
+    logic   [15:0]  wen;
+    logic   [8:0]   addr;
+    logic   [127:0] data;
+}DB_WR;
+
 module dcache(
     GLOBAL.slave            g,
     WRAPER2DCACHE.dcache    wp2dc
     );
-    logic [8:0] index = wp2dc.addr[12:4];
+    wire [8:0] index = wp2dc.addr[12:4];
     logic [511:0] lru;
-    logic bypass;
-    logic bypass_reg;
 
     logic [18:0] tag_reg;
     logic [8:0] index_reg,index_reg2;
@@ -23,8 +42,22 @@ module dcache(
     logic [15:0] wd_reg;
     logic [127:0] din_reg;
     
+    TB_IO tag0r,tag0w,tag1r,tag1w;
+    DB_RD dbr0,dbr1;
+    DB_WR dbw0,dbw1;
+    
+    assign tag0w.clk = g.clk;
+    assign tag0r.clk = g.clk;
+    assign tag1w.clk = g.clk;
+    assign tag1r.clk = g.clk;
+    
+    assign dbw0.clk = g.clk;
+    assign dbr0.clk = g.clk;
+    assign dbw1.clk = g.clk;
+    assign dbr1.clk = g.clk;
+    
     TB_CONTENT tbc [1:0];
-    logic [127:0] dbc [1:0];
+    TB_CONTENT tin_reg [1:0];
 
     always_ff @(posedge g.clk) tag_reg <= wp2dc.addr[31:13];
     always_ff @(posedge g.clk)
@@ -38,7 +71,7 @@ module dcache(
         else 
             index_reg2 <= index_reg;
 
-    always_ff @(posedge g.clk) r_reg <= 4;
+    always_ff @(posedge g.clk) r_reg <= wp2dc.r;
     always_ff @(posedge g.clk) w_reg <= |wp2dc.wd & ~&wp2dc.wd;
     always_ff @(posedge g.clk) l_reg <= &wp2dc.wd;
     always_ff @(posedge g.clk) wd_reg <= wp2dc.wd;
@@ -51,19 +84,14 @@ module dcache(
     always_ff @(posedge g.clk) hit0_reg <= g.resetn & hit0;
     always_ff @(posedge g.clk) hit1_reg <= g.resetn & hit1;
     always_comb
-        if(bypass_reg)
-            case(lru[index_reg2])
-            1'b0: wp2dc.dout = dbc[0];
-            1'b1: wp2dc.dout = dbc[1];
-            endcase
-        else if(hit0_reg)
-            wp2dc.dout = dbc[0];
+        if(hit0_reg)
+            wp2dc.dout = dbr0.data;
         else if(hit1_reg)
-            wp2dc.dout = dbc[1];
+            wp2dc.dout = dbr1.data;
         else
             case(lru[index_reg2])
-            1'b0: wp2dc.dout = dbc[1];
-            1'b1: wp2dc.dout = dbc[0];
+            1'b0: wp2dc.dout = dbr0.data;
+            1'b1: wp2dc.dout = dbr1.data;
             endcase
 
     always_ff @(posedge g.clk)
@@ -83,28 +111,20 @@ module dcache(
         1'b1: wp2dc.tout <= tbc[0].tag;
         endcase
 
-    assign hit = ((hit0 | hit1) & (r_reg | w_reg)) | (bypass & (r_reg | w_reg));
+    assign hit = (hit0 | hit1) & (r_reg | w_reg);
     always_ff @(posedge g.clk) wp2dc.hit <= g.resetn & hit;
 
-    logic [15:0] dwe[1:0];
-    logic [1:0] twe;
-    TB_CONTENT tin[1:0];
-    logic dwaddr[1:0];
-    assign dwe[0] = w_reg & hit0 ? wd_reg :
-                    l_reg & lru[index_reg] == 1'b1 ? wd_reg : 
-                    w_reg & bypass & lru[index_reg] == 1'b0 ? wd_reg : 16'h0;
-    assign dwe[1] = w_reg & hit1 ? wd_reg :
-                    l_reg & lru[index_reg] == 1'b0 ? wd_reg : 
-                    w_reg & bypass & lru[index_reg] == 1'b1 ? wd_reg : 16'h0;
-    assign dwaddr[0] = index_reg;
-    assign dwaddr[1] = index_reg;
-    assign twe[0] = ((lru[index_reg] == 1'b1 & l_reg)|~g.resetn) | ((hit0 | (bypass & lru[index_reg] == 1'b0)) & w_reg);
-    assign twe[1] = ((lru[index_reg] == 1'b0 & l_reg)|~g.resetn) | ((hit1 | (bypass & lru[index_reg] == 1'b1)) & w_reg);
-    assign tin[0] = {w_reg,g.resetn,tag_reg};
-    assign tin[1] = {w_reg,g.resetn,tag_reg};
+    assign dbw0.wen = w_reg & hit0 ? wd_reg :
+                      l_reg & lru[index_reg] == 1'b1 ? wd_reg : 16'h0;
+    assign dbw1.wen = w_reg & hit1 ? wd_reg :
+                      l_reg & lru[index_reg] == 1'b0 ? wd_reg : 16'h0;
+    assign dbw0.addr = index_reg;
+    assign dbw1.addr = index_reg;
+    assign tag0w.en = ((lru[index_reg] == 1'b1 & l_reg)|~g.resetn) | ((hit0) & w_reg);
+    assign tag1w.en = ((lru[index_reg] == 1'b0 & l_reg)|~g.resetn) | ((hit1) & w_reg);
+    assign tag0w.tag = {g.resetn,w_reg,tag_reg};
+    assign tag1w.tag = {g.resetn,w_reg,tag_reg};
 
-    always_ff @(posedge g.clk) bypass <= g.resetn & l_reg & (index_reg == index) & (tag_reg == wp2dc.addr[31:13]);
-    always_ff @(posedge g.clk) bypass_reg <= g.resetn & bypass;
     always_ff @(posedge g.clk) 
         if(!g.resetn)
             lru <= 512'b0;
@@ -115,8 +135,34 @@ module dcache(
         else if((tbc[1].valid & tbc[1].tag == tag_reg) & (r_reg | w_reg))
             lru[index_reg] <= 1'b1;
 
-    tag_blk tag0(g.clk,twe[0],index_reg,tin[0],clk,index,tbc[0]);
-    tag_blk tag1(g.clk,twe[1],index_reg,tin[1],clk,index,tbc[1]);
-    data_blk data0(g.clk,dwe[0],dwaddr[0],din_reg[0],clk,index_reg,dbc[0]);
-    data_blk data1(g.clk,dwe[1],dwaddr[1],din_reg[0],clk,index_reg,dbc[1]);
+    wire tag0_bypass = (tag0w.addr == tag0r.addr) & tag0w.en & (wp2dc.r | |wp2dc.wd);
+    reg tag0_bypass_reg;
+    always_ff @(posedge g.clk) tag0_bypass_reg <= g.resetn & tag0_bypass;
+    always_ff @(posedge g.clk) tin_reg[0] <= tag0w.tag;
+    assign tbc[0] = tag0_bypass_reg ? tin_reg[0] : tag0r.tag;
+    wire tag1_bypass = (tag1w.addr == tag1r.addr) & tag1w.en & (wp2dc.r | |wp2dc.wd);
+    reg tag1_bypass_reg;
+    always_ff @(posedge g.clk) tag1_bypass_reg <= g.resetn & tag1_bypass; 
+    always_ff @(posedge g.clk) tin_reg[1] <= tag1w.tag;
+    assign tbc[1] = tag1_bypass_reg ? tin_reg[1] : tag1r.tag;
+    
+    assign tag0w.addr = index_reg;
+    assign tag0r.addr = index;
+    assign tag0r.en = ~tag0_bypass & (wp2dc.r | |wp2dc.wd);
+    tag_blk tag0(tag0w.clk,tag0w.en,tag0w.addr,tag0w.tag,tag0r.clk,tag0r.en,tag0r.addr,tag0r.tag);
+    
+    assign tag1w.addr = index_reg;
+    assign tag1r.addr = index;
+    assign tag1r.en = ~tag1_bypass & (wp2dc.r | |wp2dc.wd);
+    tag_blk tag1(tag1w.clk,tag1w.en,tag1w.addr,tag1w.tag,tag1r.clk,tag1r.en,tag1r.addr,tag1r.tag);
+    
+    assign dbw0.data = din_reg;
+    assign dbr0.en = ~|dbw0.wen;
+    assign dbr0.addr = index_reg;
+    data_blk data0(dbw0.clk,dbw0.wen,dbw0.addr,dbw0.data,dbr0.clk,dbr0.en,dbr0.addr,dbr0.data);
+    
+    assign dbw1.data = din_reg;
+    assign dbr1.en = ~|dbw1.wen;
+    assign dbr1.addr = index_reg;
+    data_blk data1(dbw1.clk,dbw1.wen,dbw1.addr,dbw1.data,dbr1.clk,dbr1.en,dbr1.addr,dbr1.data);
 endmodule

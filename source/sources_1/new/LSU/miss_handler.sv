@@ -8,11 +8,11 @@ module miss_handler(
     );
 
     MSHR_LINE   MSHR[`MSHRROW];
-    logic miss = (wp2mh.op == dop_w | wp2mh.op == dop_r) & ~wp2mh.hit;
+    wire miss = (wp2mh.op == dop_w | wp2mh.op == dop_r) & ~wp2mh.hit;
     logic [27:0] laddr_reg;
     logic load_reg;
     logic [`MSHRROW] adchecks;
-    logic adcheck = (load_reg & laddr_reg == wp2mh.addr[31:4]) | |adchecks;
+    wire adcheck = (load_reg & laddr_reg == wp2mh.addr[31:4]) | |adchecks;
 
     MH2WBH  mh2wbh();
     MH2LH   mh2lh();
@@ -26,7 +26,7 @@ module miss_handler(
     always_ff @(posedge g.clk)
         if(!g.resetn)
             lpointer <= 3'b0;
-        else if(miss & ~adcheck & MSHR[lpointer].valid)
+        else if(miss & ~adcheck & ~MSHR[lpointer].valid)
             lpointer <= lpointer + 3'b1;
     
     always_ff @(posedge g.clk)

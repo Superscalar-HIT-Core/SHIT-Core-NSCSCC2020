@@ -19,4 +19,8 @@ module dcache_accessor(
     assign da2wp.data = da2wp.l ? mh2da.data :
                         da2wp.w ? {96'hx,wb2da.data} : 128'hx;
     assign da2wp.size = da2wp.w ? wb2da.size : rb2da.size;
+    assign wb2da.load = da2wp.l & mh2da.ready;
+    assign wb2da.laddr = mh2da.addr;
+    assign rb2da.load = da2wp.l & mh2da.ready;
+    assign rb2da.laddr = mh2da.addr;
 endmodule

@@ -6,27 +6,32 @@ module LSU(
     input   logic           clk,
     input   logic           rst,
     Ctrl.slave              ctrl_lsu,
-    output  logic           r_busy,
-    output  logic           w_busy,
+    output  logic           lsu_busy,
     input   logic           fireStore,
+    input   logic           fireStore1,
     input   UOPBundle       uOP,
     input   PRFrData        oprands,
     output  PRFwInfo        wbData,
     FU_ROB.fu               lsu_commit_reg,
     DataReq.lsu             dataReq,
     DataResp.lsu            dataResp,
-    DCacheReq.dCache        dcacheReq,
-    DCacheResp.dCache       dcacheResp,
-    input   UOPBundle       rob0,
-    input   UOPBundle       rob1,
-    input   logic           rob_isEmpty
+    DCacheReq.dCache        dCacheReq,
+    DCacheResp.dCache       dCacheResp,
+    UncachedLoadInfo.lsu    uncachedLoadInfo
     );
     assign pauseReq = 1'b0;
     assign flushReq = 1'b0;
-
-    logic [31:0] vaddr = oprands.rs0_data + uOP.imm;
-    logic [31:0] paddr = (vaddr[31:30] == 2'b10) ? {3'b0,vaddr[28:0]} : vaddr;
-    logic cache = ~(vaddr[31:28] == 4'ha | vaddr[31:28] == 4'hb);
+    
+    logic r_busy;
+    logic w_busy;
+    assign lsu_busy = r_busy | w_busy;
+    
+    logic [31:0] vaddr;
+    assign vaddr = oprands.rs0_data + uOP.imm;
+    logic [31:0] paddr;
+    assign paddr = (vaddr[31:30] == 2'b10) ? {3'b0,vaddr[28:0]} : vaddr;
+    logic cache;
+    assign cache = ~(vaddr[31:28] == 4'ha | vaddr[31:28] == 4'hb);
     Size size;
     always_comb 
         case(uOP.uOP)
@@ -43,9 +48,8 @@ module LSU(
         default: addr_err = 1'b0;
         endcase
 
-    logic store = uOP.uOP == SB_U | uOP.uOP == SH_U | uOP.uOP == SW_U;
-    logic load = uOP.uOP == LB_U | uOP.uOP == LBU_U |
-                 uOP.uOP == LH_U | uOP.uOP == LHU_U | uOP.uOP == LW_U;
+    wire store = ((uOP.uOP == SW_U) | (uOP.uOP == SH_U) | (uOP.uOP == SB_U)) & uOP.valid;
+    wire load = ((uOP.uOP == LW_U) | (uOP.uOP == LH_U) | (uOP.uOP == LHU_U) | (uOP.uOP == LB_U) | (uOP.uOP == LBU_U)) & uOP.valid;
 
     GLOBAL              g();
     assign g.clk = clk;
@@ -64,6 +68,7 @@ module LSU(
     assign lsu2wb.size = size;
     assign lsu2wb.data = oprands.rs1_data;
     assign lsu2wb.com = fireStore;
+    assign lsu2wb.com1 = fireStore1;
     assign lsu2wb.rb = ctrl_lsu.flush;
     write_buffer wbuf(g.slave,lsu2wb.wbuf,wp2buf.buffer,wb2da.wbuf,wb2uh.wbuf,wb2rb.wbuf);
     assign w_busy = lsu2wb.busy | lsu2rt.halt;
@@ -78,8 +83,13 @@ module LSU(
     assign lsu2rb.cache = cache;
     assign lsu2rb.addr = paddr;
     assign lsu2rb.size = size;
-    assign lsu2rb.regid = uOP.op1PAddr;
+    assign lsu2rb.isSigned = (uOP.uOP == LH_U) | (uOP.uOP == LB_U);
+    assign lsu2rb.regid = uOP.dstPAddr;
     assign lsu2rb.flush = ctrl_lsu.flush;
+    assign lsu2rb.rid0 = uncachedLoadInfo.head0.id;
+    assign lsu2rb.rid1 = uncachedLoadInfo.head1.id;
+    assign lsu2rb.valid0 = uncachedLoadInfo.head0.valid;
+    assign lsu2rb.commit0 = uncachedLoadInfo.head0.committed;
     read_buffer rbuf(g.slave,lsu2rb.rbuf,wb2rb.rbuf,rb2da.rbuf,wp2buf.buffer,rb2uh.rbuf,lsu2prf.lsu);
     assign r_busy = lsu2rb.busy | lsu2rt.halt;
     assign wbData.rd = lsu2prf.regid;
@@ -97,15 +107,15 @@ module LSU(
 
     DCACHE2MEMORY       dc2mem();
     miss_handler mhandler(g.slave,wp2mh.mhandler,dc2mem.dcache,mh2da.mhandler);
-    assign dcacheReq.valid = dc2mem.dvalid;
-    assign dcacheReq.addr = dc2mem.addr;
-    assign dcacheReq.write_en = dc2mem.wen;
-    assign dcacheReq.data = dc2mem.ddata;
-    assign dc2mem.mready = dcacheReq.ready;
+    assign dCacheReq.valid = dc2mem.dvalid;
+    assign dCacheReq.addr = dc2mem.addr;
+    assign dCacheReq.write_en = dc2mem.wen;
+    assign dCacheReq.data = dc2mem.ddata;
+    assign dc2mem.mready = dCacheReq.ready;
 
-    assign dc2mem.mvalid = dcacheResp.valid;
-    assign dc2mem.mdata = dcacheResp.data;
-    assign dcacheResp.ready = dc2mem.dready;
+    assign dc2mem.mvalid = dCacheResp.valid;
+    assign dc2mem.mdata = dCacheResp.data;
+    assign dCacheResp.ready = dc2mem.dready;
 
     UNCACHE2MEMORY      uc2mem();
 
@@ -122,7 +132,7 @@ module LSU(
     assign uc2mem.mdata = dataResp.data;
 
     LSU2ROB             lsu2rob();
-    rob_talker(g.slave,lsu2rt.talker,lsu2rob.lsu);
+    rob_talker talker(g.slave,lsu2rt.talker,lsu2rob.lsu);
     assign lsu2rt.wreq = store & ~w_busy;
     assign lsu2rt.rreq = load & ~r_busy;
     assign lsu2rt.addr_err = addr_err;
