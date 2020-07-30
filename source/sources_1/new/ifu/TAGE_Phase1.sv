@@ -90,7 +90,9 @@ module TAGE_Phase1(
     // Update Logic
     // Update enable
     // At most one Line in one BANK will be updated
-    
+    always_comb begin
+        
+    end
     // Condition 1: Not allocated
     reg [1:0] new_provider_to_allocate;
     reg dec_all_ubits;
