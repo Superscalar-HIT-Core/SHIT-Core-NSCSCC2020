@@ -20,10 +20,13 @@ module read_buffer(
     LSU2RBUFFER.rbuf            lsu2rb,
     WBUFFER2RBUFFER.rbuf        wb2rb,
     RBUFFER2DACCESSOR.rbuf      rb2da,
-    WRAPER2BUFFER.buffer        wp2bf,
+    WRAPER2BUFFER.buffer        wp2rb,
     RBUFFER2UHANDLER.rbuf       rb2uh,
     LSU2PRF.lsu                 lsu2prf
     );
+    logic flush_reg;
+    always_ff @(posedge g.clk) flush_reg <= lsu2rb.flush & g.resetn;
+    logic flush_all = lsu2rb.flush | flush_reg;
     RBUF_LINE rbuffer[`RBUFROW];
     logic [`RBUFPOINTER] avail,ready;
     logic [`RBUFPOINTER] launch[1:0];
@@ -47,7 +50,7 @@ module read_buffer(
         default: ready = 2'b00;
         endcase
 
-    assign lsu2rb.busy = rbuffer[avail].valid == 1'b1;
+    assign lsu2rb.busy = rbuffer[avail].valid == 1'b1 & lsu2rb.flush;
     generate
         genvar i;
         for(i = 0; i < 4; i = i + 1)
@@ -56,13 +59,16 @@ module read_buffer(
             assign miss[i] = (wp2rb.addr[31:4] == rbuffer[i].addr[31:4]) &
                             (wp2rb.op == dop_w | wp2rb.op == dop_r) & 
                             ~wp2rb.hit & rbuffer[i].cache;
-            assign dmiss[i] = da2rb.load & da2rb.addr == rbuffer[i].addr[31:4];
+            assign dmiss[i] =   (rb2da.load & rb2da.raddr == rbuffer[i].addr[31:4] & rbuffer[i].cache) |
+                                (~rbuffer[i].cache & lsu2rb.rid0 == rbuffer[i].id) |
+                                (~rbuffer[i].cache & lsu2rb.rid1 == rbuffer[i].id & ~lsu2rb.valid0) |
+                                (~rbuffer[i].cache & lsu2rb.rid1 == rbuffer[i].id & lsu2rb.commit0);
             assign valids[i] = rbuffer[i].valid;
             assign readys[i] = rbuffer[i].valid & ~rbuffer[i].hold & ~rbuffer[i].issued & ~rbuffer[i].miss;
             always_ff @(posedge g.clk)
-                if(!g.resetn)
+                if(!g.resetn | lsu2rb.flush)
                     rbuffer[i].valid <= 1'b0;
-                else if((hit & launch[1] == i) | (rb2uh.valid & lu == i))
+                else if((hit & launch[1] == i) | (rb2uh.rvalid & lu == i))
                     rbuffer[i].valid <= 1'b0;
                 else if(lsu2rb.valid & i == avail)
                     rbuffer[i].valid <= 1'b1;
@@ -91,16 +97,18 @@ module read_buffer(
                 else if(miss[i])
                     rbuffer[i].issued <= 1'b0;
             always_ff @(posedge g.clk)
-                if(load[i] | dmiss[i])
+                if(load[i])
+                    rbuffer[i].miss <= ~lsu2rb.cache;
+                else if(dmiss[i])
                     rbuffer[i].miss <= 1'b0;
                 else if(miss[i])
                     rbuffer[i].miss <= 1'b1;
         end     
     endgenerate
     assign rb2da.r = readys[ready] & rbuffer[ready].cache;
-    assign rb2da.addr = rbuffer[ready].addr;
+    assign rb2da.raddr = rbuffer[ready].addr;
     assign rb2da.size = rbuffer[ready].size;
-    assign rb2uh.rvalid = readys[ready] & ~rbuffer[ready].cache;
+    assign rb2uh.rvalid = readys[ready] & ~rbuffer[ready].cache & ~flush_all;
     assign rb2uh.raddr = rbuffer[ready].addr;
     assign rb2uh.rsize = rbuffer[ready].size;
     assign rb2uh.rready = ~hit;
@@ -110,8 +118,8 @@ module read_buffer(
     always_ff @(posedge g.clk)
         if(rb2uh.uready & rb2uh.rvalid)
             lu <= ready;
-    assign lsu2prf.valid = hit | rb2uh.uvalid;
+    assign lsu2prf.valid = (hit | rb2uh.uvalid) & ~flush_all;
     assign lsu2prf.regid = hit ? rbuffer[launch[i]].regid : rbuffer[lu].regid;
-    assign lsu2prf.id = hit ? rbuffer[launch[1].id] : rbuffer[lu].id;
+    assign lsu2prf.id = hit ? rbuffer[launch[1]].id : rbuffer[lu].id;
     assign lsu2prf.data = hit ? wp2rb.data : rb2uh.udata;
 endmodule

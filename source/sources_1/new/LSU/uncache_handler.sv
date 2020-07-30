@@ -29,7 +29,8 @@ module uncache_handler(
 
     assign uc2mem.uvalid = (rb2uh.rvalid | wb2uh.w) & rb2uh.uready;
     assign uc2mem.uwen = wb2uh.w;
-    assign uc2mem.uaddr = wb2uh.w ? {wb2uh.addr[31:2],2'b0} : {rb2uh.raddr[31:2],2'b0};
+    assign uc2mem.uaddr = wb2uh.w ? {wb2uh.waddr[31:2],2'b0} : {rb2uh.raddr[31:2],2'b0};
+    assign uc2mem.udata = wb2uh.data;
     assign uc2mem.uready = rb2uh.rready;
 
     always_comb 
@@ -53,8 +54,8 @@ module uncache_handler(
     always_ff @(posedge g.clk)
         if(!g.resetn)
             rb2uh.uvalid <= 1'b0;
-        else if(uc2mem.valid)
-            rb2uh.uvalid <= 1'b0;
+        else if(uc2mem.uvalid)
+            rb2uh.uvalid <= 1'b1;
         else if(rb2uh.rready)
             rb2uh.uvalid <= 1'b0;
 

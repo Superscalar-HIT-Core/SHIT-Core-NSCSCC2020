@@ -3,7 +3,7 @@
 module miss_handler(
     GLOBAL.slave                g,
     WRAPER2MHANDLER.mhandler    wp2mh,
-    DCACHE2MOMERY.dcache        dc2mem,
+    DCACHE2MEMORY.dcache        dc2mem,
     MHANDLER2DACCESSOR.mhandler mh2da
     );
 
@@ -32,7 +32,7 @@ module miss_handler(
     always_ff @(posedge g.clk)
         if(!g.resetn)
             ipointer <= 3'b0;
-        else if(lh_dc2mem.valid & lh_dc2mem.ready)
+        else if(lh_dc2mem.dvalid & lh_dc2mem.mready)
             ipointer <= ipointer + 3'b1;
 
     always_ff @(posedge g.clk)
@@ -59,7 +59,7 @@ module miss_handler(
             always_ff @(posedge g.clk)
                 if(miss & ~adcheck & i == lpointer & ~MSHR[i].valid)
                     MSHR[i].wb <= wp2mh.dirty;
-                else if(mh2wb.valid & mh2wb.ready)
+                else if(mh2wbh.valid & mh2wbh.ready)
                     MSHR[i].wb <= 1'b0;
             always_ff @(posedge g.clk)
                 if(miss & ~adcheck & i == lpointer & ~MSHR[i].valid)
@@ -75,25 +75,25 @@ module miss_handler(
     always_ff @(posedge g.clk)
         laddr_reg <= mh2da.addr;        
 
-    assign mh2wb.valid = MSHR[ipointer].valid & MSHR[ipointer].wb;
-    assign mh2wb.addr = {MSHR[ipointer].tag,MSHR[ipointer].addr[8:0]};
-    assign mh2wb.data = MSHR[ipointer].data;
+    assign mh2wbh.valid = MSHR[ipointer].valid & MSHR[ipointer].wb;
+    assign mh2wbh.addr = {MSHR[ipointer].tag,MSHR[ipointer].addr[8:0]};
+    assign mh2wbh.data = MSHR[ipointer].data;
     assign wbh_dc2mem.mready = dc2mem.mready;
-    writeback_handler wb_handler(g,mh2wb.wbhandler,wbh_dc2mem.dcache);
+    writeback_handler wb_handler(g,mh2wbh.wbhandler,wbh_dc2mem.dcache);
 
     assign mh2lh.valid = MSHR[ipointer].valid & ~MSHR[ipointer].issued;
     assign mh2lh.addr = MSHR[ipointer].addr;
-    assign lh_dc2mem.ready = ~mh2wbh.busy & dc2mem.mready;
+    assign lh_dc2mem.mready = ~mh2wbh.busy & dc2mem.mready;
     load_handler l_handler(g,mh2lh.lhandler,lh_dc2mem.dcache);
 
     assign mh2ml.addr = MSHR[dpointer].addr;
-    assign ml_dc2mem.valid = dc2mem.mvalid;
-    assign ml_dc2mem.data = dc2mem.mdata;
-    mem_listener m_listener(g,mh2ml.mlisntener,ml_dc2mem.dcache,mh2da);
+    assign ml_dc2mem.mvalid = dc2mem.mvalid;
+    assign ml_dc2mem.mdata = dc2mem.mdata;
+    mem_listener m_listener(g,mh2ml.mlistener,ml_dc2mem.dcache,mh2da);
 
-    assign dc2mem.valid = wbh_dc2mem.valid | lh_dc2mem.valid;
-    assign dc2mem.wen   = wbh_dc2mem.valid ? wbh_dc2mem.wen : lh_dc2mem.wen;
-    assign dc2mem.addr  = wbh_dc2mem.valid ? wbh_dc2mem.addr : lh_dc2mem.addr;
-    assign dc2mem.data  = wbh_dc2mem.data;
-    assign dc2mem.ready = ml_dc2mem.ready;
+    assign dc2mem.dvalid = wbh_dc2mem.dvalid | lh_dc2mem.dvalid;
+    assign dc2mem.wen   = wbh_dc2mem.dvalid ? wbh_dc2mem.wen : lh_dc2mem.wen;
+    assign dc2mem.addr  = wbh_dc2mem.dvalid ? wbh_dc2mem.addr : lh_dc2mem.addr;
+    assign dc2mem.ddata  = wbh_dc2mem.ddata;
+    assign dc2mem.dready = ml_dc2mem.dready;
 endmodule

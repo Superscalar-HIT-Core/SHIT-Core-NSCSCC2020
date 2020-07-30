@@ -24,5 +24,5 @@ module writeback_handler(
     assign dc2mem.dvalid = mh2wbh.valid | valid;
     assign dc2mem.wen = 1'b1;
     assign dc2mem.addr = valid ? {addr,4'b0} : {mh2wbh.addr,4'b0};
-    assign dc2mem.data = valid ? data : mh2wbh.data;
+    assign dc2mem.ddata = valid ? data : mh2wbh.data;
 endmodule

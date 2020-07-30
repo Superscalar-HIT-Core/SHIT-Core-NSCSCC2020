@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 `include "LSU_defines.svh"
 `include "../defines/defines.svh"
+`include "../defs.sv"
 module LSU(
     input   logic           clk,
     input   logic           rst,
@@ -14,12 +15,11 @@ module LSU(
     FU_ROB.fu               lsu_commit_reg,
     DataReq.lsu             dataReq,
     DataResp.lsu            dataResp,
-    DcacheReq.lsu           dcacheReq,
-    DcacheResp.lsu          dcacheResp,
-    input  [`ROB_ID_W]      rid0,
-    input                   valid0,
-    input                   com0,
-    input  [`ROB_ID_W]      rid1
+    DCacheReq.dCache        dcacheReq,
+    DCacheResp.dCache       dcacheResp,
+    input   UOPBundle       rob0,
+    input   UOPBundle       rob1,
+    input   logic           rob_isEmpty
     );
     assign pauseReq = 1'b0;
     assign flushReq = 1'b0;
@@ -47,7 +47,9 @@ module LSU(
     logic load = uOP.uOP == LB_U | uOP.uOP == LBU_U |
                  uOP.uOP == LH_U | uOP.uOP == LHU_U | uOP.uOP == LW_U;
 
-    GLOBAL  g(  .clk(clk),  .resetn(~rst));
+    GLOBAL              g();
+    assign g.clk = clk;
+    assign g.resetn = ~rst;
     LSU2WBUFFER         lsu2wb();
     WRAPER2BUFFER       wp2buf();
     WBUFFER2DACCESSOR   wb2da();
@@ -77,7 +79,8 @@ module LSU(
     assign lsu2rb.addr = paddr;
     assign lsu2rb.size = size;
     assign lsu2rb.regid = uOP.op1PAddr;
-    read_buffer rbuf(g.slave,lsu2rb.rbuf,wb2rb.rbuf,rb2da.rbuf,wp2bf.buffer,rb2uh.rbuf,lsu2prf.lsu);
+    assign lsu2rb.flush = ctrl_lsu.flush;
+    read_buffer rbuf(g.slave,lsu2rb.rbuf,wb2rb.rbuf,rb2da.rbuf,wp2buf.buffer,rb2uh.rbuf,lsu2prf.lsu);
     assign r_busy = lsu2rb.busy | lsu2rt.halt;
     assign wbData.rd = lsu2prf.regid;
     assign wbData.wen = lsu2prf.valid;
@@ -92,17 +95,17 @@ module LSU(
 
     dcache_wraper wraper(g.slave,da2wp.wraper,wp2mh.wraper,wp2buf.wraper);
 
-    DCACHE2MOMERY       dc2mem();
+    DCACHE2MEMORY       dc2mem();
     miss_handler mhandler(g.slave,wp2mh.mhandler,dc2mem.dcache,mh2da.mhandler);
-    assign dcacheReq.valid = mh2da.dvalid;
-    assign dcacheReq.addr = mh2da.addr;
-    assign dcacheReq.write_en = mh2da.wen;
-    assign dcacheReq.data = mh2da.ddata;
-    assign mh2da.mready = dcacheReq.ready;
+    assign dcacheReq.valid = dc2mem.dvalid;
+    assign dcacheReq.addr = dc2mem.addr;
+    assign dcacheReq.write_en = dc2mem.wen;
+    assign dcacheReq.data = dc2mem.ddata;
+    assign dc2mem.mready = dcacheReq.ready;
 
-    assign mh2da.mvalid = dcacheResp.valid;
-    assign mh2da.mdata = dcacheResp.data;
-    assign dcacheResp.ready = mh2da.dready;
+    assign dc2mem.mvalid = dcacheResp.valid;
+    assign dc2mem.mdata = dcacheResp.data;
+    assign dcacheResp.ready = dc2mem.dready;
 
     UNCACHE2MEMORY      uc2mem();
 
@@ -131,6 +134,6 @@ module LSU(
     assign lsu_commit_reg.setFinish = lsu2rob.valid;
     assign lsu_commit_reg.id = lsu2rob.id;
     assign lsu_commit_reg.setException = lsu2rob.set_ex;
-    assign lsu_commit_reg.exceptionType = (lsu2rob.sl == 1'b1) ? ExcAddressErrS : ExcAddressErrL;
+    assign lsu_commit_reg.exceptionType = (lsu2rob.ls == 1'b1) ? ExcAddressErrS : ExcAddressErrL;
     assign lsu_commit_reg.BadVAddr = lsu2rob.bad_addr;
 endmodule

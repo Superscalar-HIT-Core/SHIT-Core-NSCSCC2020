@@ -14,7 +14,7 @@ module load_handler(
             valid <= 1'b0;
         else if(mh2lh.valid & ~dc2mem.mready)
             valid <= 1'b1;
-        else if(dc2mem.ready)
+        else if(dc2mem.mready)
             valid <= 1'b0;
 
     always_ff @(posedge g.clk) if(mh2lh.valid & mh2lh.ready) addr <= mh2lh.addr;
@@ -22,7 +22,7 @@ module load_handler(
     assign mh2lh.ready = ~valid;
     assign mh2lh.busy = dc2mem.dvalid;
 
-    assign dc2mem.valid = mh2lh.valid | valid;
+    assign dc2mem.dvalid = mh2lh.valid | valid;
     assign dc2mem.addr = valid ? {addr,4'b0} : {mh2lh.addr,4'b0};
     assign dc2mem.wen = 1'b0;
 endmodule

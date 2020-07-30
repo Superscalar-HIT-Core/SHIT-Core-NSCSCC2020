@@ -18,7 +18,7 @@ typedef struct packed {
 module write_buffer(
     GLOBAL.slave            g,
     LSU2WBUFFER.wbuf        lsu2wb,
-    WRAPER2BUFFER.buffer    wp2buf,
+    WRAPER2BUFFER.buffer    wp2wb,
     WBUFFER2DACCESSOR.wbuf  wb2da,
     WBUFFER2UHANDLER.wbuf   wb2uh,
     WBUFFER2RBUFFER.wbuf    wb2rb
@@ -96,12 +96,12 @@ module write_buffer(
     assign lsu2wb.busy = wbuffer[wpointer].valid | lsu2wb.rb;
 
     assign wb2da.w = wbuffer[fpointer].valid & wbuffer[fpointer].com & ~wbuffer[fpointer].issued & wbuffer[fpointer].cache;
-    assign wb2da.addr = wbuffer[fpointer].addr;
+    assign wb2da.waddr = wbuffer[fpointer].addr;
     assign wb2da.data = wbuffer[fpointer].data;
     assign wb2da.size = wbuffer[fpointer].size;
 
     assign wb2uh.w = wbuffer[fpointer].valid & wbuffer[fpointer].com & ~wbuffer[fpointer].issued & ~wbuffer[fpointer].cache;
-    assign wb2uh.addr = wbuffer[fpointer].addr;
+    assign wb2uh.waddr = wbuffer[fpointer].addr;
     assign wb2da.data = wbuffer[fpointer].data;
     assign wb2da.size = wbuffer[fpointer].size;
 endmodule

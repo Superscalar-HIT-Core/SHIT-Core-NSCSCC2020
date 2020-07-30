@@ -7,23 +7,23 @@ module dcache_wraper(
     WRAPER2BUFFER.wraper    wp2buf
     );
 
-    WRAPER2DCACHE wp2da();
-    assign wp2da.wraper.r = ~da2wp.l & da2wp.r; 
-    assign wp2da.wraper.wt = 1'b0;
-    assign wp2da.wraper.addr = da2wp.addr;
+    WRAPER2DCACHE wp2dc();
+    assign wp2dc.r = ~da2wp.l & da2wp.r; 
+    assign wp2dc.wt = 1'b0;
+    assign wp2dc.addr = da2wp.addr;
     
     always_comb
         if(da2wp.l)
-            wp2da.wraper.wd = 16'hffff;
+            wp2dc.wd = 16'hffff;
         else if(da2wp.w)
             case(da2wp.size)
-            s_byte: wp2da.wraper.wd = 16'h1 << da2wp.addr[3:0];
-            s_half: wp2da.wraper.wd = 16'h3 << da2wp.addr[3:0];
-            s_word: wp2da.wraper.wd = 16'hf << da2wp.addr[3:0];
-            default: wp2da.wraper.wd = 16'h0;
+            s_byte: wp2dc.wd = 16'h1 << da2wp.addr[3:0];
+            s_half: wp2dc.wd = 16'h3 << da2wp.addr[3:0];
+            s_word: wp2dc.wd = 16'hf << da2wp.addr[3:0];
+            default: wp2dc.wd = 16'h0;
             endcase
         else
-            wp2da.wraper.wd = 16'h0;
+            wp2dc.wd = 16'h0;
     
     always_comb
         if(da2wp.l)
@@ -33,7 +33,7 @@ module dcache_wraper(
 
     Size size_reg[1:0];
     logic [31:0] addr_reg[1:0];
-    logic [31:0] word = wp2da.dout >> {addr_reg[1][3:0],3'b0};
+    logic [31:0] word = wp2dc.dout >> {addr_reg[1][3:0],3'b0};
     Dcache_op op[1:0];
     
     always_ff @(posedge g.clk)
@@ -54,7 +54,7 @@ module dcache_wraper(
     always_ff @(posedge g.clk) addr_reg[0] <= (!g.resetn) ? 32'b0:da2wp.addr;
     always_ff @(posedge g.clk) addr_reg[1] <= (!g.resetn) ? 32'b0:addr_reg[0];
 
-    dcache dcache(g,wp2da.dcache);
+    dcache dcache(g,wp2dc.dcache);
     assign wp2mh.op = op[1];
     assign wp2mh.addr = addr_reg[1];
     assign wp2mh.tag = wp2dc.tout;
@@ -64,6 +64,7 @@ module dcache_wraper(
 
     assign wp2buf.op = op[1];
     assign wp2buf.hit = wp2dc.hit;
+    assign wp2buf.addr = addr_reg[1];
     always_comb
         case(size_reg[1])
         s_byte: wp2buf.data = {{24{word[7]}},word[7:0]};
