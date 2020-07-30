@@ -195,6 +195,8 @@ module mycpu_top(
     wire                lsu_busy;
     wire                mul_busy, div_busy;
 
+    wire                hasPendingUncachedLoad;
+
     UOPBundle           alu0RFBundle;
     UOPBundle           alu1RFBundle;
     UOPBundle           lsuRFBundle;
@@ -231,6 +233,8 @@ module mycpu_top(
     FU_ROB              alu1_rob();
     FU_ROB              mdu_rob();
     FU_ROB              lsu_rob();
+
+    UncachedLoadInfo    uncachedLoadInfo();
 
     ROB_Commit          rob_commit();
 
@@ -695,12 +699,12 @@ module mycpu_top(
         
     end
     always @ (posedge aclk) begin
-        // if (sanityCheck0) begin
-        //     $display("sanity check : reg %d is 0x%h", sanityCheck0ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck0ARF]]);
-        // end
-        // if (sanityCheck1) begin
-        //     $display("sanity check : reg %d is 0x%h", sanityCheck1ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck1ARF]]);
-        // end
+        if (sanityCheck0) begin
+            $fdisplay("sanity check : reg %d is 0x%h", sanityCheck0ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck0ARF]]);
+        end
+        if (sanityCheck1) begin
+            $fdisplay("sanity check : reg %d is 0x%h", sanityCheck1ARF, prf_u.prfs_bank0[rr.u_map_table.committed_rename_map_table_bank0[sanityCheck1ARF]]);
+        end
     end
 
     // always @ (negedge ctrl_commit.flushReq) #1 begin

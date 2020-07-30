@@ -73,7 +73,7 @@ module CP0(
             PageMask[31: 0] <= 32'h0;       // page mask
             Count   [31: 0] <= 32'h0;       // Count
 
-            Status  [31:28] <= 4'b0001;     // Coprocesser useability
+            Status  [31:28] <= 4'b0000;     // Coprocesser useability
             Status  [27:23] <= 5'h0;        // 0
             Status  [   26] <= 1'b0;        // FR
             Status  [   23] <= 1'b0;        // PX
@@ -83,7 +83,7 @@ module CP0(
             Status  [15: 8] <= 8'b0;        // IM7..0
             Status  [7 : 4] <= 4'b0;        // 0
             Status  [    3] <= 1'b0;        // R0
-            Status  [    2] <= 1'b1;        // ERL
+            Status  [    2] <= 1'b0;        // ERL
             Status  [    1] <= 1'b0;        // EXL
             Status  [    0] <= 1'b0;        // IE
 
@@ -124,7 +124,8 @@ module CP0(
             Cause[15:10]    <= exceInfo.interrupt; // IP7~IP2中断位
 			Random          <= Random + 1;
             divClk          <= ~divClk;
-            Count           <= Count + divClk;
+            // Count           <= Count + divClk;
+            Count           <= 32'hABCD0000;
             Cause[30]       <= CounterInterrupt;            // Cause.TI 计时器中断
         end
 
@@ -135,13 +136,15 @@ module CP0(
             end else if (!Status[1]) begin
                 Status[1] <= 1'b1;
                 Cause[31] <= exceInfo.isDS;
-                EPc <= exceInfo.isDS ? ( exceInfo.excePC - 4 ) : exceInfo.excePC;
+                // EPc <= exceInfo.isDS ? ( exceInfo.excePC - 4 ) : exceInfo.excePC;
+                if (exceInfo.isDS)  EPc <= exceInfo.excePC - 4;
+                else                EPc <= exceInfo.excePC;
                 priority case(exceInfo.exceType)
                     ExcInterrupt:   begin
                         Cause[6:2] 		<= `Exc_INT;
                     end
-                    ExcAddressErrL: begin
-                        BadVAddr 		<= exceInfo.excePC[1:0] == 2'b0 ? exceInfo.reserved : exceInfo.excePC[1:0];
+                    ExcAddressErrL, ExcAddressErrIF: begin
+                        BadVAddr 		<= exceInfo.reserved;
                         Cause[6:2] 		<= `Exc_ADEL;
                     end
                     ExcReservedInst:    begin

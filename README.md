@@ -19,8 +19,14 @@
     - 执行
     - 写回
 
+- file copy -force ../../../soft/perf_func/obj/stream_copy/axi_ram.mif ./mycpu.sim/sim_1/behav/xsim/axi_ram.mif; restart; run all;
 
+- cd [get_property DIRECTORY [current_project]]; source ./run_allbench.tcl
 ## 更新日志
+
+### 2020-07-29
+
+- 功能测试上板通过，性能测试仍然有bug
 
 ### 2020-07-25
 

@@ -89,14 +89,28 @@ module MDU(
                 mulPipeHi[i] <= mulPipeHi[i + 1];
                 mulPipeLo[i] <= mulPipeLo[i + 1];
             end
-            mulPipeHi[`MDU_MUL_CYCLE - 1] <= (uopHi.uOP == MULTHI_U || uopHi.uOP == MULTUHI_U) ? uopHi : dummy;
-            mulPipeLo[`MDU_MUL_CYCLE - 0] <= (uopLo.uOP == MULTLO_U || uopLo.uOP == MULTULO_U) ? uopLo : dummy;
+            // mulPipeHi[`MDU_MUL_CYCLE - 1] <= (uopHi.uOP == MULTHI_U || uopHi.uOP == MULTUHI_U) ? uopHi : dummy;
+            // mulPipeLo[`MDU_MUL_CYCLE - 0] <= (uopLo.uOP == MULTLO_U || uopLo.uOP == MULTULO_U) ? uopLo : dummy;
+            if (uopHi.uOP == MULTHI_U || uopHi.uOP == MULTUHI_U) begin
+                mulPipeHi[`MDU_MUL_CYCLE - 1] <= uopHi;
+                mulPipeLo[`MDU_MUL_CYCLE - 0] <= uopLo;
+            end else begin
+                mulPipeHi[`MDU_MUL_CYCLE - 1] <= dummy;
+                mulPipeLo[`MDU_MUL_CYCLE - 0] <= dummy;
+            end
             for(integer i = 0; i < `MDU_DIV_CYCLE; i++) begin
                 divPipeHi[i] <= divPipeHi[i + 1];
                 divPipeLo[i] <= divPipeLo[i + 1];
             end
-            divPipeHi[`MDU_DIV_CYCLE - 1] <= (uopHi.uOP ==  DIVHI_U || uopHi.uOP ==  DIVUHI_U) ? uopHi : dummy;
-            divPipeLo[`MDU_DIV_CYCLE - 0] <= (uopLo.uOP ==  DIVLO_U || uopLo.uOP ==  DIVULO_U) ? uopLo : dummy;
+            // divPipeHi[`MDU_DIV_CYCLE - 1] <= (uopHi.uOP ==  DIVHI_U || uopHi.uOP ==  DIVUHI_U) ? uopHi : dummy;
+            // divPipeLo[`MDU_DIV_CYCLE - 0] <= (uopLo.uOP ==  DIVLO_U || uopLo.uOP ==  DIVULO_U) ? uopLo : dummy;
+            if (uopHi.uOP == DIVHI_U || uopHi.uOP == DIVUHI_U) begin
+                divPipeHi[`MDU_DIV_CYCLE - 1] <= uopHi;
+                divPipeLo[`MDU_DIV_CYCLE - 0] <= uopLo;
+            end else begin
+                divPipeHi[`MDU_DIV_CYCLE - 1] <= dummy;
+                divPipeLo[`MDU_DIV_CYCLE - 0] <= dummy;
+            end
 
             rs0SgnPipe <= {rs0SgnPipe[30:0], rdata.rs0_data[31] && uopHi.valid};
             rs1SgnPipe <= {rs1SgnPipe[30:0], rdata.rs1_data[31] && uopHi.valid};
@@ -145,8 +159,12 @@ module MDU(
             mulLo       <= 0; 
         end else begin
             state       <= nxtState;
-            divLo       <= state == divOutputHi ? quotient      : divLo;
-            mulLo       <= state == mulOutputHi ? mulRes[31:0]  : mulLo;              
+            // divLo       <= state == divOutputHi ? quotient      : divLo;
+            if (state == divOutputHi)   divLo <= quotient;
+            else                        divLo <= divLo;
+            // mulLo       <= state == mulOutputHi ? mulRes[31:0]  : mulLo;       
+            if (state == mulOutputHi)   mulLo <= mulRes[31:0];
+            else                        mulLo <= mulLo;       
         end
     end
 

@@ -784,13 +784,16 @@ module decode(
                     uOP0.isPriv     = `TRUE;
                 end
                 default: begin
-                    uOP0.uOP        = NOP_U;
+                    uOP0.uOP        = RESERVED_U;
                     uOP0.rs_type    = RS_ALU;
                     uOP0.aluType    = ALU_MISC;
                     uOP0.op0re      = `FALSE;
                     uOP0.op1re      = `FALSE;
                     uOP0.dstwe      = `FALSE;
-                    uOP0.valid      = `FALSE;
+                    uOP0.busy       = `FALSE;
+                    uOP0.valid      = `TRUE;
+                    uOP0.causeExc   = `TRUE;
+                    uOP0.exception  = ExcReservedInst;
                 end
             endcase
             // inst fetch bad vaddr, high priority

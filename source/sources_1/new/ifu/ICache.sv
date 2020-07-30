@@ -30,7 +30,7 @@ module ICache(
 
     ICache_Regs.iCache  iCache_regs
 );
-    typedef enum  { sRunning, sBlock, sWaitUnpause, sRecover, sReset } ICacheState;
+    typedef enum  { sRunning, sBlock, sIdle, sWaitUnpause, sRecover, sReset } ICacheState;
 
     typedef struct packed {
         logic           writeEn;
@@ -75,6 +75,8 @@ module ICache(
     logic  [5  :0]  lineAddress;
     logic  [127:0]  hitLine;
     logic  [31 :0]  hitInsts[3 :0];
+
+    logic           instValid;
 
     ICacheState     state, nxtState;
 
@@ -155,8 +157,10 @@ module ICache(
         collision2          <= tag2IO.address != compInputPC[9:4];
         collision3          <= tag3IO.address != compInputPC[9:4];
         if(rst) begin
-            for (integer i = 0; i < 3; i++) begin
+            for (integer i = 0; i < 4; i++) begin
                 valid[i]    <= 0;
+            end
+            for (integer i = 0; i < 64; i++) begin
                 age  [i]    <= 0;
             end
             inst0           <= 0;
@@ -183,6 +187,16 @@ module ICache(
             requestSent <= `FALSE;
         end else begin
             requestSent <= requestSent;
+        end
+    end
+
+    always_ff @(posedge clk) begin
+        if(rst || ctrl_iCache.flush) begin
+            instValid <= `FALSE;
+        end else if (!ctrl_iCache.pause) begin
+            instValid <= `TRUE;
+        end else begin
+            instValid <= `FALSE;
         end
     end
 
@@ -228,11 +242,11 @@ module ICache(
             sRunning: begin
                 if(rst) begin
                     nxtState = sReset;
-                end else if (flush && !instReq.valid) begin
+                end else if (flush && !instReq.valid && !requestSent) begin
                     nxtState = sRunning;
-                end else if(flush && instReq.valid) begin
+                end else if(flush && (instReq.valid || requestSent) && !instResp.valid) begin
                     nxtState = sRecover;
-                end else if(ctrl_iCache.pause || hit) begin
+                end else if(hit) begin
                     nxtState = sRunning;
                 end else begin
                     nxtState = sBlock;
@@ -258,10 +272,21 @@ module ICache(
             sRecover: begin
                 if(rst) begin
                     nxtState = sReset;
-                end else if(instResp.valid) begin
+                end else if(instResp.valid && ctrl_iCache.pause) begin
+                    nxtState = sIdle;
+                end else if(instResp.valid && !ctrl_iCache.pause) begin
                     nxtState = sRunning;
                 end else begin
                     nxtState = sRecover;
+                end
+            end
+            sIdle: begin
+                if(rst || ctrl_iCache.flush) begin
+                    nxtState = sReset;
+                end else if(!ctrl_iCache.pause) begin
+                    nxtState = sRunning;
+                end else begin
+                    nxtState = sIdle;
                 end
             end
             sWaitUnpause:begin
@@ -336,11 +361,11 @@ module ICache(
         case(state)
             sRunning: begin
                 if(hit) begin
-                    iCache_regs.inst0.valid = ~PCReg[2] && !flush;
+                    iCache_regs.inst0.valid = ~PCReg[2] && !flush && (instValid || !ctrl_iCache.pause);
                     iCache_regs.inst0.inst  = hitInsts[{PCReg[3], 1'b0}];
                     iCache_regs.inst0.pc    = PCReg & 32'hffff_fffc;
 
-                    iCache_regs.inst1.valid = !regs_iCache.onlyGetDS && !flush;
+                    iCache_regs.inst1.valid = !regs_iCache.onlyGetDS && !flush && (instValid || !ctrl_iCache.pause);
                     iCache_regs.inst1.inst  = hitInsts[{PCReg[3], 1'b1}];
                     iCache_regs.inst1.pc    = PCReg | 32'h0000_0004;
                     ctrl_iCache.pauseReq    = `FALSE;
@@ -449,6 +474,13 @@ module ICache(
                     iCache_regs.inst0.valid     = `FALSE;
                     iCache_regs.inst1.valid     = `FALSE;
                 end
+            end
+            sIdle: begin
+                instReq.valid                   = `FALSE;
+                instResp.ready                  = `FALSE;
+                iCache_regs.inst0.valid         = `FALSE;
+                iCache_regs.inst1.valid         = `FALSE;
+                
             end
             sWaitUnpause: begin
                 ctrl_iCache.pauseReq            = `FALSE;

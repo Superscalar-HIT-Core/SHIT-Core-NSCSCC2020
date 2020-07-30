@@ -425,7 +425,7 @@ typedef struct packed {
 //     Word imm;
 //     ALUOP alu_op;
 //     logic is_ds_i; // 是否为延迟槽指令
-//     logic is_special_i;  // 是否是特殊的指令，例如CP0等等，需要单独的发射
+//     logic is_special_i;  // 是否是特殊的指令，例如0等等，需要单独的发射
 // } ALU_Inst_Ops;
 
 typedef struct packed {
@@ -707,8 +707,8 @@ interface CP0Exception;
     logic[1:0]    Status_IM_SW;
     logic[1:0]    Cause_IP_SW;
     Word          EPc;
-    modport cp0(input causeExce, exceType, excePC, isDS, interrupt, output reserved, EPc, Status_IE, Status_EXL, Status_IM, Status_IM_SW, Cause_IP_SW, Counter_Int);
-    modport exce(output causeExce, exceType, excePC, isDS, interrupt, input reserved, EPc, Status_IE, Status_EXL, Status_IM, Status_IM_SW, Cause_IP_SW, Counter_Int);
+    modport cp0(input causeExce, exceType, excePC, isDS, interrupt, reserved, output EPc, Status_IE, Status_EXL, Status_IM, Status_IM_SW, Cause_IP_SW, Counter_Int);
+    modport exce(output causeExce, exceType, excePC, isDS, interrupt,  reserved, input EPc, Status_IE, Status_EXL, Status_IM, Status_IM_SW, Cause_IP_SW, Counter_Int);
 endinterface //CP0 ----- Exception
 
 interface CommitExce;
@@ -783,6 +783,15 @@ interface MDUTestInterface_MUL;
         end
     endtask //automatic
 endinterface //MDUTestInterface_MUL
+
+interface UncachedLoadInfo;
+    UOPBundle   head0;
+    UOPBundle   head1;
+    logic       isEmpty;
+
+    modport rob(output head0, head1, isEmpty);
+    modport lsu(input head0, head1, isEmpty);
+endinterface
 
 interface MDUTestInterface_DIV;
     wire         clk;

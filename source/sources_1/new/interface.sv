@@ -120,10 +120,11 @@ interface DataReq;
     logic [31:0] addr;
     logic        write_en;
     logic [31:0] data;
-    logic [ 3:0] strobe;
+    logic [3 :0] strobe;
+    logic [2 :0] size;
 
-    modport axi(output ready, input valid, addr, write_en, data, strobe);
-    modport lsu(input ready, output valid, addr, write_en, data, strobe);
+    modport axi(output ready, input valid, addr, write_en, data, strobe, size);
+    modport lsu(input ready, output valid, addr, write_en, data, strobe, size);
 
     task automatic sendWReq(logic [31:0] ad, logic [31:0] dat, ref logic clk);
         @(posedge clk) #1 begin

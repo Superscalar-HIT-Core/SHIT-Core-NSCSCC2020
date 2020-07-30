@@ -36,6 +36,7 @@ module IF0_1_reg(
     always_ff @ (posedge clk) begin
         if(rst) begin
             PC          <=  32'hbfc00000;
+            // PC          <=  32'hbfc17300;
             headIsDS    <=  `FALSE;
         end else if(backend_if0.redirect && backend_if0.valid) begin
             PC          <=  backend_if0.redirectPC;
