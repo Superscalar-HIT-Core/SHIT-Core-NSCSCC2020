@@ -846,6 +846,22 @@ typedef struct packed {
     logic wen;
 } BypassInfo;
 
+typedef logic [9:0] TAGEIndex;
+typedef logic [2:0] TAGECtr;
+typedef logic [9:0] TAGETag;
+typedef logic [1:0] TAGEUseful;
+
+typedef struct packed {
+    logic hit;                                              // 预测命中Tage
+    TAGEIndex [3:0] index;                                      // 预测的index，以防历史记录改变
+    TAGETag tag;
+    TAGECtr ctr;                                        // 三位饱和计数器
+    TAGEUseful [3:0] useful;     // 四个useful位
+    logic [1:0] provider;                             // 
+    logic has_alter;                                
+} TAGEPred;
+
 // `define DEBUG
 
-`endif
+
+`endif 
