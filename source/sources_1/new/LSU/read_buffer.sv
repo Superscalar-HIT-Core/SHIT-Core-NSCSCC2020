@@ -9,13 +9,13 @@ typedef struct packed {
     logic   [31:0]      addr;
     Size                size;
     logic               isSigned;
-    logic   [7:0]       rely;
+    logic   [15:0]      rely;
     logic               hold;
     logic               issued;
     logic               miss;
 } RBUF_LINE;
-`define RBUFROW 3:0
-`define RBUFPOINTER 1:0
+`define RBUFROW     15:0
+`define RBUFPOINTER 3:0
 module read_buffer(
     GLOBAL.slave                g,
     LSU2RBUFFER.rbuf            lsu2rb,
@@ -32,38 +32,50 @@ module read_buffer(
     logic [`RBUFPOINTER] avail,ready;
     logic [`RBUFPOINTER] launch[1:0];
     logic [`RBUFPOINTER] lu;
-    logic [`RBUFROW] valids,readys,load,miss,dmiss;
+    logic [`RBUFROW] valids,readys,load,miss,dmiss,elders,youngers;
+    logic [`RBUFROW] dmiss_reg,dmiss_reg2;
+    wire hasElder = |elders;
     wire hit = (wp2rb.op == dop_r) & wp2rb.hit;
-    always_comb
-        casez(valids)
-        4'b???0: avail = 2'b00;
-        4'b??01: avail = 2'b01;
-        4'b?011: avail = 2'b10;
-        4'b0111: avail = 2'b11;
-        default: avail = 2'b00;
-        endcase
-    always_comb 
-        casez(readys)
-        4'b???1: ready = 2'b00;
-        4'b??10: ready = 2'b01;
-        4'b?100: ready = 2'b10;
-        4'b1000: ready = 2'b11;
-        default: ready = 2'b00;
-        endcase
+    integer j,k,l,cnt;
+    always_comb begin
+        avail = 4'b0;
+        for(j = 0; j < 16; j = j + 1)
+            if(valids[j])
+                avail = avail + 4'b1;
+            else break;
+    end
+
+    always_comb begin
+        ready = 4'b0;
+        for(k = 0; k < 16; k = k + 1)
+            if(!readys[k])
+                ready = ready + 4'b1;
+            else break;
+    end
+    
+    always_ff @(posedge g.clk) begin
+        cnt = 0;
+        for(l = 0; l < 16; l = l + 1)
+            if(valids[j])
+                cnt = cnt + 1;
+        lsu2rb.half = cnt >= 8;
+    end
 
     assign lsu2rb.busy = (rbuffer[avail].valid == 1'b1) | lsu2rb.flush;
+    always_ff @(posedge g.clk) if(!g.resetn) dmiss_reg <= 4'b0; else dmiss_reg <= dmiss;
+    always_ff @(posedge g.clk) if(!g.resetn) dmiss_reg2 <= 4'b0; else dmiss_reg2 <= dmiss_reg;
     generate
         genvar i;
-        for(i = 0; i < 4; i = i + 1)
+        for(i = 0; i < 16; i = i + 1)
         begin
             assign load[i] = ~rbuffer[i].valid & i == avail & lsu2rb.valid;
             assign miss[i] = (wp2rb.addr[31:4] == rbuffer[i].addr[31:4]) &
                             (wp2rb.op == dop_w | wp2rb.op == dop_r) & 
                             ~wp2rb.hit & rbuffer[i].cache;
-            assign dmiss[i] =   (rb2da.load & rb2da.laddr == rbuffer[i].addr[31:4] & rbuffer[i].cache) |
-                                (~rbuffer[i].cache & lsu2rb.rid0 == rbuffer[i].id) |
-                                (~rbuffer[i].cache & lsu2rb.rid1 == rbuffer[i].id & ~lsu2rb.valid0) |
-                                (~rbuffer[i].cache & lsu2rb.rid1 == rbuffer[i].id & lsu2rb.commit0);
+                            
+            assign dmiss[i] =   (rb2da.load & rb2da.laddr == rbuffer[i].addr[31:4] & rbuffer[i].cache) | elders[i] | (youngers[i] & ~hasElder);
+            assign elders[i] =   (~rbuffer[i].cache & lsu2rb.rid0 == rbuffer[i].id & rbuffer[i].valid);
+            assign youngers[i] = (~rbuffer[i].cache & lsu2rb.rid1 == rbuffer[i].id & & rbuffer[i].valid & (~lsu2rb.valid0 | lsu2rb.commit0));
             assign valids[i] = rbuffer[i].valid;
             assign readys[i] = rbuffer[i].valid & ~rbuffer[i].hold & ~rbuffer[i].issued & ~rbuffer[i].miss;
             always_ff @(posedge g.clk)
@@ -101,7 +113,7 @@ module read_buffer(
             always_ff @(posedge g.clk)
                 if(load[i])
                     rbuffer[i].miss <= ~lsu2rb.cache;
-                else if(dmiss[i])
+                else if(dmiss[i] | dmiss_reg[i] | dmiss_reg2[i])
                     rbuffer[i].miss <= 1'b0;
                 else if(miss[i])
                     rbuffer[i].miss <= 1'b1;
