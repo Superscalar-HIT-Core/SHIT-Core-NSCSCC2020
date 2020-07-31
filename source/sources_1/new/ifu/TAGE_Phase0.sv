@@ -14,18 +14,11 @@ module TAGE_Phase0(
     // For branch prediction
     input [31:0] br_pc,
     output TAGEIndex [3:0] index,
-    output TAGETag PCTag,
+    output TAGETag [3:0] PCTags,
     output flush_ubits_hi, flush_ubits_lo
     );
 
-    reg [9:0]  hist_10;
-    reg [19:0] hist_20;
-    reg [39:0] hist_40;
     reg [79:0] hist_80;
-
-    reg [9:0]  committed_hist_10;
-    reg [19:0] committed_hist_20;
-    reg [39:0] committed_hist_40;
     reg [79:0] committed_hist_80;
 
     wire [9:0] folded_hist_10;
@@ -36,12 +29,51 @@ module TAGE_Phase0(
     // Predict Phase 0: Index generation logic
     
     // TODO: Design the function to generate pc tag
-
+    assign PCTags[0]     =    br_pc[11:4]  
+                            ^ hist_80[7:0] 
+                            ^ { hist_80[8:1], 1'b0 };
+    assign PCTags[1]     =    br_pc[11:4]  
+                            ^ hist_80[7:0] 
+                            ^ { hist_80[8:1], 1'b0 }
+                            ^ { 1'b0, hist_80[14:8] }
+                            ^ { hist_80[6:0], 1'b0 } 
+                            ^ { hist_80[13:7], 1'b0 };
+    assign PCTags[2]     =    br_pc[11:4] 
+							^ ( hist_80[8:0] 
+							^   hist_80[17:9] 
+							^   hist_80[26:18] 
+							^   hist_80[35:27] )
+							^ ( { 1'b0,hist_80[43:36] } 
+							^   { hist_80[7:0],1'b0 } 
+							^   { hist_80[15:8],1'b0 } 
+							^   { hist_80[23:16],1'b0 } )
+							^ ( { hist_80[31:24],1'b0 } 
+							^   { hist_80[39:32],1'b0 } 
+							^   { 4'h0,hist_80[43:40],1'b0 } );
+    assign PCTags[3]     =    br_pc[8:0]
+                            ^ ( hist_80[8:0]
+                            ^   hist_80[17:9]
+                            ^   hist_80[26:18]
+                            ^   hist_80[35:27] )
+                            ^ ( hist_80[44:36]
+                            ^   hist_80[53:45]
+                            ^   hist_80[62:54]
+                            ^   hist_80[71:63] )
+                            ^ ( {hist_80[7:0],1'b0}
+                            ^   {hist_80[15:8],1'b0}
+                            ^   {hist_80[23:16],1'b0}
+                            ^   {hist_80[31:24],1'b0} )
+                            ^ ( {hist_80[39:32],1'b0}
+                            ^   {hist_80[47:40],1'b0}
+                            ^   {hist_80[55:48],1'b0}
+                            ^   {hist_80[63:56],1'b0} )
+                            ^ {hist_80[71:64],1'b0}
+                            ^ {hist_80[79:72],1'b0} ;
     // TAGE Indexing Logic
-    assign folded_hist_10 = hist_10;
-    assign folded_hist_20 = hist_20[19:10] ^ hist_20[9:0];
-    assign folded_hist_40 = ( hist_40[19:10] ^ hist_40[9:0] ) ^ 
-                            ( hist_40[39:30] ^ hist_40[29:20] );
+    assign folded_hist_10 = hist_80[9:0];
+    assign folded_hist_20 = hist_80[19:10] ^ hist_80[9:0];
+    assign folded_hist_40 = ( hist_80[19:10] ^ hist_80[9:0] ) ^ 
+                            ( hist_80[39:30] ^ hist_80[29:20] );
     assign folded_hist_80 = ( (hist_80[19:10] ^ hist_80[9:0] ) ^ 
                             ( hist_80[39:30] ^ hist_80[29:20] ) ) ^ 
                             ( (hist_80[49:40] ^ hist_80[59:50] ) ^ 
@@ -55,24 +87,12 @@ module TAGE_Phase0(
     // History update
     always @(posedge clk)   begin
         if(rst) begin
-            hist_10 <= 0;
-            hist_20 <= 0;
-            hist_40 <= 0;
             hist_80 <= 0;
         end else if (recover) begin
-            hist_10 <= committed_hist_10;
-            hist_20 <= committed_hist_20;
-            hist_40 <= committed_hist_40;
             hist_80 <= committed_hist_80;
         end else if (pause) begin
-            hist_10 <= hist_10;
-            hist_20 <= hist_20;
-            hist_40 <= hist_40;
             hist_80 <= hist_80;
         end else begin
-            hist_10 <= { hist_10[8:0], new_branch_taken};
-            hist_20 <= { hist_20[18:0],new_branch_taken};
-            hist_40 <= { hist_40[38:0],new_branch_taken};
             hist_80 <= { hist_80[78:0],new_branch_taken};
         end
     end
@@ -80,18 +100,12 @@ module TAGE_Phase0(
     // History update
     always @(posedge clk)   begin
         if(rst) begin
-            committed_hist_10 <= 0;
-            committed_hist_20 <= 0;
-            committed_hist_40 <= 0;
             committed_hist_80 <= 0;
         end else begin
-            committed_hist_10 <= { committed_hist_10[8:0],  committed_branch_taken};
-            committed_hist_20 <= { committed_hist_20[18:0], committed_branch_taken};
-            committed_hist_40 <= { committed_hist_40[38:0], committed_branch_taken};
             committed_hist_80 <= { committed_hist_80[78:0], committed_branch_taken};
         end
     end
-
+    // 8 bits tag and 3 bits ctr
     reg wait_flush_hi, wait_flush_lo;
     wire flush_ubit;
     // 128K = 2^18;

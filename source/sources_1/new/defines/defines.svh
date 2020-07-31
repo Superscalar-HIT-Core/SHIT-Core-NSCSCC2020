@@ -848,7 +848,7 @@ typedef struct packed {
 
 typedef logic [9:0] TAGEIndex;
 typedef logic [2:0] TAGECtr;
-typedef logic [9:0] TAGETag;
+typedef logic [7:0] TAGETag;
 typedef logic [1:0] TAGEUseful;
 
 typedef struct packed {
