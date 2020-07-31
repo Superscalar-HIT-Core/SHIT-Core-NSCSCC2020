@@ -32,7 +32,7 @@ module read_buffer(
     logic [`RBUFPOINTER] avail,ready;
     logic [`RBUFPOINTER] launch[1:0];
     logic [`RBUFPOINTER] lu;
-    logic [`RBUFROW] valids,readys,load,miss,dmiss;
+    logic [`RBUFROW] valids,readys,load,miss,dmiss,dmiss_reg,dmiss_reg2;
     wire hit = (wp2rb.op == dop_r) & wp2rb.hit;
     always_comb
         casez(valids)
@@ -52,6 +52,8 @@ module read_buffer(
         endcase
 
     assign lsu2rb.busy = (rbuffer[avail].valid == 1'b1) | lsu2rb.flush;
+    always_ff @(posedge g.clk) if(!g.resetn) dmiss_reg <= 4'b0; else dmiss_reg <= dmiss;
+    always_ff @(posedge g.clk) if(!g.resetn) dmiss_reg2 <= 4'b0; else dmiss_reg2 <= dmiss_reg;
     generate
         genvar i;
         for(i = 0; i < 4; i = i + 1)
@@ -101,7 +103,7 @@ module read_buffer(
             always_ff @(posedge g.clk)
                 if(load[i])
                     rbuffer[i].miss <= ~lsu2rb.cache;
-                else if(dmiss[i])
+                else if(dmiss[i] | dmiss_reg[i] | dmiss_reg2[i])
                     rbuffer[i].miss <= 1'b0;
                 else if(miss[i])
                     rbuffer[i].miss <= 1'b1;

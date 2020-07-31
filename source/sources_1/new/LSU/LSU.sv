@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 `include "LSU_defines.svh"
 `include "../defines/defines.svh"
-`include "../defs.sv"
+// `include "../defs.sv"
 module LSU(
     input   logic           clk,
     input   logic           rst,
@@ -50,8 +50,8 @@ module LSU(
         default: addr_err = 1'b0;
         endcase
 
-    wire store = ((uOP.uOP == SW_U) | (uOP.uOP == SH_U) | (uOP.uOP == SB_U)) & uOP.valid;
-    wire load = ((uOP.uOP == LW_U) | (uOP.uOP == LH_U) | (uOP.uOP == LHU_U) | (uOP.uOP == LB_U) | (uOP.uOP == LBU_U)) & uOP.valid;
+    wire store = ((uOP.uOP == SW_U) | (uOP.uOP == SH_U) | (uOP.uOP == SB_U)) & uOP.valid & ~lsu_busy;
+    wire load = ((uOP.uOP == LW_U) | (uOP.uOP == LH_U) | (uOP.uOP == LHU_U) | (uOP.uOP == LB_U) | (uOP.uOP == LBU_U)) & uOP.valid & ~lsu_busy;
 
     GLOBAL              g();
     assign g.clk = clk;
