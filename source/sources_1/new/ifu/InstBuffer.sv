@@ -53,6 +53,7 @@ module InstBuffer(
     logic   [1+`IB_ADDR]    vTail;
 
     logic   [31:0]          debug_inst_count;
+    logic                   needPause;
 
     assign debug_inst_count = vTail - head;
     assign waitForDS        = !instBuffer_backend.inst1.valid && (data[oSlot0].isJ || data[oSlot0].isBr);
@@ -76,7 +77,7 @@ module InstBuffer(
 
     assign isFull   = vHead - tail <= 2'h2;
 
-    assign ctrl_instBuffer.pauseReq = isFull;
+    assign ctrl_instBuffer.pauseReq = isFull || needPause;
 
     assign passThrough =    empty && 
                             instBuffer_backend.ready &&
@@ -85,12 +86,22 @@ module InstBuffer(
                             !ifu_instBuffer.inst1.isJ && 
                             !ifu_instBuffer.inst1.isBr &&
                             !(rst || instBuffer_backend.flushReq);
+    
+    always_ff @ (posedge clk) begin
+        if(rst || ctrl_instBuffer.flush) begin
+            needPause <= `FALSE;
+        end else if (isFull) begin
+            needPause <= `TRUE;
+        end else if (vTail - head <= 4'h8) begin
+            needPause <= `FALSE;
+        end
+    end
 
     // >>>>>>>>>> INPUT PORT <<<<<<<<<<
     always_ff @ (posedge clk) begin
         if(rst || instBuffer_backend.flushReq) begin
             tail    <= 32'h0;
-        end else if(!isFull && !passThrough) begin
+        end else if(!ctrl_instBuffer.pauseReq && !passThrough) begin
             case ({ifu_instBuffer.inst0.valid, ifu_instBuffer.inst1.valid})
                 2'b01: begin
                     tail            <= tail + 1'b1;

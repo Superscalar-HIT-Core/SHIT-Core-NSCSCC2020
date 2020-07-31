@@ -29,9 +29,9 @@ wire robEmpty = dispatch_rob.empty;
 wire hasPrivInst =  (inst_0_ops.valid && inst_0_ops.isPriv) || 
                     (inst_1_ops.valid && inst_1_ops.isPriv);
 wire slotsFull = inst_0_ops.valid && inst_1_ops.valid;
-wire passThrough = ~hasPrivInst;                // 不需要暂停，直接传递过去
+wire passThrough = ~hasPrivInst;                // 不需要暂停，直接传�?�过�?
 reg pause_req_cp0;
-assign pause_req = pause_req_cp0;           // rob的已经在外面处理了
+assign pause_req = pause_req_cp0;           // rob的已经在外面处理�?
 // 对ROB发来的ROB ID进行处理
 wire [7:0] robID_0, robID_1;
 assign robID_0 = { dispatch_rob.robID[6:0], 1'b0 } ;
@@ -150,7 +150,7 @@ assign inst1_isStore =  (inst_1_ops_reordered.uOP == SB_U ) ||
                         (inst_1_ops_reordered.uOP == SWL_U) || 
                         (inst_1_ops_reordered.uOP == SWR_U); 
 
-// 给ROB的
+// 给ROB�?
 assign dispatch_rob.uOP0 = inst_0_ops_reordered;
 assign dispatch_rob.uOP1 = inst_1_ops_reordered;
 assign dispatch_rob.valid = (inst_0_ops_reordered.valid | inst_1_ops_reordered.valid) && (~pause);
@@ -160,7 +160,7 @@ wire inst_1_is_alu = (inst_1_ops_reordered.rs_type == RS_ALU) && inst_1_ops_reor
 wire inst_0_is_mdu = (inst_0_ops_reordered.rs_type == RS_MDU) && inst_0_ops_reordered.valid;
 wire inst_0_is_lsu = (inst_0_ops_reordered.rs_type == RS_LSU) && inst_0_ops_reordered.valid;
 wire inst_1_is_lsu = (inst_1_ops_reordered.rs_type == RS_LSU) && inst_1_ops_reordered.valid;
-// 每个指令的操作数是否已经准备好（这里只是设置是否读寄存器）
+// 每个指令的操作数是否已经准备好（这里只是设置是否读寄存器�?
 wire inst0_r0_ren = inst_0_ops_reordered.op0re && (|inst_0_ops_reordered.op0LAddr);
 wire inst0_r1_ren = inst_0_ops_reordered.op1re && (|inst_0_ops_reordered.op1LAddr);
 wire inst1_r0_ren = inst_1_ops_reordered.op0re && (|inst_1_ops_reordered.op0LAddr);
@@ -176,7 +176,7 @@ assign inst1_rdy.prs2_rdy = ~(inst1_r1_ren);
 assign dispatch_inst0_wnum = inst_0_ops_reordered.dstPAddr;
 assign dispatch_inst1_wnum = inst_1_ops_reordered.dstPAddr;
 assign dispatch_inst0_wen = inst_0_ops_reordered.dstwe && inst_0_ops_reordered.valid;
-assign dispatch_inst1_wen = inst_1_ops_reordered.dstwe && inst_0_ops_reordered.valid;
+assign dispatch_inst1_wen = inst_1_ops_reordered.dstwe && inst_1_ops_reordered.valid;
 
 
 

@@ -472,6 +472,13 @@ typedef enum bit[3:0] {
 } ALUType;
 
 typedef struct packed {
+    logic [31:0]    pc;
+    logic [1 :0]    bimState;
+    logic [31:0]    targetAddr;
+    logic           valid;
+} NLPEntry;
+
+typedef struct packed {
     // logic   [`UOP_WIDTH]    uOP;
     logic   [31:0]          pc;
     logic   [`ROB_ID_W]     id;
@@ -783,6 +790,15 @@ interface MDUTestInterface_MUL;
         end
     endtask //automatic
 endinterface //MDUTestInterface_MUL
+
+interface UncachedLoadInfo;
+    UOPBundle   head0;
+    UOPBundle   head1;
+    logic       isEmpty;
+
+    modport rob(output head0, head1, isEmpty);
+    modport lsu(input head0, head1, isEmpty);
+endinterface
 
 interface MDUTestInterface_DIV;
     wire         clk;
