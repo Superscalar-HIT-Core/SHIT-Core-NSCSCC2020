@@ -50,8 +50,8 @@ module IF_3(
         .jr     (inst1Jr                )
     );
 
-    assign inst0NLPTaken = (regs_if3.inst0.nlpInfo.valid && regs_if3. inst0.nlpInfo.taken) ? `TRUE : `FALSE;   // eliminate X state
-    assign inst1NLPTaken = (regs_if3.inst1.nlpInfo.valid && regs_if3.inst1.nlpInfo.taken) ? `TRUE : `FALSE;
+    assign inst0NLPTaken = (regs_if3.inst0.nlpInfo.valid && regs_if3.inst0.valid && regs_if3.inst0.nlpInfo.taken) ? `TRUE : `FALSE;   // eliminate X state
+    assign inst1NLPTaken = (regs_if3.inst1.nlpInfo.valid && regs_if3.inst1.valid && regs_if3.inst1.nlpInfo.taken) ? `TRUE : `FALSE;
 
     always_comb begin
         if3_regs.inst0          = regs_if3.inst0;

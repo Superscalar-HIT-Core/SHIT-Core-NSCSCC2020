@@ -472,6 +472,13 @@ typedef enum bit[3:0] {
 } ALUType;
 
 typedef struct packed {
+    logic [31:0]    pc;
+    logic [1 :0]    bimState;
+    logic [31:0]    targetAddr;
+    logic           valid;
+} NLPEntry;
+
+typedef struct packed {
     // logic   [`UOP_WIDTH]    uOP;
     logic   [31:0]          pc;
     logic   [`ROB_ID_W]     id;

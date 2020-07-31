@@ -160,10 +160,10 @@ module AXIInterface(
                 if(rst) begin
                     nextRState = sRRst;
                 end else if(axiReadAddr.valid && axiReadAddr.ready) begin
-                    if(dataReqBusy && !dataReqWEn) begin
-                        nextRState = sRData;
-                    end else if(dCacheReqBusy && !dCacheReqWEn) begin
+                    if(dCacheReqBusy && !dCacheReqWEn) begin
                         nextRState = sRDCache;
+                    end else if(dataReqBusy && !dataReqWEn) begin
+                        nextRState = sRData;
                     end else begin
                         nextRState = sRInst;
                     end
@@ -346,7 +346,7 @@ module AXIInterface(
                     axiReadAddr.address = dataReqAddr;
                     axiReadAddr.length  = 4'b0000;  // no burst
                     axiReadAddr.size    = dataReqSize;
-                    axiReadAddr.burst   = 2'b10;
+                    axiReadAddr.burst   = 2'b00;
                 end else if(instReqBusy) begin
                     axiReadAddr.id      = 4'h0;
                     axiReadAddr.address = instReqPC & 32'hFFFF_FFF0;

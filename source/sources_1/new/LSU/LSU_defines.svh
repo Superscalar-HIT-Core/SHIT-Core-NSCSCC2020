@@ -214,4 +214,5 @@ interface UNCACHE2MEMORY;
     modport lsu (output uvalid,uwen,uaddr,ustrobe,uready,udata,usize, input mready,mvalid,mdata);
     modport memory(input uvalid,uwen,uaddr,ustrobe,uready,udata,usize, output mready,mvalid,mdata);
 endinterface
+`include "MHandler_defines.svh"
 `endif

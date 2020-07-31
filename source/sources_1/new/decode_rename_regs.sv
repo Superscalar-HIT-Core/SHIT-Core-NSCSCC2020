@@ -32,7 +32,11 @@ module decode_rename_regs(
             uOP1        <= uOP1;
             uOP2        <= uOP2;
             uOP3        <= uOP3;
-            lastIsFull  <= full || lastIsFull;
+            if(ctrl_decode_rename_regs.pause) begin
+                lastIsFull <= lastIsFull;
+            end else begin
+                lastIsFull <= lastIsFull || full;
+            end
         end else begin
             uOP0        <= decode0_regs.uOP0;
             uOP1        <= decode0_regs.uOP1;
