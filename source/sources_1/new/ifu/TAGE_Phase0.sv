@@ -79,10 +79,10 @@ module TAGE_Phase0(
                             ( (hist_80[49:40] ^ hist_80[59:50] ) ^ 
                             ( hist_80[69:60] ^ hist_80[79:70] ) );
 
-    assign index[0] = folded_hist_10 ^ pc[13:4];
-    assign index[1] = folded_hist_20 ^ pc[13:4];
-    assign index[2] = folded_hist_40 ^ pc[13:4];
-    assign index[3] = folded_hist_80 ^ pc[13:4];
+    assign index[0] = folded_hist_10 ^ br_pc[13:4];
+    assign index[1] = folded_hist_20 ^ br_pc[13:4];
+    assign index[2] = folded_hist_40 ^ br_pc[13:4];
+    assign index[3] = folded_hist_80 ^ br_pc[13:4];
 
     // History update
     always @(posedge clk)   begin
