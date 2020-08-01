@@ -9,7 +9,7 @@
 
 `define IB_SIZE         16
 `define IB_ADDR         3:0
-`define NLP_SIZE        512
+`define NLP_SIZE        512 
 // `define NLP_ADDR        9:0
 `define NLP_PC          10:2
 
