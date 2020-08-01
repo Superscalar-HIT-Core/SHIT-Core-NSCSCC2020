@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "../defs.sv"
+`include "../defines/defines.svh"
 
 module IF_3(
     input wire              clk,
@@ -7,13 +7,16 @@ module IF_3(
 
     ICache_Regs.regs        iCache_regs,
     Regs_IF3.if3            regs_if3,
-    input                   pred_taken,
-    input TAGEPred          pred_info,
 
     IF3_Regs.if3            if3_regs,
     IF3Redirect.if3         if3_0,
     NLPUpdate.if3           if3_nlp,
-    Ctrl.slave              ctrl_if3    // only care aboud flushReq
+    Ctrl.slave              ctrl_if3,    // only care aboud flushReq
+
+    input wire              pred_valid, // from bpd
+    input wire              pred_taken, // from bpd
+    input wire [31:0]       pred_target,
+    input TAGEPred          pred_info
 );
     logic           inst0Jr;
     logic           inst1Jr;
@@ -21,6 +24,9 @@ module IF_3(
     logic           inst1J;
     logic           inst0Br;
     logic           inst1Br;
+
+    logic           inst0IsCtrl;
+    logic           inst1IsCtrl;
 
     logic           inst0NLPTaken;
     logic           inst1NLPTaken;
@@ -58,56 +64,68 @@ module IF_3(
         if3_regs.inst0          = regs_if3.inst0;
         if3_regs.inst1          = regs_if3.inst1;
 
-        if3_regs.inst0.pc       = regs_if3.inst0.pc;
-        if3_regs.inst0.inst     = regs_if3.inst0.inst;
-        if3_regs.inst0.valid    = regs_if3.inst0.valid;
-        if3_regs.inst0.nlpInfo  = regs_if3.inst0.nlpInfo;
-        // TODO
-        if3_regs.inst0.bpdInfo  = bpd_if3.bpdInfo0;
+        // who is the real ctrl inst?
+        inst0IsCtrl             = inst0J || inst0Br;
+        inst1IsCtrl             = inst1J || inst1Br;
+
+        if3_regs.inst0.bpdInfo  = inst0IsCtrl ? pred_info : 0;
         if3_regs.inst0.isJ      = inst0J;
         if3_regs.inst0.isBr     = inst0Br;
-        if3_regs.inst0.predAddr = inst0Jr ? if3_regs.inst0.nlpInfo.target : decodeTarget0;
         if3_regs.inst0.jBadAddr = (inst0J && !inst0Jr) && |decodeTarget0[1:0]; // only handle j here
-        
-        if3_regs.inst1.pc       = regs_if3.inst1.pc;
-        if3_regs.inst1.inst     = regs_if3.inst1.inst;
-        if3_regs.inst1.valid    = regs_if3.inst1.valid;
-        if3_regs.inst1.nlpInfo  = regs_if3.inst1.nlpInfo;
-        // TODO
-        if3_regs.inst1.bpdInfo  = bpd_if3.bpdInfo1;
+
+        if3_regs.inst1.bpdInfo  = inst1IsCtrl ? pred_info : 0;
         if3_regs.inst1.isJ      = inst1J;
         if3_regs.inst1.isBr     = inst1Br;
-        if3_regs.inst1.predAddr = inst1Jr ? if3_regs.inst1.nlpInfo.target : decodeTarget1;
-        if3_regs.inst0.jBadAddr = (inst1J && !inst1Jr) && |decodeTarget1[1:0];
+        if3_regs.inst1.jBadAddr = (inst1J && !inst1Jr) && |decodeTarget1[1:0]; // only handle j here
 
-        if(!if3_regs.inst0.valid) begin                  // invalid inst
-            if3_regs.inst0.predTaken = `FALSE;
-        end else if(if3_regs.inst0.isJ && !(inst0Jr && !if3_regs.inst0.nlpInfo.valid)) begin            // unconditional
-            if3_regs.inst0.predTaken = `TRUE;
-        end else if(!if3_regs.inst0.isBr) begin          // normal
-            if3_regs.inst0.predTaken = `FALSE;
-        end else if(if3_regs.inst0.bpdInfo.valid) begin  // predict by bpd
-            if3_regs.inst0.predTaken = if3_regs.inst0.bpdInfo.taken;
-        end else if(if3_regs.inst0.nlpInfo.valid) begin  // predict by nlp
-            if3_regs.inst0.predTaken = if3_regs.inst0.nlpInfo.taken;
-        end else begin                          // both miss
-            if3_regs.inst0.predTaken = `FALSE;
-        end
-
-        if(!if3_regs.inst1.valid) begin                  // invalid inst
-            if3_regs.inst1.predTaken = `FALSE;
-        end else if(if3_regs.inst1.isJ && !(inst1Jr && !if3_regs.inst1.nlpInfo.valid)) begin            // unconditional
-            if3_regs.inst1.predTaken = `TRUE;
-        end else if(!if3_regs.inst1.isBr) begin          // normal
-            if3_regs.inst1.predTaken = `FALSE;
-        end else if(if3_regs.inst1.bpdInfo.valid) begin  // predict by bpd
-            if3_regs.inst1.predTaken = if3_regs.inst1.bpdInfo.taken;
-        end else if(if3_regs.inst1.nlpInfo.valid) begin  // predict by nlp
-            if3_regs.inst1.predTaken = if3_regs.inst1.nlpInfo.taken;
-        end else begin                          // both miss
-            if3_regs.inst1.predTaken = `FALSE;
+        if(!if3_regs.inst0.valid || !inst0IsCtrl) begin                  // invalid inst
+            if3_regs.inst0.predTaken    = `FALSE;
+            if3_regs.inst0.predAddr     = 0;
+        end else if (if3_regs.inst0.isJ) begin
+            if(inst0Jr) begin
+                if(pred_valid) begin
+                    if3_regs.inst0.predTaken    = `TRUE;
+                    if3_regs.inst0.predAddr     = pred_target;
+                end else if(if3_regs.inst0.nlpInfo.valid) begin
+                    if3_regs.inst0.predTaken    = `TRUE;
+                    if3_regs.inst0.predAddr     = if3_regs.inst0.nlpInfo.target;
+                end else begin
+                    if3_regs.inst0.predTaken    = `FALSE;
+                    if3_regs.inst0.predAddr     = 0;
+                end
+            end else begin
+                if3_regs.inst0.predTaken        = `TRUE;
+                if3_regs.inst0.predAddr         = decodeTarget0;
+            end
+        end else begin  // isBr
+            if(pred_valid) begin
+                if3_regs.inst0.predTaken    = pred_taken;
+                if3_regs.inst0.predAddr     = decodeTarget0;
+            end
         end
         
+        if(!if3_regs.inst1.valid || !inst1IsCtrl) begin                  // invalid inst
+            if3_regs.inst1.predTaken    = `FALSE;
+            if3_regs.inst1.predAddr     = 0;
+        end else if (if3_regs.inst0.isJ) begin
+            if(inst1Jr) begin
+                if(pred_taken) begin
+                    if3_regs.inst1.predTaken    = `TRUE;
+                    if3_regs.inst1.predAddr     = pred_target;
+                end else if(if3_regs.inst1.nlpInfo.valid) begin
+                    if3_regs.inst1.predTaken    = `TRUE;
+                    if3_regs.inst1.predAddr     = if3_regs.inst1.nlpInfo.target;
+                end else begin
+                    if3_regs.inst1.predTaken    = `FALSE;
+                    if3_regs.inst1.predAddr     = 0;
+                end
+            end else begin
+                if3_regs.inst1.predTaken        = `TRUE;
+                if3_regs.inst1.predAddr         = decodeTarget1;
+            end
+        end
+
+        // redirect control
         ctrl_if3.pauseReq   = `FALSE;
         ctrl_if3.flushReq   = `FALSE;
         if3_0.redirect      = `FALSE;
@@ -140,6 +158,7 @@ module IF_3(
         end
     end
 
+    // wait ds handle
     always_ff @ (posedge clk) begin
         if(rst || ctrl_if3.flush) begin
             waitDSRedirectTarget <= 0;
@@ -174,6 +193,7 @@ module IF_3(
         end
     end
 
+    // nlp update info
     always_comb begin
         if3_nlp.update = 0;
         if(if3_regs.inst0.valid && (if3_regs.inst0.bpdInfo.valid || (if3_regs.inst0.isJ && (!inst0Jr || (inst0Jr && if3_regs.inst0.nlpInfo.valid))))) begin
@@ -192,5 +212,4 @@ module IF_3(
             if3_nlp.update.valid       = `FALSE;
         end
     end
-
 endmodule

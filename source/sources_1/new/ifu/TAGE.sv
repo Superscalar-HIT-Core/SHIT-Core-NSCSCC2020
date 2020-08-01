@@ -13,7 +13,9 @@ module TAGE(
     input new_branch_taken,
     // For branch prediction
     input [31:0] br_pc,
+    output pred_valid,
     output pred_taken,
+    output [31:0] pred_target,
     output TAGEPred pred_info,
     // For branch prediction update
     input commit_valid,

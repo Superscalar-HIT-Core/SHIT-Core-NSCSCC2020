@@ -544,6 +544,24 @@ typedef struct packed {
     // TODO
 } UOPBundle;
 
+typedef logic [9:0] TAGEIndex;
+typedef logic [2:0] TAGECtr;
+typedef logic [7:0] TAGETag;
+typedef logic [1:0] TAGEUseful;
+
+typedef struct packed {
+    logic hit;                                            // 预测命中
+    TAGEIndex hit_index;                                  // 预测的index，以防历史记录改变
+    TAGEIndex on_mispred_index;                           // 预测错误时，要分配的新项的index
+    logic [1:0] on_mispred_bank;                          // 预测错误时，需要分配哪个Bank
+    TAGETag hit_tag;            // 命中的Tag
+    TAGETag on_mispred_tag;     // 错误预测时，更新的新项的Tag
+    logic has_free_to_alloc;    // 预测错误时，有新项可以分配
+    TAGECtr ctr;                // 三位饱和计数器
+    logic [1:0] provider;                             // 
+    logic has_alter;
+} TAGEPred;
+
 interface Ctrl;
     logic   pauseReq;
     logic   flushReq;
@@ -877,24 +895,6 @@ typedef struct packed {
     Word wData;
     logic wen;
 } BypassInfo;
-
-typedef logic [9:0] TAGEIndex;
-typedef logic [2:0] TAGECtr;
-typedef logic [7:0] TAGETag;
-typedef logic [1:0] TAGEUseful;
-
-typedef struct packed {
-    logic hit;                                            // 预测命中
-    TAGEIndex hit_index;                                  // 预测的index，以防历史记录改变
-    TAGEIndex on_mispred_index;                           // 预测错误时，要分配的新项的index
-    logic [1:0] on_mispred_bank;                          // 预测错误时，需要分配哪个Bank
-    TAGETag hit_tag;            // 命中的Tag
-    TAGETag on_mispred_tag;     // 错误预测时，更新的新项的Tag
-    logic has_free_to_alloc;    // 预测错误时，有新项可以分配
-    TAGECtr ctr;                // 三位饱和计数器
-    logic [1:0] provider;                             // 
-    logic has_alter;
-} TAGEPred;
 
 // `define DEBUG
 
