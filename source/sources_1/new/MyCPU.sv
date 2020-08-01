@@ -441,12 +441,13 @@ module mycpu_top(
         .busyvec_l                          (busyvec_l_sb2lsuiq),
         .busyvec_r                          (busyvec_r_sb2lsuiq)
     );
-
+	wire LSU_half;
 
     issue_unit_LSU issue_lsu(
         .clk                                (aclk),
         .rst                                (rst),
         .flush                              (lsuIQFlush),
+		.lsu_half_full					    (LSU_half),
         .inst_Ops_0                         (dispatch_lsu_0),
         .inst_Ops_1                         (dispatch_lsu_1),
         .enq_req_0                          (rs_lsu_wen_0),
@@ -618,7 +619,8 @@ module mycpu_top(
         .*,
         .uOP                                (lsuUOPBundle),
         .oprands                            (lsuOprands),
-        .wbData                             (lsuWBOut)
+        .wbData                             (lsuWBOut),
+		.half_full							(LSU_half)
     );
     MDU mdu(
         .*,

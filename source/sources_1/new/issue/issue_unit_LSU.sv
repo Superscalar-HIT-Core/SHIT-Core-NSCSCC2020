@@ -175,6 +175,7 @@ module issue_unit_LSU(
     input clk,
     input rst,
     input flush,        // 清除请求
+    input lsu_half_full,
     input LSU_Queue_Meta inst_Ops_0, inst_Ops_1,      // 从译码模块来的，指令的译码信息
     input enq_req_0, enq_req_1,                     // 指令入队请求
     // 此处，LSU没有准备好，是不能发射的
@@ -229,7 +230,7 @@ iq_lsu u_iq_lsu(
     .busyvec_r(busyvec_r)
 );
 
-assign ready = ~(almost_full | full);   // 如果满了，则不能继续接受
+assign ready = ~(almost_full | full) && ~lsu_half_full;    // 如果满了，则不能继续接受
 
 store_bitmask_gen u_mask(
     .store_vec(isStore_vec),
