@@ -18,6 +18,7 @@ module CtrlUnitBackend(
     Ctrl.master     ctrl_rf_mdu_regs,
     Ctrl.master     ctrl_rf_lsu_regs,
     Ctrl.master     ctrl_lsu,
+    Ctrl.master     ctrl_mdu,
     Ctrl.master     ctrl_alu0_output_regs,
     Ctrl.master     ctrl_alu1_output_regs,
     Ctrl.master     ctrl_mdu_output_regs,
@@ -105,6 +106,7 @@ module CtrlUnitBackend(
     assign  ctrl_alu0_output_regs.flush         = flushReq_dly || ctrl_commit.flushReq;
     assign  ctrl_alu1_output_regs.flush         = flushReq_dly || ctrl_commit.flushReq;
     assign  ctrl_mdu_output_regs.flush          = flushReq_dly || ctrl_commit.flushReq;
+    assign  ctrl_mdu.flush                      = flushReq_dly || ctrl_commit.flushReq;
     assign  ctrl_lsu_output_regs.flush          = flushReq_dly || ctrl_commit.flushReq;
     assign  ctrl_lsu.flush                      = flushReq_dly || ctrl_commit.flushReq;
     assign  aluIQFlush                          = flushReq_dly || ctrl_commit.flushReq;

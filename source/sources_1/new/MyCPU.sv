@@ -95,6 +95,7 @@ module mycpu_top(
     Ctrl                ctrl_rf_mdu_regs();
     Ctrl                ctrl_rf_lsu_regs();
     Ctrl                ctrl_lsu();
+    Ctrl                ctrl_mdu();
     Ctrl                ctrl_alu0_output_regs();
     Ctrl                ctrl_alu1_output_regs();
     Ctrl                ctrl_mdu_output_regs();
