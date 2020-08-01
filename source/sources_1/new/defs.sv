@@ -40,18 +40,6 @@ typedef struct packed {
     logic           valid;
 } BPDUpdateInfo;
 
-typedef struct packed {
-    logic   [31:0]  inst;
-    logic   [31:0]  pc;
-    logic           isBr;
-    logic           isDs;
-    logic           isJ;
-    logic           valid;
-    NLPPredInfo     nlpInfo;
-    BPDPredInfo     bpdInfo;
-    logic           predTaken;
-    logic   [31:0]  predAddr;
-    logic           jBadAddr;
-} InstBundle;
+
 
 `endif

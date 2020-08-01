@@ -265,6 +265,21 @@ typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
 `define NOP_U       8'b01000010
 `define WAIT_U      8'b01000101
 
+
+typedef struct packed {
+    logic   [31:0]  inst;
+    logic   [31:0]  pc;
+    logic           isBr;
+    logic           isDs;
+    logic           isJ;
+    logic           valid;
+    NLPPredInfo     nlpInfo;
+    TAGEPred        bpdInfo;
+    logic           predTaken;
+    logic   [31:0]  predAddr;
+    logic           jBadAddr;
+} InstBundle;
+
 typedef enum bit[7:0] {
     //     NOP_U  移到第一个，为了方便观察
     NOP_U       ,
@@ -509,6 +524,7 @@ typedef struct packed {
 
     logic                   predTaken;
     logic   [31:0]          predAddr;
+    TAGEPred                predInfo;
     logic   [1:0]           nlpBimState;
 
     logic                   causeExc;

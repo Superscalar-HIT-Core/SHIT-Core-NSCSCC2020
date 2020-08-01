@@ -22,7 +22,7 @@ module TAGE_Phase1(
     input [31:0] committed_pc,
     input commit_valid,
     input TAGEPred committed_pred_info,
-    input commited_mispred
+    input committed_mispred
     );
     wire [7:0] random_num;
     // 线性反馈移位寄存器
@@ -171,18 +171,18 @@ module TAGE_Phase1(
                 update_index[committed_pred_info.provider] = committed_pred_info.hit_index;
                 // Useful bit
                 if(committed_pred_info.has_alter) begin // 需要更新useful bit
-                    inc_useful[committed_pred_info.provider] = ~commited_mispred;
-                    dec_useful[committed_pred_info.provider] = commited_mispred;
+                    inc_useful[committed_pred_info.provider] = ~committed_mispred;
+                    dec_useful[committed_pred_info.provider] = committed_mispred;
                 end
                 // Counter 
-                if(commited_mispred)    begin   // 预测错误，减小计数器
+                if(committed_mispred)    begin   // 预测错误，减小计数器
                     update_ctr[committed_pred_info.provider] = committed_pred_info.ctr == 2'b00 ? 2'b00 : committed_pred_info.ctr - 2'b01;
                 end else begin                  // 预测正确，增大计数器
                     update_ctr[committed_pred_info.provider] = committed_pred_info.ctr == 2'b11 ? 2'b11 : committed_pred_info.ctr + 2'b01;
                 end
                 update_tag[committed_pred_info.provider] = committed_pred_info.hit_tag;
             end
-            if(commited_mispred && committed_pred_info.provider != 2'b11)    begin
+            if(committed_mispred && committed_pred_info.provider != 2'b11)    begin
                 // 如果预测失败，并且不是使用最长历史，还需要尝试分配一个新的项
                 if(committed_pred_info.has_free_to_alloc)  begin   // 分配一个新的项
                     update_en[committed_pred_info.on_mispred_bank] = 1;

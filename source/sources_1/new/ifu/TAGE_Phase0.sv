@@ -9,10 +9,13 @@ module TAGE_Phase0(
     input rst,
     input pause,
     input recover,
-    input committed_branch_taken,
+    input new_branch_happen,
     input new_branch_taken,
     // For branch prediction
     input [31:0] br_pc,
+    // For updating bpd
+    input commit_valid,
+    input committed_branch_taken,
     output TAGEIndex [3:0] index,
     output TAGETag [3:0] PCTags,
     output flush_ubits_hi, flush_ubits_lo
@@ -92,7 +95,7 @@ module TAGE_Phase0(
             hist_80 <= committed_hist_80;
         end else if (pause) begin
             hist_80 <= hist_80;
-        end else begin
+        end else if(new_branch_happen) begin 
             hist_80 <= { hist_80[78:0],new_branch_taken};
         end
     end
@@ -101,7 +104,7 @@ module TAGE_Phase0(
     always @(posedge clk)   begin
         if(rst) begin
             committed_hist_80 <= 0;
-        end else begin
+        end else if(commit_valid) begin
             committed_hist_80 <= { committed_hist_80[78:0], committed_branch_taken};
         end
     end
@@ -116,7 +119,7 @@ module TAGE_Phase0(
             branch_cnt <= 0;
         end else if(recover)    begin
             branch_cnt <= committed_branch_cnt;
-        end else begin
+        end else if(new_branch_happen) begin
             branch_cnt <= branch_cnt + new_branch_taken;
         end
     end
@@ -124,7 +127,7 @@ module TAGE_Phase0(
     always @(posedge clk)   begin
         if(rst) begin
             committed_branch_cnt <= 0;
-        end else begin
+        end else if(commit_valid) begin
             committed_branch_cnt <= committed_branch_cnt + committed_branch_taken;
         end
     end

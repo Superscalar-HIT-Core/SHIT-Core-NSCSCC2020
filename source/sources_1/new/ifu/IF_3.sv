@@ -7,7 +7,8 @@ module IF_3(
 
     ICache_Regs.regs        iCache_regs,
     Regs_IF3.if3            regs_if3,
-    BPD_IF3.if3             bpd_if3,
+    input                   pred_taken,
+    input TAGEPred          pred_info,
 
     IF3_Regs.if3            if3_regs,
     IF3Redirect.if3         if3_0,
@@ -61,6 +62,7 @@ module IF_3(
         if3_regs.inst0.inst     = regs_if3.inst0.inst;
         if3_regs.inst0.valid    = regs_if3.inst0.valid;
         if3_regs.inst0.nlpInfo  = regs_if3.inst0.nlpInfo;
+        // TODO
         if3_regs.inst0.bpdInfo  = bpd_if3.bpdInfo0;
         if3_regs.inst0.isJ      = inst0J;
         if3_regs.inst0.isBr     = inst0Br;
@@ -71,6 +73,7 @@ module IF_3(
         if3_regs.inst1.inst     = regs_if3.inst1.inst;
         if3_regs.inst1.valid    = regs_if3.inst1.valid;
         if3_regs.inst1.nlpInfo  = regs_if3.inst1.nlpInfo;
+        // TODO
         if3_regs.inst1.bpdInfo  = bpd_if3.bpdInfo1;
         if3_regs.inst1.isJ      = inst1J;
         if3_regs.inst1.isBr     = inst1Br;
