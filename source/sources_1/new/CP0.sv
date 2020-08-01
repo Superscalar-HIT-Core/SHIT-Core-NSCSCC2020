@@ -121,12 +121,12 @@ module CP0(
 
             Compare [31: 0] <= 32'h0;       // fuck state X
         end else begin
-            Cause[15:10]    <= exceInfo.interrupt; // IP7~IP2中断位
+            Cause[15:10]    <= exceInfo.interrupt; // IP7~IP2中断�?
 			Random          <= Random + 1;
             divClk          <= ~divClk;
             Count           <= Count + divClk;
-            // Count           <= 32'hABCD0000;
-            Cause[30]       <= CounterInterrupt;            // Cause.TI 计时器中断
+//             Count           <= 32'hABCD0000;
+            Cause[30]       <= CounterInterrupt;            // Cause.TI 计时器中�?
         end
 
         // CP0 Set From Exception
@@ -168,7 +168,7 @@ module CP0(
                     end
                 endcase
             end
-        end else if(alu0_cp0.writeEn) begin         // CP0写使能
+        end else if(alu0_cp0.writeEn) begin         // CP0写使�?
             case(alu0_cp0.addr)
                 `CP0INDEX    : Index    <= (Index      & ~`CP0INDEXMASK     ) | (alu0_cp0.writeData & `CP0INDEXMASK    );
                 `CP0ENTRYLO0 : EntryLo0 <= (EntryLo0   & ~`CP0ENTRYLO0MASK  ) | (alu0_cp0.writeData & `CP0ENTRYLO0MASK );

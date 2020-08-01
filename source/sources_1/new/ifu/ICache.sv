@@ -11,7 +11,7 @@
 //  age reg :  3 * 64
 
 //  tag     : 21 bit for every line
-//  tag ram : 21 * 64 ï¼ˆ* 4ï¼‰
+//  tag ram : 21 * 64 ï¼?* 4ï¼?
 
 //  data ram: 128 * 64 (* 4)
 
@@ -55,6 +55,9 @@ module ICache(
     InstBundle      inst0;
     InstBundle      inst1;
     logic           onlyGetDSReg;
+
+    logic  [31 :0]  recoverPCReg;
+    logic  [20 :0]  recoverTag;
 
     logic           collision0;
     logic           collision1;
@@ -173,6 +176,16 @@ module ICache(
         end
     end
 
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            recoverPCReg    <= 0;
+            recoverTag      <= 0;
+        end else if (flush) begin
+            recoverPCReg    <= PCReg;
+            recoverTag      <= tag;
+        end
+    end
+
     always_ff @ (posedge clk) begin
         if(rst) begin
             requestSent <= `FALSE;
@@ -238,7 +251,7 @@ module ICache(
                             hit2 ? data2IO.dataOut :
                             hit3 ? data3IO.dataOut : instResp.cacheLine;
     assign lineAddress  = PCReg[9 : 4];
-    assign tag          = PCReg[31:10];
+    assign tag          = iCache_tlb.phyAddr0[31:10];
 
     always_comb begin
         nxtState = sReset;
@@ -392,7 +405,7 @@ module ICache(
                 end else begin
                     iCache_regs.inst0.valid = `FALSE;
                     iCache_regs.inst1.valid = `FALSE;
-                    ctrl_iCache.pauseReq    = `TRUE;
+                    ctrl_iCache.pauseReq    = !flush;
                     instReq.valid           = ~requestSent && !flush;
                     instReq.pc              = iCache_tlb.phyAddr0 & 32'hffff_fffc;
                     instResp.ready          = `TRUE;
