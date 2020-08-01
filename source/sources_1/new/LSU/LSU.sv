@@ -12,6 +12,7 @@ module LSU(
     input   UOPBundle       uOP,
     input   PRFrData        oprands,
     output  PRFwInfo        wbData,
+    output                  half_full,
     FU_ROB.fu               lsu_commit_reg,
     DataReq.lsu             dataReq,
     DataResp.lsu            dataResp,
@@ -97,6 +98,7 @@ module LSU(
     assign wbData.rd = lsu2prf.regid;
     assign wbData.wen = lsu2prf.valid;
     assign wbData.wdata = lsu2prf.data;
+    assign half_full = lsu2wb.half | lsu2rb.half;
 
     MHANDLER2DACCESSOR  mh2da();
     DACCESSOR2WRAPER    da2wp();
