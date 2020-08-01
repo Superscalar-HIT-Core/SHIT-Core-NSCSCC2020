@@ -275,7 +275,7 @@ module ICache(
                 end else if (flush && !instResp.valid) begin
                     nxtState = sRecover;
                 end else if (flush && instResp.valid) begin
-                    nxtState = sRunning;
+                    nxtState = sIdle;
                 end else if (ctrl_iCache.pause && !instResp.valid) begin
                     nxtState = sBlock;
                 end else if (ctrl_iCache.pause && instResp.valid) begin

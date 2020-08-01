@@ -125,7 +125,7 @@ module CP0(
 			Random          <= Random + 1;
             divClk          <= ~divClk;
             Count           <= Count + divClk;
-//             Count           <= 32'hABCD0000;
+            // Count           <= 32'h00000000;
             Cause[30]       <= CounterInterrupt;            // Cause.TI 计时器中�?
         end
 
