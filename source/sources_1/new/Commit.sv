@@ -105,7 +105,7 @@ module Commit(
             lastWaitDs          <= 0;
         end else begin
             if( !predFailed && !(lastWaitDs && !waitDS) && !causeExce &&
-                (takePredFailed ||   // 只有预测跳转的时候，才需要检查地�?
+                (takePredFailed ||   // ??????????????????????????
                 (~takePredFailed && (rob_commit.uOP0.branchTaken == `TRUE) && addrPredFailed ))
             ) begin
                 predFailed                      <= `TRUE;
@@ -122,7 +122,7 @@ module Commit(
             if(waitDS) lastTarget <= lastTarget;
             else       lastTarget <= target;
 
-            // 在有外部中断的情况下，所有的都被清了
+            // ???????????????????????????
             // if( causeInt )    begin
             //     causeExce <= `TRUE;
             //     exception <= ExcInterrupt;
@@ -180,7 +180,7 @@ module Commit(
             commit_rename_req_1.committed_prf   <= rob_commit.uOP1.dstPAddr;
             commit_rename_req_1.stale_prf       <= rob_commit.uOP1.dstPStale;
 
-            // 如果指令0造成异常，则指令1也不能提�?
+            // ??????0????????????1????????
             // commit_rename_req_0.wr_reg_commit   <=  causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF) ? 0 : rob_commit.uOP0.dstwe;
             if (causeInt || (rob_commit.uOP0.causeExc && inst0Good && rob_commit.uOP0.valid && rob_commit.uOP0.exception != ExcAddressErrIF)) begin
                 commit_rename_req_0.wr_reg_commit <= 0;
@@ -216,8 +216,8 @@ module Commit(
             backend_if0.redirect    = `TRUE;
             backend_if0.valid       = `TRUE;
             backend_if0.redirectPC  = 32'hBFC0_0380;
-        end else if ( causeExce ) begin                  // 如果分支指令引发了异常，那么先处理异常，再重新做分支指令，其延迟槽也不能被提�?
-        // TODO: 如果延迟槽引发了异常呢？
+        end else if ( causeExce ) begin                  // ???????????????????????????????????????????????????????????
+        // TODO: ??????????????????
             ctrl_commit.flushReq    = `TRUE;
             backend_if0.redirect    = `TRUE;
             backend_if0.valid       = `TRUE;
@@ -259,5 +259,7 @@ module Commit(
         end
     end
     assign exceInfo.interrupt = ext_interrupt_signal;
-
+    
+    wire debug_is_branch = rob_commit.uOP0.branchType != typeNormal && inst0Good;
+    wire debug_redirect = backend_if0.redirect;
 endmodule

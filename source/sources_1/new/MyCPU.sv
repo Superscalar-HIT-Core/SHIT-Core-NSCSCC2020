@@ -52,6 +52,7 @@ module mycpu_top(
     output wire [4:0]   debug_wb_rf_wnum       ,
     output wire [31:0]  debug_wb_rf_wdata      
 );
+
     // In order to pass the synthesis
     assign debug_wb_pc       = 0;
     assign debug_wb_rf_wen   = 0;
@@ -61,7 +62,21 @@ module mycpu_top(
     assign clk = aclk;
     wire rst;
     assign rst = ~aresetn;
-    
+    reg [31:0] debug_branch_cnt;
+    reg [31:0] debug_redirect_cnt;
+    always @(posedge clk)   begin
+        if(rst) begin
+            debug_branch_cnt <= 0;
+            debug_redirect_cnt <= 0;
+        end else begin
+            if(commit.debug_is_branch)  begin
+                debug_branch_cnt <= debug_branch_cnt + 1'b1;
+            end 
+            if(commit.debug_redirect)   begin
+                debug_redirect_cnt <= debug_redirect_cnt + 1'b1;
+            end
+        end
+    end
     AXIReadAddr         axiReadAddr();
     AXIReadData         axiReadData();
     AXIWriteAddr        axiWriteAddr();
