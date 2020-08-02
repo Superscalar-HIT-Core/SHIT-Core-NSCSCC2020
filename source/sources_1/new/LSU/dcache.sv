@@ -90,8 +90,8 @@ module dcache(
             wp2dc.dout = dbr1.data;
         else
             case(lru[index_reg2])
-            1'b0: wp2dc.dout = dbr0.data;
-            1'b1: wp2dc.dout = dbr1.data;
+            1'b0: wp2dc.dout = dbr1.data;
+            1'b1: wp2dc.dout = dbr0.data;
             endcase
 
     always_ff @(posedge g.clk)
@@ -99,7 +99,7 @@ module dcache(
             wp2dc.dirty <= 1'b0;
         else if((w_reg | r_reg) & ~hit)
             case(lru[index_reg])
-            1'b0: wp2dc.dirty <= tbc[1].dirty & tbc[1].valid;
+            1'b0: wp2dc.dirty <= tbc[1].dirty & tbc[1].valid; 
             1'b1: wp2dc.dirty <= tbc[0].dirty & tbc[1].valid;
             endcase 
         else

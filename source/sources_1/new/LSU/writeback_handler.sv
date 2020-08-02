@@ -12,7 +12,7 @@ module writeback_handler(
     always_ff @(posedge g.clk)
         if(!g.resetn)
             valid <= 1'b0;
-        else if(mh2wbh.valid & dc2mem.mready)
+        else if(mh2wbh.valid & ~dc2mem.mready)
             valid <= 1'b1;
         else if(dc2mem.mready)
             valid <= 1'b0;
