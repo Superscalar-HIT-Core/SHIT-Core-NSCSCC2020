@@ -90,8 +90,8 @@ module dcache(
             wp2dc.dout = dbr1.data;
         else
             case(lru[index_reg2])
-            1'b0: wp2dc.dout = dbr0.data;
-            1'b1: wp2dc.dout = dbr1.data;
+            1'b0: wp2dc.dout = dbr1.data;
+            1'b1: wp2dc.dout = dbr0.data;
             endcase
 
     always_ff @(posedge g.clk)

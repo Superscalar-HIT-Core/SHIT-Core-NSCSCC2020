@@ -76,11 +76,11 @@ module NLP(
             if (if3_nlp.update.valid && if3UpdateMatch) begin
                 for(integer i = 0; i < 16; i++) begin
                     if(data[i].valid && data[i].pc == if3_nlp.update.pc) begin
-                        data[i].targetAddr     = if3_nlp.update.target;
+                        data[i].targetAddr     <= if3_nlp.update.target;
                         if(if3_nlp.update.shouldTake) begin
-                            data[i].bimState   = if3_nlp.update.bimState == 2'b11 ? 2'b11 : if3_nlp.update.bimState + 1;
+                            data[i].bimState   <= if3_nlp.update.bimState == 2'b11 ? 2'b11 : if3_nlp.update.bimState + 1;
                         end else begin
-                            data[i].bimState   = if3_nlp.update.bimState == 2'b00 ? 2'b00 : if3_nlp.update.bimState - 1;
+                            data[i].bimState   <= if3_nlp.update.bimState == 2'b00 ? 2'b00 : if3_nlp.update.bimState - 1;
                         end
                         break;
                     end
@@ -95,11 +95,11 @@ module NLP(
             if (backend_nlp.update.valid && backendUpdateMatch) begin
                 for(integer i = 0; i < 16; i++) begin
                     if(data[i].valid && data[i].pc == backend_nlp.update.pc) begin
-                        data[i].targetAddr     = backend_nlp.update.target;
+                        data[i].targetAddr     <= backend_nlp.update.target;
                         if(backend_nlp.update.shouldTake) begin
-                            data[i].bimState   = backend_nlp.update.bimState == 2'b11 ? 2'b11 : backend_nlp.update.bimState + 1;
+                            data[i].bimState   <= backend_nlp.update.bimState == 2'b11 ? 2'b11 : backend_nlp.update.bimState + 1;
                         end else begin
-                            data[i].bimState   = backend_nlp.update.bimState == 2'b00 ? 2'b00 : backend_nlp.update.bimState - 1;
+                            data[i].bimState   <= backend_nlp.update.bimState == 2'b00 ? 2'b00 : backend_nlp.update.bimState - 1;
                         end
                         break;
                     end
