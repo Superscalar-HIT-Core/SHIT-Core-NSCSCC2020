@@ -150,7 +150,7 @@ module AXIInterface(
 
         lastDCacheBusy      <= dCacheReqBusy;
         lastDCacheReqAddr   <= dCacheReqAddr;
-        lastDCacheReqData   <= dCacheReqAddr;
+        lastDCacheReqData   <= dCacheReqData;
         lastDCacheReqWEn    <= dCacheReqWEn;
     end
 

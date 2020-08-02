@@ -99,7 +99,7 @@ module dcache(
             wp2dc.dirty <= 1'b0;
         else if((w_reg | r_reg) & ~hit)
             case(lru[index_reg])
-            1'b0: wp2dc.dirty <= tbc[1].dirty & tbc[1].valid;
+            1'b0: wp2dc.dirty <= tbc[1].dirty & tbc[1].valid; 
             1'b1: wp2dc.dirty <= tbc[0].dirty & tbc[1].valid;
             endcase 
         else
