@@ -93,8 +93,8 @@ interface WBUFFER2UHANDLER;
 endinterface //WBUFFER2UHANDLER
 
 interface WBUFFER2RBUFFER;
-    logic   [7:0]   rely;
-    logic   [7:0]   cur;
+    logic   [15:0]   rely;
+    logic   [15:0]   cur;
     modport wbuf    (output rely,cur);
     modport rbuf    (input rely,cur);
 endinterface //WBUFFER2RBUFFER
@@ -132,8 +132,9 @@ interface LSU2WBUFFER;
     logic           com1;
     logic           rb;
     logic           busy;
-    modport lsu(output req,id,cache,addr,size,data,com,com1,rb, input busy);
-    modport wbuf(input req,id,cache,addr,size,data,com,com1,rb, output busy);
+    logic           half;
+    modport lsu(output req,id,cache,addr,size,data,com,com1,rb, input busy,half);
+    modport wbuf(input req,id,cache,addr,size,data,com,com1,rb, output busy,half);
 endinterface
 
 interface LSU2RTALKER;
@@ -173,8 +174,9 @@ interface LSU2RBUFFER;
     logic           valid0;
     logic           commit0;
     logic           busy;
-    modport lsu (output valid,regid,cache,addr,size,isSigned,id,flush,rid0,rid1,valid0,commit0, input busy);
-    modport rbuf(input valid,regid,cache,addr,size,isSigned,id,flush,rid0,rid1,valid0,commit0, output busy);
+    logic           half;
+    modport lsu (output valid,regid,cache,addr,size,isSigned,id,flush,rid0,rid1,valid0,commit0, input busy,half);
+    modport rbuf(input valid,regid,cache,addr,size,isSigned,id,flush,rid0,rid1,valid0,commit0, output busy,half);
 endinterface //LSU2RBUFFER
 
 interface LSU2PRF;
@@ -204,12 +206,13 @@ interface UNCACHE2MEMORY;
     logic   [31:0]  uaddr;
     logic   [31:0]  udata;
     logic   [3:0]   ustrobe;
+    logic   [2:0]   usize;
     logic           uready;
     logic           mready;
     logic           mvalid;
     logic   [31:0]  mdata;
-    modport lsu (output uvalid,uwen,uaddr,ustrobe,uready,udata, input mready,mvalid,mdata);
-    modport memory(input uvalid,uwen,uaddr,ustrobe,uready,udata, output mready,mvalid,mdata);
+    modport lsu (output uvalid,uwen,uaddr,ustrobe,uready,udata,usize, input mready,mvalid,mdata);
+    modport memory(input uvalid,uwen,uaddr,ustrobe,uready,udata,usize, output mready,mvalid,mdata);
 endinterface
 `include "MHandler_defines.svh"
 `endif

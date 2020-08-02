@@ -52,6 +52,7 @@ module mycpu_top(
     output wire [4:0]   debug_wb_rf_wnum       ,
     output wire [31:0]  debug_wb_rf_wdata      
 );
+
     // In order to pass the synthesis
     assign debug_wb_pc       = 0;
     assign debug_wb_rf_wen   = 0;
@@ -61,7 +62,21 @@ module mycpu_top(
     assign clk = aclk;
     wire rst;
     assign rst = ~aresetn;
-    
+    reg [31:0] debug_branch_cnt;
+    reg [31:0] debug_redirect_cnt;
+    always @(posedge clk)   begin
+        if(rst) begin
+            debug_branch_cnt <= 0;
+            debug_redirect_cnt <= 0;
+        end else begin
+            if(commit.debug_is_branch)  begin
+                debug_branch_cnt <= debug_branch_cnt + 1'b1;
+            end 
+            if(commit.debug_redirect)   begin
+                debug_redirect_cnt <= debug_redirect_cnt + 1'b1;
+            end
+        end
+    end
     AXIReadAddr         axiReadAddr();
     AXIReadData         axiReadData();
     AXIWriteAddr        axiWriteAddr();
@@ -95,6 +110,7 @@ module mycpu_top(
     Ctrl                ctrl_rf_mdu_regs();
     Ctrl                ctrl_rf_lsu_regs();
     Ctrl                ctrl_lsu();
+    Ctrl                ctrl_mdu();
     Ctrl                ctrl_alu0_output_regs();
     Ctrl                ctrl_alu1_output_regs();
     Ctrl                ctrl_mdu_output_regs();
@@ -719,5 +735,13 @@ module mycpu_top(
     //     end
     //     $display("========== arf disp finished ==========");
     // end
+    
+    wire [31:0] debug_regfile[31:0];
+    genvar k;
+    generate
+    for(k=0;k<32;k=k+1) begin
+        assign debug_regfile[k] = soc_axi_lite_top.cpu.prf_u.prfs_bank0[soc_axi_lite_top.cpu.rr.u_map_table.committed_rename_map_table_bank0[k]];
+    end
+    endgenerate
     // synopsys translate_on
 endmodule

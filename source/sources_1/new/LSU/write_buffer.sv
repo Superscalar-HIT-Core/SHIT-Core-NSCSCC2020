@@ -12,8 +12,8 @@ typedef struct packed {
     logic               issued;
 } WBUF_LINE;
 
-`define WBUFROW     7:0
-`define WBUFPOINTER 2:0
+`define WBUFROW     15:0
+`define WBUFPOINTER 3:0
 
 module write_buffer(
     GLOBAL.slave            g,
@@ -30,44 +30,53 @@ module write_buffer(
                    (wb2uh.w & wb2uh.ready & ~wbuffer[fpointer].cache);
     wire do_com = (lsu2wb.com | lsu2wb.com1) & ~lsu2wb.rb;
     wire do_dcom = lsu2wb.com & lsu2wb.com1 & ~lsu2wb.rb;
+    
+    integer j,cnt;
+    always_ff @(posedge g.clk)begin
+        cnt = 0;
+        for(j = 0; j < 16; j = j + 1)
+            if(wbuffer[j].valid)
+                cnt = cnt + 1;
+        lsu2wb.half = cnt >= 8;
+    end
 
     always_ff @(posedge g.clk)
         if(!g.resetn)
-            wpointer <= 3'b0;
+            wpointer <= 4'b0;
         else if(lsu2wb.rb)
             wpointer <= cpointer;
         else if(lsu2wb.req & ~wbuffer[wpointer].valid)
-            wpointer <= wpointer + 3'b1;
+            wpointer <= wpointer + 4'b1;
 
     always_ff @(posedge g.clk)
         if(!g.resetn)
-            cpointer <= 3'b0;
+            cpointer <= 4'b0;
         else if(do_dcom & wbuffer[cpointer1].valid)
-            cpointer <= cpointer + 3'h2;
+            cpointer <= cpointer + 4'h2;
         else if(do_com & wbuffer[cpointer].valid)
-            cpointer <= cpointer + 3'h1;
+            cpointer <= cpointer + 4'h1;
             
     always_ff @(posedge g.clk)
         if(!g.resetn)
-            cpointer1 <= cpointer + 3'h1;
+            cpointer1 <= cpointer + 4'h1;
         else if(do_dcom & wbuffer[cpointer1].valid)
-            cpointer1 <= cpointer + 3'h3;
+            cpointer1 <= cpointer + 4'h3;
         else if(do_com & wbuffer[cpointer].valid)
-            cpointer1 <= cpointer + 3'h2;
+            cpointer1 <= cpointer + 4'h2;
         else
-            cpointer1 <= cpointer + 3'h1;
+            cpointer1 <= cpointer + 4'h1;
 
     always_ff @(posedge g.clk)
         if(!g.resetn)
-            fpointer <= 3'b0;
+            fpointer <= 4'b0;
         else if(finish & wbuffer[fpointer].valid)
-            fpointer <= fpointer + 3'b1;
+            fpointer <= fpointer + 4'b1;
 
     wire loaded = wb2da.load & wb2da.laddr == wbuffer[fpointer].addr[31:4];
-    logic [7:0] do_write;
+    logic [`WBUFROW] do_write;
     generate
         genvar i;
-        for(i = 0; i < 8; i = i + 1)
+        for(i = 0; i < 16; i = i + 1)
         begin
             assign do_write[i] = lsu2wb.req & wpointer == i & ~wbuffer[i].valid;
 

@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 `include "../defs.sv"
-
+`define USE_RECOVER_WRITE_ICACHE
 //  virtually index, physically tag
 //  index : low 10 bit[9:0]
 //      128bit/cacheline (16 byte), [3:0] addr in line
@@ -11,7 +11,7 @@
 //  age reg :  3 * 64
 
 //  tag     : 21 bit for every line
-//  tag ram : 21 * 64 ï¼ˆ* 4ï¼‰
+//  tag ram : 21 * 64 ï¼?* 4ï¼?
 
 //  data ram: 128 * 64 (* 4)
 
@@ -55,6 +55,9 @@ module ICache(
     InstBundle      inst0;
     InstBundle      inst1;
     logic           onlyGetDSReg;
+
+    logic  [31 :0]  recoverPCReg;
+    logic  [20 :0]  recoverTag;
 
     logic           collision0;
     logic           collision1;
@@ -173,6 +176,16 @@ module ICache(
         end
     end
 
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            recoverPCReg    <= 0;
+            recoverTag      <= 0;
+        end else if (ctrl_iCache.flush) begin
+            recoverPCReg    <= PCReg;
+            recoverTag      <= tag;
+        end
+    end
+
     always_ff @ (posedge clk) begin
         if(rst) begin
             requestSent <= `FALSE;
@@ -238,7 +251,7 @@ module ICache(
                             hit2 ? data2IO.dataOut :
                             hit3 ? data3IO.dataOut : instResp.cacheLine;
     assign lineAddress  = PCReg[9 : 4];
-    assign tag          = PCReg[31:10];
+    assign tag          = iCache_tlb.phyAddr0[31:10];
 
     always_comb begin
         nxtState = sReset;
@@ -247,7 +260,7 @@ module ICache(
                 if(rst) begin
                     nxtState = sReset;
                 end else if (flush && !instReq.valid && !requestSent) begin
-                    nxtState = sRunning;
+                    nxtState = sIdle;
                 end else if(flush && (instReq.valid || requestSent) && !instResp.valid) begin
                     nxtState = sRecover;
                 end else if(hit) begin
@@ -262,7 +275,7 @@ module ICache(
                 end else if (flush && !instResp.valid) begin
                     nxtState = sRecover;
                 end else if (flush && instResp.valid) begin
-                    nxtState = sRunning;
+                    nxtState = sIdle;
                 end else if (ctrl_iCache.pause && !instResp.valid) begin
                     nxtState = sBlock;
                 end else if (ctrl_iCache.pause && instResp.valid) begin
@@ -392,7 +405,7 @@ module ICache(
                 end else begin
                     iCache_regs.inst0.valid = `FALSE;
                     iCache_regs.inst1.valid = `FALSE;
-                    ctrl_iCache.pauseReq    = `TRUE;
+                    ctrl_iCache.pauseReq    = !flush;
                     instReq.valid           = ~requestSent && !flush;
                     instReq.pc              = iCache_tlb.phyAddr0 & 32'hffff_fffc;
                     instResp.ready          = `TRUE;
@@ -473,6 +486,54 @@ module ICache(
                     ctrl_iCache.pauseReq        = `FALSE;
                     iCache_regs.inst0.valid     = `FALSE;
                     iCache_regs.inst1.valid     = `FALSE;
+`ifdef USE_RECOVER_WRITE_ICACHE
+                    casex (age[lineAddress])
+                        3'b?11: begin   // replace hit0
+                            tag0IO.writeEn          = `TRUE;
+                            tag0IO.address          = recoverPCReg[9:4];
+                            tag0IO.dataIn           = recoverTag;
+                            data0IO.writeEn         = `TRUE;
+                            data0IO.address         = recoverPCReg[9:4];
+                            data0IO.dataIn          = instResp.cacheLine;
+                            nxtAge[lineAddress][0]  = 1'b0;
+                            nxtAge[lineAddress][1]  = 1'b0;
+                            nxtValid[0][lineAddress]   = `TRUE;
+                        end
+                        3'b?01: begin   // replace hit1
+                            tag1IO.writeEn          = `TRUE;
+                            tag1IO.address          = recoverPCReg[9:4];
+                            tag1IO.dataIn           = recoverTag;
+                            data1IO.writeEn         = `TRUE;
+                            data1IO.address         = recoverPCReg[9:4];
+                            data1IO.dataIn          = instResp.cacheLine;
+                            nxtAge[lineAddress][0]  = 1'b0;
+                            nxtAge[lineAddress][1]  = 1'b1;
+                            nxtValid[1][lineAddress]   = `TRUE;
+                        end
+                        3'b1?0: begin   // replace hit2
+                            tag2IO.writeEn          = `TRUE;
+                            tag2IO.address          = recoverPCReg[9:4];
+                            tag2IO.dataIn           = recoverTag;
+                            data2IO.writeEn         = `TRUE;
+                            data2IO.address         = recoverPCReg[9:4];
+                            data2IO.dataIn          = instResp.cacheLine;
+                            nxtAge[lineAddress][0]  = 1'b1;
+                            nxtAge[lineAddress][2]  = 1'b0;
+                            nxtValid[2][lineAddress]   = `TRUE;
+                        end
+                        3'b0?0: begin   // replace hit3
+                            tag3IO.writeEn          = `TRUE;
+                            tag3IO.address          = recoverPCReg[9:4];
+                            tag3IO.dataIn           = recoverTag;
+                            data3IO.writeEn         = `TRUE;
+                            data3IO.address         = recoverPCReg[9:4];
+                            data3IO.dataIn          = instResp.cacheLine;
+                            nxtAge[lineAddress][0]  = 1'b1;
+                            nxtAge[lineAddress][2]  = 1'b1;
+                            nxtValid[3][lineAddress]   = `TRUE;
+                        end
+                    endcase
+`endif
                 end else begin
                     ctrl_iCache.pauseReq        = `TRUE;
                     iCache_regs.inst0.valid     = `FALSE;

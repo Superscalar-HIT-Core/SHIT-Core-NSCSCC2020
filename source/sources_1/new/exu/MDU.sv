@@ -4,6 +4,8 @@
 module MDU(
     input  wire         clk,
     input  wire         rst,
+    
+    Ctrl.slave          ctrl_mdu,
 
     input  UOPBundle    uopHi,
     input  UOPBundle    uopLo,
@@ -55,7 +57,7 @@ module MDU(
 
     Divider_IP divider_i(
         .aclk                   (clk                    ),
-        .aresetn                (~rst                   ),
+        .aresetn                (~rst && ~ctrl_mdu.flush),
         .s_axis_divisor_tvalid  (`TRUE                  ),  
         .s_axis_divisor_tdata   (dividor                ),    
         .s_axis_dividend_tvalid (`TRUE                  ),
@@ -69,11 +71,11 @@ module MDU(
         .A                      (multA                  ),    
         .B                      (multB                  ),    
         .P                      (mulResUnsigned         ),
-        .SCLR                   (rst                    )     
+        .SCLR                   (rst || ctrl_mdu.flush )     
     );
 
     always_ff @ (posedge clk) begin
-        if(rst) begin
+        if(rst || ctrl_mdu.flush) begin
             for(integer i = 0; i <= `MDU_MUL_CYCLE; i++) begin
                 mulPipeHi[i]      <= 0;
                 mulPipeLo[i]      <= 0;
@@ -120,14 +122,14 @@ module MDU(
     always_comb begin
         case(state)
             mulOutputHi: begin
-                if(rst) begin
+                if(rst || ctrl_mdu.flush) begin
                     nxtState = idle;
                 end else begin
                     nxtState = mulOutputLo;
                 end
             end
             divOutputHi: begin
-                if(rst) begin
+                if(rst || ctrl_mdu.flush) begin
                     nxtState = idle;
                 end else begin
                     nxtState = divOutputLo;
@@ -136,7 +138,7 @@ module MDU(
             mulOutputLo ,
             divOutputLo ,
             idle        : begin
-                if(rst) begin
+                if(rst || ctrl_mdu.flush) begin
                     nxtState = idle;
                 end else if(mulPipeHi[1].valid) begin
                     nxtState = mulOutputHi;
@@ -153,7 +155,7 @@ module MDU(
     end
 
     always_ff @ (posedge clk) begin
-        if(rst) begin
+        if(rst || ctrl_mdu.flush) begin
             state       <= idle;
             divLo       <= 0;
             mulLo       <= 0; 

@@ -39,8 +39,8 @@ module rob_talker(
         else if(rreq_reg)
             lsu2rob.ls = `EXP_ADDR_L;
         else
-            lsu2rob.ls = `EXP_ADDR_L;
+            lsu2rob.ls = 1'bx;
     
-    assign lsu2rob.set_ex = (lsu2rt.addr_err | addr_err_reg) & ~ lsu2rt.rfin;
+    assign lsu2rob.set_ex = ((lsu2rt.addr_err & ~lsu2rt.halt) | (addr_err_reg & lsu2rt.halt)) & ~ lsu2rt.rfin;
     assign lsu2rob.bad_addr = addr_err_reg ? bad_addr_reg : lsu2rt.bad_addr;
 endmodule

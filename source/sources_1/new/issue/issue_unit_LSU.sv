@@ -230,7 +230,7 @@ iq_lsu u_iq_lsu(
     .busyvec_r(busyvec_r)
 );
 
-assign ready = ~(almost_full | full) && ~lsu_half_full;  // 如果满了，则不能继续接受
+assign ready = ~(almost_full | full) && ~lsu_half_full;    // 如果满了，则不能继续接受
 
 store_bitmask_gen u_mask(
     .store_vec(isStore_vec),

@@ -146,6 +146,10 @@ module IF_3(
             ctrl_if3.flushReq   = `TRUE;
             if3_0.redirect      = `TRUE;
             if3_0.redirectPC    = if3_regs.inst0.pc + 8;
+        end else if(if3_regs.inst0.predTaken && inst0NLPTaken && if3_regs.inst0.predAddr != if3_regs.inst0.nlpInfo.target) begin
+            ctrl_if3.flushReq   = `TRUE;
+            if3_0.redirect      = `TRUE;
+            if3_0.redirectPC    = if3_regs.inst0.predAddr;
         end else begin
             ctrl_if3.pauseReq   = `FALSE;
             ctrl_if3.flushReq   = `FALSE;
@@ -162,6 +166,8 @@ module IF_3(
     always_ff @ (posedge clk) begin
         if(rst || ctrl_if3.flush) begin
             waitDSRedirectTarget <= 0;
+        end else if(if3_regs.inst1.predTaken && inst1NLPTaken && if3_regs.inst0.predAddr != if3_regs.inst0.nlpInfo.target) begin
+            waitDSRedirectTarget <= if3_regs.inst1.predAddr;
         end else if(if3_regs.inst1.predTaken && !inst1NLPTaken) begin
             waitDSRedirectTarget <= if3_regs.inst1.predAddr;
         end else if(!if3_regs.inst1.predTaken && inst1NLPTaken) begin
@@ -184,6 +190,8 @@ module IF_3(
             waitDS              <= `FALSE;
         end else if(!if3_regs.inst0.predTaken && inst0NLPTaken) begin
             waitDS              <= `FALSE;
+        end else if(if3_regs.inst1.predTaken && inst1NLPTaken && if3_regs.inst0.predAddr != if3_regs.inst0.nlpInfo.target) begin
+            waitDS              <= `TRUE;
         end else if(if3_regs.inst1.predTaken && !inst1NLPTaken) begin
             waitDS              <= `TRUE;
         end else if(!if3_regs.inst1.predTaken && inst1NLPTaken) begin

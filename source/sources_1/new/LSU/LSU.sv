@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 `include "LSU_defines.svh"
 `include "../defines/defines.svh"
-`include "../defs.sv"
+//`include "../defs.sv"
 module LSU(
     input   logic           clk,
     input   logic           rst,
@@ -12,6 +12,7 @@ module LSU(
     input   UOPBundle       uOP,
     input   PRFrData        oprands,
     output  PRFwInfo        wbData,
+    output                  half_full,
     FU_ROB.fu               lsu_commit_reg,
     DataReq.lsu             dataReq,
     DataResp.lsu            dataResp,
@@ -50,8 +51,8 @@ module LSU(
         default: addr_err = 1'b0;
         endcase
 
-    wire store = ((uOP.uOP == SW_U) | (uOP.uOP == SH_U) | (uOP.uOP == SB_U)) & uOP.valid;
-    wire load = ((uOP.uOP == LW_U) | (uOP.uOP == LH_U) | (uOP.uOP == LHU_U) | (uOP.uOP == LB_U) | (uOP.uOP == LBU_U)) & uOP.valid;
+    wire store = ((uOP.uOP == SW_U) | (uOP.uOP == SH_U) | (uOP.uOP == SB_U)) & uOP.valid & ~lsu_busy;
+    wire load = ((uOP.uOP == LW_U) | (uOP.uOP == LH_U) | (uOP.uOP == LHU_U) | (uOP.uOP == LB_U) | (uOP.uOP == LBU_U)) & uOP.valid & ~lsu_busy;
 
     GLOBAL              g();
     assign g.clk = clk;
@@ -97,6 +98,7 @@ module LSU(
     assign wbData.rd = lsu2prf.regid;
     assign wbData.wen = lsu2prf.valid;
     assign wbData.wdata = lsu2prf.data;
+    assign half_full = lsu2wb.half | lsu2rb.half;
 
     MHANDLER2DACCESSOR  mh2da();
     DACCESSOR2WRAPER    da2wp();
@@ -127,6 +129,7 @@ module LSU(
     assign dataReq.write_en = uc2mem.uwen;
     assign dataReq.data = uc2mem.udata;
     assign dataReq.strobe = uc2mem.ustrobe;
+    assign dataReq.size = uc2mem.usize;
     assign uc2mem.mready = dataReq.ready;
 
     assign dataResp.ready = uc2mem.uready;
