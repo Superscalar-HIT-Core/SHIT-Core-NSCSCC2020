@@ -35,9 +35,10 @@ module Commit(
     logic           isDS;
     logic           inst0Store;
     logic           inst1Store;
-    reg [5:0] ext_interrupt_signal;
+    (* mark_debug = "yes" *)reg [5:0] ext_interrupt_signal;
     logic causeInt;
     logic           pendingInt;
+
     always @(posedge clk)   begin
         if(rst) begin
             ext_interrupt_signal <= 0;
@@ -261,5 +262,5 @@ module Commit(
     assign exceInfo.interrupt = ext_interrupt_signal;
     
     wire debug_is_branch = rob_commit.uOP0.branchType != typeNormal && inst0Good;
-    wire debug_redirect = backend_if0.redirect;
+    (* mark_debug = "yes" *)wire debug_redirect = backend_if0.redirect;
 endmodule
