@@ -51,26 +51,45 @@ module IFU(
     logic IF3_isBranch, IF3_isJ;
     wire [31:0] pred_target;
     wire pred_valid, pred_taken;
-    TAGEPred pred_info;
-    TAGE u_TAGE(
+    assign pred_valid = 1;
+    // TAGEPred pred_info;
+    // TAGE u_TAGE(
+    //     .clk                    (clk                    ),
+    //     .rst                    (rst                    ),
+    //     .pause                  (ctrl_tage.pause        ),
+    //     .recover                (ctrl_tage.flush        ),
+    //     .IF3_isBranch           (IF3_isBranch           ),
+    //     .IF3_isJ                (IF3_isJ                ),
+    //     .br_pc                  (regs_iCache.PC         ),
+    //     // 送出的结果
+    //     .pred_valid             (pred_valid             ),
+    //     .pred_taken             (pred_taken             ),
+    //     .pred_target            (pred_target            ),
+    //     .pred_info              (pred_info              ),
+    //     // 从commit阶段来的
+    //     .commit_valid           (backend_bpd.updValid   ),
+    //     .committed_target       (backend_bpd.updTarget  ),
+    //     .committed_pred_info    (backend_bpd.updInfo    ),
+    //     .committed_branch_taken (backend_bpd.updTaken   ),
+    //     .committed_mispred      (backend_bpd.updMisPred )
+    // );
+    PredInfo pred_info;
+    assign pred_target = 0;
+    Predictor bpd_u(
         .clk                    (clk                    ),
         .rst                    (rst                    ),
-        .pause                  (ctrl_tage.pause        ),
+        // .pause                  (ctrl_tage.pause        ),
+    // 注意：此处的recover接的是regfile的recover，需要等分支指令提交进来了再进行恢复
         .recover                (ctrl_tage.flush        ),
-        .IF3_isBranch           (IF3_isBranch           ),
+        .IF3_isBR               (IF3_isBranch           ),
         .IF3_isJ                (IF3_isJ                ),
-        .br_pc                  (regs_iCache.PC         ),
-        // 送出的结果
-        .pred_valid             (pred_valid             ),
-        .pred_taken             (pred_taken             ),
-        .pred_target            (pred_target            ),
+        .br_PC                  (regs_iCache.PC         ),
         .pred_info              (pred_info              ),
-        // 从commit阶段来的
+        .pred_taken             (pred_taken             ),
         .commit_valid           (backend_bpd.updValid   ),
         .committed_target       (backend_bpd.updTarget  ),
         .committed_pred_info    (backend_bpd.updInfo    ),
         .committed_branch_taken (backend_bpd.updTaken   ),
         .committed_mispred      (backend_bpd.updMisPred )
-    );
-    
+);  
 endmodule

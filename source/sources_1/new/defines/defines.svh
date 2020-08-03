@@ -265,6 +265,41 @@ typedef logic [5:0] ARFNum; // 逻辑寄存器编号(共34个)
 `define NOP_U       8'b01000010
 `define WAIT_U      8'b01000101
 
+// BranchPred
+`define GHLEN 20
+`define BHRLEN 4
+`define PHTIDXLEN_G 10 
+typedef logic [`GHLEN-1:0] GlobalHist;           // Index used for indexing BHR Table
+typedef logic [1:0] PHTEntry;           // One entry in PHT Table
+typedef logic [`PHTIDXLEN_G-1:0] PHTIndex_G;           // PHT Index
+typedef struct packed {
+    PHTIndex_G pht_index_g;
+} GlobalHistPred;
+
+`define BHTIDXLEN 8
+`define BHRLEN 4
+`define PHTIDXLEN 10 
+`define CPHT_ENTRY 1024
+typedef logic [`BHTIDXLEN-1:0] BHTIndex;           // Index used for indexing BHR Table
+typedef logic [`BHRLEN-1:0] BHREntry;           // One entry in BHR Table
+typedef logic [`PHTIDXLEN-1:0] PHTIndex;           // PHT Index
+typedef logic [9:0] CPHTIndex;
+typedef logic [1:0] CPHT_Entry;
+typedef struct packed {
+    BHTIndex bht_index;
+    PHTIndex pht_index;
+} LocalHistPred;
+
+typedef struct packed {
+    BHTIndex bht_index;
+    PHTIndex pht_index;
+    PHTIndex_G pht_index_g;
+    CPHTIndex cpht_index;
+    logic use_global;
+} PredInfo;
+
+
+
 typedef logic [9:0] TAGEIndex;
 typedef logic [2:0] TAGECtr;
 typedef logic [7:0] TAGETag;
@@ -291,7 +326,7 @@ typedef struct packed {
     logic           isJ;
     logic           valid;
     NLPPredInfo     nlpInfo;
-    TAGEPred        bpdInfo;
+    PredInfo        bpdInfo;
     logic           predTaken;
     logic   [31:0]  predAddr;
     logic           jBadAddr;
@@ -541,7 +576,7 @@ typedef struct packed {
 
     logic                   predTaken;
     logic   [31:0]          predAddr;
-    TAGEPred                predInfo;
+    PredInfo                predInfo;
     logic   [1:0]           nlpBimState;
 
     logic                   causeExc;
