@@ -77,16 +77,16 @@ module AXIInterface(
             instPendingReadResp <= `FALSE;
             dCPendingReadResp   <= `FALSE;
             dataPendingReadResp <= `FALSE;
-        end else if(rState == sRData && axiReadData.valid && axiReadData.ready) begin
+        end else if(rState == sRData && axiReadData.valid && axiReadData.ready && axiReadData.last) begin
             dataReadResp        <= axiReadData.data;
             instPendingReadResp <= `FALSE;
             dCPendingReadResp   <= `FALSE;
             dataPendingReadResp <= `TRUE;
-        end else if(rState == sRDCache && axiReadData.valid && axiReadData.ready) begin
+        end else if(rState == sRDCache && axiReadData.valid && axiReadData.ready && axiReadData.last) begin
             instPendingReadResp <= `FALSE;
             dCPendingReadResp   <= `TRUE;
             dataPendingReadResp <= `FALSE;
-        end else if(rState == sRInst && axiReadData.valid && axiReadData.ready) begin
+        end else if(rState == sRInst && axiReadData.valid && axiReadData.ready && axiReadData.last) begin
             instPendingReadResp <= `TRUE;
             dCPendingReadResp   <= `FALSE;
             dataPendingReadResp <= `FALSE;

@@ -26,9 +26,9 @@ module mycpu_top(
     (* mark_debug = "yes" *)input  wire         wready    ,
 
     input  wire [ 3:0]  bid       ,
-    input  wire [ 1:0]  bresp     ,
-    input  wire         bvalid    ,
-    output wire         bready    ,
+    (* mark_debug = "yes" *)input  wire [ 1:0]  bresp     ,
+    (* mark_debug = "yes" *)input  wire         bvalid    ,
+    (* mark_debug = "yes" *)output wire         bready    ,
 
     output wire [ 3:0]  arid      ,
     (* mark_debug = "yes" *)output wire [31:0]  araddr    ,
