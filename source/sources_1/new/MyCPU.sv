@@ -7,32 +7,14 @@ module mycpu_top(
 
     input [5:0] ext_int,
 
-<<<<<<< HEAD
-(*mark_debug = "true"*)output wire [ 3:0]  awid      ,
-(*mark_debug = "true"*)output wire [31:0]  awaddr    ,
-    output wire [ 7:0]  awlen     ,
-    output wire [ 2:0]  awsize    ,
-=======
     output wire [ 3:0]  awid      ,
     (* mark_debug = "yes" *)output wire [31:0]  awaddr    ,
     (* mark_debug = "yes" *)output wire [ 3:0]  awlen     ,
     (* mark_debug = "yes" *)output wire [ 2:0]  awsize    ,
->>>>>>> bd15dcd3c36bdc0d3b4b681a506e36ae6ae2052a
     output wire [ 1:0]  awburst   ,
     output wire [ 1:0]  awlock    ,
     output wire [ 3:0]  awcache   ,
     output wire [ 2:0]  awprot    ,
-<<<<<<< HEAD
-(*mark_debug = "true"*)output wire         awvalid   ,
-(*mark_debug = "true"*)input  wire         awready   ,
-
-(*mark_debug = "true"*)output wire [ 3:0]  wid       ,
-(*mark_debug = "true"*)output wire [31:0]  wdata     ,
-    output wire [ 3:0]  wstrb     ,
-    output wire         wlast     ,
-(*mark_debug = "true"*)output wire         wvalid    ,
-(*mark_debug = "true"*)input  wire         wready    ,
-=======
     (* mark_debug = "yes" *)output wire         awvalid   ,
     (* mark_debug = "yes" *)input  wire         awready   ,
 
@@ -42,7 +24,6 @@ module mycpu_top(
     (* mark_debug = "yes" *)output wire         wlast     ,
     (* mark_debug = "yes" *)output wire         wvalid    ,
     (* mark_debug = "yes" *)input  wire         wready    ,
->>>>>>> bd15dcd3c36bdc0d3b4b681a506e36ae6ae2052a
 
     input  wire [ 3:0]  bid       ,
     (* mark_debug = "yes" *)input  wire [ 1:0]  bresp     ,
