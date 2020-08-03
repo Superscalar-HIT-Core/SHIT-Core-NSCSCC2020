@@ -48,6 +48,7 @@ module decode(
         uOP0.pc          = inst.pc;
         uOP0.predTaken   = inst.predTaken;
         uOP0.predAddr    = inst.predAddr;
+        uOP0.predInfo    = inst.bpdInfo;
         uOP0.isDS        = inst.isDs;
         uOP0.committed   = `FALSE;
         uOP1.pc          = inst.pc;

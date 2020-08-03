@@ -94,6 +94,7 @@ module mycpu_top(
     Ctrl                ctrl_if0_1_regs();
     Ctrl                ctrl_if2_3_regs();
     Ctrl                ctrl_iCache();
+    Ctrl                ctrl_tage();
     Ctrl                ctrl_if3();
     Ctrl                ctrl_if3_output_regs();
     Ctrl                ctrl_instBuffer();

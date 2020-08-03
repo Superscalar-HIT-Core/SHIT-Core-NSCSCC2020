@@ -48,10 +48,11 @@ always_ff @(posedge clk) begin
         UsefulBits[update_index] <= 0;
     end
 end
+assign bypass = update_index == index_in;
 wire [10:0] dout;
-assign tag_read = dout[10:3];
-assign ctr_read = dout[2:0];
-assign hit_out = tag_read == tag_in;
+assign tag_read = ~bypass ? dout[10:3] : update_tag;
+assign ctr_out = ~bypass ? dout[2:0] : update_ctr;
+assign hit_out = ~bypass ? (tag_read == tag_in) : (update_tag == tag_in);
 assign useful_out = UsefulBits[index_in];
 assign wen = update_en;
 wire [10:0] din;
@@ -59,12 +60,33 @@ wire [10:0] din;
 assign din[10:3] = update_tag;
 assign din[2:0] = update_ctr;
 
-dist_mem_gen_0 tag_ctr (
-  .a(update_index),        // Write address
-  .d(din),        // input wire [10 : 0] d
-  .dpra(index_in),  // Read address
-  .clk(clk),    // input wire clk
-  .we(update_en),      // input wire we
-  .dpo(dout)    // output wire [10 : 0] dpo
+
+// dist_mem_gen_0 tag_ctr (
+//   .a(update_index),        // Write address
+//   .d(din),        // input wire [10 : 0] d
+//   .dpra(index_in),  // Read address
+//   .clk(clk),    // input wire clk
+//   .we(update_en),      // input wire we
+//   .dpo(dout)    // output wire [10 : 0] dpo
+// );
+
+// TAGEHist history (
+//   .clk(clk),    // input wire clka
+//   .wea(update_en), // input wire [0 : 0] wea
+//   .addra(update_index),  // input wire [9 : 0] addra
+//   .dina(din),    // input wire [10 : 0] dina
+//   .addrb(index_in),  // input wire [9 : 0] addrb
+//   .doutb(dout)  // output wire [10 : 0] doutb
+// );
+
+blk_mem_gen_0 history (
+  .clka(clk),    // input wire clka
+  .wea(update_en),      // input wire [0 : 0] wea
+  .addra(update_index),  // input wire [9 : 0] addra
+  .dina(din),    // input wire [10 : 0] dina
+  .clkb(clk),    // input wire clkb
+  .enb(~bypass),
+  .addrb(index_in),  // input wire [9 : 0] addrb
+  .doutb(dout)  // output wire [10 : 0] doutb
 );
 endmodule

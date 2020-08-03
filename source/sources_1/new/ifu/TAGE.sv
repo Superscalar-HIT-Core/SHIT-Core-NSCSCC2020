@@ -9,8 +9,9 @@ module TAGE(
     input rst,
     input pause,
     input recover,
-    input new_branch_happen,
-    input new_branch_taken,
+    input IF3_isBranch,
+    input IF3_isJ,
+    // input new_branch_taken,
     // For branch prediction
     input [31:0] br_pc,
     output pred_valid,
@@ -19,23 +20,25 @@ module TAGE(
     output TAGEPred pred_info,
     // For branch prediction update
     input commit_valid,
-    input [31:0] committed_pc,
+    input [31:0] committed_target,
     input TAGEPred committed_pred_info,
     input committed_branch_taken,
     input committed_mispred
     );
-    
+    assign pred_target = 0;
     TAGEIndex [3:0] index_01;
     TAGETag [3:0] PCTags_01;
     TAGEIndex [3:0] index_01_r;
     TAGETag [3:0] PCTags_01_r;
+    wire new_branch_taken;
+    assign new_branch_taken = pred_taken || (IF3_isBranch && IF3_isJ);
     wire flush_ubits_hi_01, flush_ubits_lo_01;
     TAGE_Phase0 phase0(
         .clk(clk),
         .rst(rst),
         .pause(pause),
         .recover(recover),
-        .new_branch_happen(new_branch_happen),
+        .new_branch_happen(IF3_isBranch),
         .new_branch_taken(new_branch_taken),
         .br_pc(br_pc),
         .commit_valid(commit_valid),
@@ -65,17 +68,20 @@ module TAGE(
     // Phase 1/2 Regs
     TAGEPred TAGEResp_o, TAGEResp_r;
     wire PredTaken_o;
+    wire pred_valid_o;
+    reg pred_valid_r;
     reg PredTaken_r;
     TAGE_Phase1 phase1(
         .clk(clk),
         .rst(rst),
         .pause(pause),
         .recover(recover),
+        .PredValid(pred_valid_o),
         // 是否需要Flush Useful Bit
         .flush_ubits_hi(flush_ubits_hi_01), 
         .flush_ubits_lo(flush_ubits_lo_01),
         // 访问Tage的四个Index
-        .indexes(index_01_r),
+        .indexes(index_01),
         // For branch prediction
         .PCTags(PCTags_01_r),
         .TAGEResp(TAGEResp_o),
@@ -92,12 +98,15 @@ module TAGE(
         if(rst) begin
             TAGEResp_r <= 0;
             PredTaken_r <= 0;
+            pred_valid_r <= 0;
         end else begin
             TAGEResp_r  <= TAGEResp_o;
             PredTaken_r <= PredTaken_o;
+            pred_valid_r <= pred_valid;
         end 
     end
 
     assign pred_taken = PredTaken_r;
     assign pred_info = TAGEResp_r;
+    assign pred_valid = pred_valid_r;
 endmodule

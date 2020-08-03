@@ -26,8 +26,8 @@ module TAGE_Phase0(
 
     wire [9:0] folded_hist_10;
     wire [9:0] folded_hist_20;
-    wire [9:0] folded_hist_30;
     wire [9:0] folded_hist_40;
+    wire [9:0] folded_hist_80;
 
     // Predict Phase 0: Index generation logic
     

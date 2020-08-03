@@ -14,7 +14,7 @@ module IFU(
     Ctrl                ctrl_if3,
     Ctrl                ctrl_if3_output_regs,
     Ctrl                ctrl_nlp,
-
+    Ctrl                ctrl_tage,
     ICache_TLB          iCache_tlb,
     BackendRedirect     backend_if0,
     BPDUpdate           backend_bpd,
@@ -48,5 +48,29 @@ module IFU(
     IF2_3_reg       if23reg(.*);
     IF_3            if3(.*);
     IF3_Output_reg  if3OutputReg(.*);
+    logic IF3_isBranch, IF3_isJ;
+    wire [31:0] pred_target;
+    wire pred_valid, pred_taken;
+    TAGEPred pred_info;
+    TAGE u_TAGE(
+        .clk                    (clk                    ),
+        .rst                    (rst                    ),
+        .pause                  (ctrl_tage.pause        ),
+        .recover                (ctrl_tage.flush        ),
+        .IF3_isBranch           (IF3_isBranch           ),
+        .IF3_isJ                (IF3_isJ                ),
+        .br_pc                  (regs_iCache.PC         ),
+        // 送出的结果
+        .pred_valid             (pred_valid             ),
+        .pred_taken             (pred_taken             ),
+        .pred_target            (pred_target            ),
+        .pred_info              (pred_info              ),
+        // 从commit阶段来的
+        .commit_valid           (backend_bpd.updValid   ),
+        .committed_target       (backend_bpd.updTarget  ),
+        .committed_pred_info    (backend_bpd.updInfo    ),
+        .committed_branch_taken (backend_bpd.updTaken   ),
+        .committed_mispred      (backend_bpd.updMisPred )
+    );
     
 endmodule

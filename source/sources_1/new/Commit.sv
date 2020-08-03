@@ -207,6 +207,14 @@ module Commit(
     end
 
     always_comb begin
+            backend_bpd.updValid         <= inst0Good && rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP0.branchType != typeJ;
+            backend_bpd.updTarget        <= rob_commit.uOP0.pc;
+            backend_bpd.updInfo          <= rob_commit.uOP0.predInfo;
+            backend_bpd.updMisPred       <= rob_commit.uOP0.branchTaken != rob_commit.uOP0.predTaken;
+            backend_bpd.updTaken         <= rob_commit.uOP0.branchTaken;
+    end
+
+    always_comb begin
         ctrl_commit.flushReq    = `FALSE;
         backend_if0.redirect    = `FALSE;
         backend_if0.valid       = `FALSE;

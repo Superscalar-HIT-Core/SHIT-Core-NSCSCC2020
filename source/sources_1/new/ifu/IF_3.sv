@@ -16,7 +16,9 @@ module IF_3(
     input wire              pred_valid, // from bpd
     input wire              pred_taken, // from bpd
     input wire [31:0]       pred_target,
-    input TAGEPred          pred_info
+    input TAGEPred          pred_info,
+    output                  IF3_isBranch,    // To BPD, update the global history
+    output                  IF3_isJ
 );
     logic           inst0Jr;
     logic           inst1Jr;
@@ -36,7 +38,12 @@ module IF_3(
 
     logic           waitDS, lastWaitDS;
     logic [31:0]    waitDSRedirectTarget;
-
+    wire            isJ, isBranch;
+    assign          isBranch =  inst0Jr | inst0J | inst0Br |
+                                inst1Jr | inst1J | inst1Br ;
+    assign          isJ =  inst0J | inst1J ;
+    assign          IF3_isBranch = isBranch;
+    assign          IF3_isJ = isJ;
     Predecoder pre0(
         .pc     (regs_if3.inst0.pc      ),
         .inst   (regs_if3.inst0.inst    ),
@@ -101,6 +108,12 @@ module IF_3(
             if(pred_valid) begin
                 if3_regs.inst0.predTaken    = pred_taken;
                 if3_regs.inst0.predAddr     = decodeTarget0;
+            end else if(if3_regs.inst0.nlpInfo.valid) begin
+                if3_regs.inst0.predTaken    = inst0NLPTaken;
+                if3_regs.inst0.predAddr     = decodeTarget0;
+            end else begin
+                if3_regs.inst0.predTaken    = `FALSE;
+                if3_regs.inst0.predAddr     = decodeTarget0;
             end
         end
         
@@ -122,6 +135,17 @@ module IF_3(
             end else begin
                 if3_regs.inst1.predTaken        = `TRUE;
                 if3_regs.inst1.predAddr         = decodeTarget1;
+            end
+        end else begin
+            if(pred_valid) begin
+                if3_regs.inst1.predTaken    = pred_taken;
+                if3_regs.inst1.predAddr     = decodeTarget1;
+            end else if(if3_regs.inst1.nlpInfo.valid) begin
+                if3_regs.inst1.predTaken    = inst1NLPTaken;
+                if3_regs.inst1.predAddr     = decodeTarget1;
+            end else begin
+                if3_regs.inst1.predTaken    = `FALSE;
+                if3_regs.inst1.predAddr     = decodeTarget1;
             end
         end
 
@@ -204,13 +228,13 @@ module IF_3(
     // nlp update info
     always_comb begin
         if3_nlp.update = 0;
-        if(if3_regs.inst0.valid && (if3_regs.inst0.bpdInfo.valid || (if3_regs.inst0.isJ && (!inst0Jr || (inst0Jr && if3_regs.inst0.nlpInfo.valid))))) begin
+        if(if3_regs.inst0.valid && (pred_valid && inst0IsCtrl || (if3_regs.inst0.isJ && (!inst0Jr || (inst0Jr && if3_regs.inst0.nlpInfo.valid))))) begin
             if3_nlp.update.pc          = if3_regs.inst0.pc;
             if3_nlp.update.target      = if3_regs.inst0.predAddr;
             if3_nlp.update.bimState    = if3_regs.inst0.nlpInfo.valid ? if3_regs.inst0.nlpInfo.bimState : 2'b01;
             if3_nlp.update.shouldTake  = if3_regs.inst0.predTaken;
             if3_nlp.update.valid       = `TRUE;
-        end else if(if3_regs.inst1.valid && (if3_regs.inst1.bpdInfo.valid || (if3_regs.inst1.isJ && (!inst1Jr || (inst1Jr && if3_regs.inst1.nlpInfo.valid))))) begin
+        end else if(if3_regs.inst1.valid && (pred_valid && inst1IsCtrl || (if3_regs.inst1.isJ && (!inst1Jr || (inst1Jr && if3_regs.inst1.nlpInfo.valid))))) begin
             if3_nlp.update.pc          = if3_regs.inst1.pc;
             if3_nlp.update.target      = if3_regs.inst1.predAddr;
             if3_nlp.update.bimState    = if3_regs.inst1.nlpInfo.valid ? if3_regs.inst1.nlpInfo.bimState : 2'b01;

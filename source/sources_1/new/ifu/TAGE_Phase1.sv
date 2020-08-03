@@ -2,7 +2,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Tage分支预测器，历史长度10，20，40，80
 //////////////////////////////////////////////////////////////////////////////////
-`include "../defines.svh"
+`include "../defines/defines.svh"
 
 module TAGE_Phase1(
     input clk,
@@ -17,6 +17,7 @@ module TAGE_Phase1(
     output TAGETag [3:0] PCTags,
     output TAGEPred TAGEResp,
     output PredTaken,
+    output PredValid,
     // For branch prediction update
     input committed_branch_taken,
     input [31:0] committed_pc,
@@ -78,7 +79,7 @@ module TAGE_Phase1(
         );
         end
     endgenerate
-
+    wire hit;
     assign hit = |TAGE_hit ;
 
     assign provider =   TAGE_hit[3] ? 3 :
@@ -87,7 +88,7 @@ module TAGE_Phase1(
                         TAGE_hit[0] ? 0 : 0;
     wire [3:0] alter_mask;
     wire alter_hit;
-    assign alter_mask = ( hit & ~(1 << provider) );
+    assign alter_mask = ( TAGE_hit & ~(1 << provider) );
     assign alter_hit = |alter_mask;
     assign alter =      alter_mask[3] ? 3 :
                         alter_mask[2] ? 2 :
@@ -100,7 +101,7 @@ module TAGE_Phase1(
     wire not_useful_1 = ( useful[1] == 0 );
     wire not_useful_2 = ( useful[2] == 0 );
     wire not_useful_3 = ( useful[3] == 0 );
-    wire [3:0] free_useful_vec = ~{ not_useful_3, not_useful_2, not_useful_1, not_useful_0 };
+    wire [3:0] free_useful_vec = { not_useful_3, not_useful_2, not_useful_1, not_useful_0 };
     wire [3:0] provider_mask =  provider == 2'b00 ? 4'b1110 : 
                                 provider == 2'b01 ? 4'b1100 :
                                 provider == 2'b10 ? 4'b1000 : 4'b0000 ;
@@ -164,6 +165,8 @@ module TAGE_Phase1(
         new_to_allocate = 0;
         update_index = 0;
         update_tag = 0;
+        update_ctr = 0;
+        update_useful = 0;
         if(commit_valid)    begin
             if(committed_pred_info.hit) begin           // 如果预测的结果是从预测器出来的
                 // 对于Provider的更新
@@ -171,6 +174,7 @@ module TAGE_Phase1(
                 update_index[committed_pred_info.provider] = committed_pred_info.hit_index;
                 // Useful bit
                 if(committed_pred_info.has_alter) begin // 需要更新useful bit
+                    update_useful[committed_pred_info.provider] = 1'b1;
                     inc_useful[committed_pred_info.provider] = ~committed_mispred;
                     dec_useful[committed_pred_info.provider] = committed_mispred;
                 end
@@ -181,26 +185,26 @@ module TAGE_Phase1(
                     update_ctr[committed_pred_info.provider] = committed_pred_info.ctr == 2'b11 ? 2'b11 : committed_pred_info.ctr + 2'b01;
                 end
                 update_tag[committed_pred_info.provider] = committed_pred_info.hit_tag;
-            end
-            if(committed_mispred && committed_pred_info.provider != 2'b11)    begin
-                // 如果预测失败，并且不是使用最长历史，还需要尝试分配一个新的项
-                if(committed_pred_info.has_free_to_alloc)  begin   // 分配一个新的项
-                    update_en[committed_pred_info.on_mispred_bank] = 1;
-                    reset_useful[committed_pred_info.on_mispred_bank] = 1;
-                    update_ctr[committed_pred_info.on_mispred_bank] = committed_branch_taken ? 3'b100 : 3'b011;
-                end else begin              // 对于i>j，将所有的useful减1，并不分配
-                    for( integer i = 0; i<4; i++ )  begin
-                        if( i>committed_pred_info.provider )  dec_useful[i] = 1;
+                if(committed_mispred && committed_pred_info.provider != 2'b11)    begin
+                    // 如果预测失败，并且不是使用最长历史，还需要尝试分配一个新的项
+                    if(committed_pred_info.has_free_to_alloc)  begin   // 分配一个新的项
+                        update_en[committed_pred_info.on_mispred_bank] = 1;
+                        reset_useful[committed_pred_info.on_mispred_bank] = 1;
+                        update_ctr[committed_pred_info.on_mispred_bank] = committed_branch_taken ? 3'b100 : 3'b011;
+                    end else begin              // 对于i>j，将所有的useful减1，并不分配
+                        for( integer i = 0; i<4; i++ )  begin
+                            if( i>committed_pred_info.provider )  dec_useful[i] = 1;
+                        end
                     end
                 end
+            end else begin                      // 如果没有Hit，就分配第0个
+                update_en[0] = 1;
+                update_ctr[0] = committed_branch_taken ? 3'b100 : 3'b011;
+                update_index[0] = committed_pred_info.on_mispred_index;
+                update_tag[0] = committed_pred_info.on_mispred_tag;
+                reset_useful[0] = 1;
             end
-        end else begin                      // 如果没有Hit，就分配第0个
-            update_en[0] = 1;
-            update_ctr[0] = committed_branch_taken ? 3'b100 : 3'b011;
-            update_index[0] = committed_pred_info.on_mispred_index;
-            update_tag[0] = committed_pred_info.on_mispred_tag;
-            reset_useful[0] = 1;
         end
     end
-
+    assign PredValid = hit;
 endmodule
