@@ -120,7 +120,7 @@ module IF_3(
         if(!if3_regs.inst1.valid || !inst1IsCtrl) begin                  // invalid inst
             if3_regs.inst1.predTaken    = `FALSE;
             if3_regs.inst1.predAddr     = 0;
-        end else if (if3_regs.inst0.isJ) begin
+        end else if (if3_regs.inst1.isJ) begin
             if(inst1Jr) begin
                 if(pred_taken) begin
                     if3_regs.inst1.predTaken    = `TRUE;

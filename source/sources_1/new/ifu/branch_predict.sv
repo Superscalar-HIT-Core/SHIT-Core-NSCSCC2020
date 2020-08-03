@@ -16,8 +16,8 @@ module Predictor(
     input committed_branch_taken,
     input committed_mispred
 );  
-    // 虽然是竞争的分支预测，也需要对两个进行更新
-    // 两个具有一周期延时的预测器
+    // 虽然是竞争的分支预测，也�?要对两个进行更新
+    // 两个具有�?周期延时的预测器
     GlobalHistPred pred_info_global_o;
     LocalHistPred pred_info_local_o;
     BHREntry bhr;
@@ -85,7 +85,8 @@ module Predictor(
     wire pred_taken_o, use_global_o;
     assign pred_taken_o = CPHT[CPHT_index] == 1 ? pred_taken_global : pred_taken_local;
     assign use_global_o = CPHT[CPHT_index] == 1;
-
+//    assign pred_taken_o = pred_taken_global;
+//    assign use_global_o = 1;
     // Output logic
     PredInfo pred_info_o;
     assign pred_info_o.bht_index = pred_info_local_o.bht_index;

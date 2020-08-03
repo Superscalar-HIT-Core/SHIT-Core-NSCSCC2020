@@ -20,10 +20,10 @@ module GlobalHistPredictor(
     // Output is not registered
     GlobalHist ghist_committed;
 
-    PHTEntry [1023:0] PHT;
+    PHTEntry [4095:0] PHT;
     PHTEntry current_ph;
     PHTIndex_G pht_index, pht_index_r;
-    assign pht_index = ghist[19:10] ^ ghist[9:0] ^ br_PC[12:3]; // TODO
+    assign pht_index = ghist[1:0] ^ br_PC[11:0]; // TODO
 
     // Pipeline Register
     always @(posedge clk)   begin
@@ -66,7 +66,7 @@ module GlobalHistPredictor(
     // Update logic
     always @(posedge clk)   begin
         if(rst) begin
-            for(integer i=0;i<1024;i++) begin
+            for(integer i=0;i<4096;i++) begin
                 PHT[i] <= 0;
             end
         end else if(commit_update) begin

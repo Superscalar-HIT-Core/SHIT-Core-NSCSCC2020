@@ -29,8 +29,8 @@ module LocalHistPredictor(
     PHTIndex pht_index,pht_index_r;
 
     // Hash Function?
-    assign bht_index = br_PC[10:3] ^ br_PC[18:11];
-    assign pht_index = br_PC[12:3] ^ current_bhr; // TODO
+    assign bht_index = br_PC[10:3];
+    assign pht_index = br_PC[7:3] ^ current_bhr; // TODO
 
     // Pipeline Register
     always @(posedge clk)   begin
@@ -61,7 +61,7 @@ module LocalHistPredictor(
 
     assign pht_inc = PHT[committed_pred_info.pht_index] == 2'b11 ? 2'b11 : PHT[committed_pred_info.pht_index] + 2'b01;
     assign pht_dec = PHT[committed_pred_info.pht_index] == 2'b00 ? 2'b00 : PHT[committed_pred_info.pht_index] - 2'b01;
-    assign bhr_new = { BHT[committed_pred_info.bht_index][`BHRLEN-2:0], committed_taken };
+    assign bhr_new = { BHT[committed_pred_info.bht_index][`BHRLEN-2:1], committed_taken };
     always @(posedge clk)   begin
         if(rst) begin
             for(integer i=0;i<1024;i++) begin

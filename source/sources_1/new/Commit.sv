@@ -270,4 +270,16 @@ module Commit(
     
     wire debug_is_branch = rob_commit.uOP0.branchType != typeNormal && inst0Good;
     wire debug_redirect = backend_if0.redirect;
+    reg [31:0] branch_cnt;
+    reg [31:0] failed_cnt;
+    always @(posedge clk)   begin
+        if(rst) begin
+        branch_cnt <= 0;
+        failed_cnt <= 0;
+        end else begin
+        branch_cnt <= branch_cnt + debug_is_branch;
+        failed_cnt <= failed_cnt + takePredFailed;
+        
+        end
+    end
 endmodule
