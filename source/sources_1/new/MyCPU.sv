@@ -7,14 +7,22 @@ module mycpu_top(
 
     input [5:0] ext_int,
 
+<<<<<<< HEAD
 (*mark_debug = "true"*)output wire [ 3:0]  awid      ,
 (*mark_debug = "true"*)output wire [31:0]  awaddr    ,
     output wire [ 7:0]  awlen     ,
     output wire [ 2:0]  awsize    ,
+=======
+    output wire [ 3:0]  awid      ,
+    (* mark_debug = "yes" *)output wire [31:0]  awaddr    ,
+    (* mark_debug = "yes" *)output wire [ 3:0]  awlen     ,
+    (* mark_debug = "yes" *)output wire [ 2:0]  awsize    ,
+>>>>>>> bd15dcd3c36bdc0d3b4b681a506e36ae6ae2052a
     output wire [ 1:0]  awburst   ,
     output wire [ 1:0]  awlock    ,
     output wire [ 3:0]  awcache   ,
     output wire [ 2:0]  awprot    ,
+<<<<<<< HEAD
 (*mark_debug = "true"*)output wire         awvalid   ,
 (*mark_debug = "true"*)input  wire         awready   ,
 
@@ -24,29 +32,40 @@ module mycpu_top(
     output wire         wlast     ,
 (*mark_debug = "true"*)output wire         wvalid    ,
 (*mark_debug = "true"*)input  wire         wready    ,
+=======
+    (* mark_debug = "yes" *)output wire         awvalid   ,
+    (* mark_debug = "yes" *)input  wire         awready   ,
+
+    output wire [ 3:0]  wid       ,
+    (* mark_debug = "yes" *)output wire [31:0]  wdata     ,
+    (* mark_debug = "yes" *)output wire [ 3:0]  wstrb     ,
+    (* mark_debug = "yes" *)output wire         wlast     ,
+    (* mark_debug = "yes" *)output wire         wvalid    ,
+    (* mark_debug = "yes" *)input  wire         wready    ,
+>>>>>>> bd15dcd3c36bdc0d3b4b681a506e36ae6ae2052a
 
     input  wire [ 3:0]  bid       ,
-    input  wire [ 1:0]  bresp     ,
-    input  wire         bvalid    ,
-    output wire         bready    ,
+    (* mark_debug = "yes" *)input  wire [ 1:0]  bresp     ,
+    (* mark_debug = "yes" *)input  wire         bvalid    ,
+    (* mark_debug = "yes" *)output wire         bready    ,
 
     output wire [ 3:0]  arid      ,
-    output wire [31:0]  araddr    ,
-    output wire [ 7:0]  arlen     ,
-    output wire [ 2:0]  arsize    ,
+    (* mark_debug = "yes" *)output wire [31:0]  araddr    ,
+    (* mark_debug = "yes" *)output wire [ 3:0]  arlen     ,
+    (* mark_debug = "yes" *)output wire [ 2:0]  arsize    ,
     output wire [ 1:0]  arburst   ,
     output wire [ 1:0]  arlock    ,
     output wire [ 3:0]  arcache   ,
     output wire [ 2:0]  arprot    ,
-    output wire         arvalid   ,
-    input  wire         arready   ,
+    (* mark_debug = "yes" *)output wire         arvalid   ,
+    (* mark_debug = "yes" *)input  wire         arready   ,
 
     input  wire [ 3:0]  rid       ,
-    input  wire [31:0]  rdata     ,
+    (* mark_debug = "yes" *)input  wire [31:0]  rdata     ,
     input  wire [ 1:0]  rresp     ,
-    input  wire         rlast     ,
-    input  wire         rvalid    ,
-    output wire         rready    ,
+    (* mark_debug = "yes" *)input  wire         rlast     ,
+    (* mark_debug = "yes" *)input  wire         rvalid    ,
+    (* mark_debug = "yes" *)output wire         rready    ,
     output wire [31:0]  debug_wb_pc            ,
     output wire [3:0]   debug_wb_rf_wen        ,
     output wire [4:0]   debug_wb_rf_wnum       ,
@@ -273,6 +292,8 @@ module mycpu_top(
     assign wake_reg_MDU_en = 0;
     assign wake_reg_LSU = 0;
     assign wake_reg_MDU = 0;
+    PRFNum alu0_wake_reg, alu1_wake_reg;
+    logic  alu0_wake_ena, alu1_wake_ena;
     // assign lsu_busy = 0;
 
     wire           dispatch_pause_req;
@@ -444,12 +465,12 @@ module mycpu_top(
         .set_busy_num_0                     (set_busy_num_0),
         .set_busy_num_1                     (set_busy_num_1),
         // issued instructions(at most 4 instructions issue at a time)
-        .clr_busy_ALU0                      (alu0WBReq.wen),
-        .clr_busy_ALU1                      (alu1WBReq.wen),
+        .clr_busy_ALU0                      (alu0_wake_ena),
+        .clr_busy_ALU1                      (alu1_wake_ena),
         .clr_busy_LSU                       (lsuWBReq.wen),
         .clr_busy_MDU                       (mduWBReq.wen),
-        .clr_busy_num_ALU0                  (alu0WBReq.rd),
-        .clr_busy_num_ALU1                  (alu1WBReq.rd),
+        .clr_busy_num_ALU0                  (alu0_wake_reg),
+        .clr_busy_num_ALU1                  (alu1_wake_reg),
         .clr_busy_num_LSU                   (lsuWBReq.rd),
         .clr_busy_num_MDU                   (mduWBReq.rd),
         .rd_num_l                           (scoreboard_rd_num_l_lsuiq2sb),
@@ -493,12 +514,12 @@ module mycpu_top(
         .set_busy_num_0                     (set_busy_num_0),
         .set_busy_num_1                     (set_busy_num_1),
         // issued instructions(at most 4 instructions issue at a time)
-        .clr_busy_ALU0                      (alu0WBReq.wen),
-        .clr_busy_ALU1                      (alu1WBReq.wen),
+        .clr_busy_ALU0                      (alu0_wake_ena),
+        .clr_busy_ALU1                      (alu1_wake_ena),
         .clr_busy_LSU                       (lsuWBReq.wen),
         .clr_busy_MDU                       (mduWBReq.wen),
-        .clr_busy_num_ALU0                  (alu0WBReq.rd),
-        .clr_busy_num_ALU1                  (alu1WBReq.rd),
+        .clr_busy_num_ALU0                  (alu0_wake_reg),
+        .clr_busy_num_ALU1                  (alu1_wake_reg),
         .clr_busy_num_LSU                   (lsuWBReq.rd),
         .clr_busy_num_MDU                   (mduWBReq.rd),
         .rd_num_l                           (scoreboard_rd_num_l_mduiq2sb),
@@ -531,7 +552,9 @@ module mycpu_top(
         .issueBundle                        (issue_alu_inst_0),
         .primPauseReq                       (`FALSE),
         .rfBundle                           (alu0RFBundle),
-        .prfRequest                         (alu0RFReq)
+        .prfRequest                         (alu0RFReq),
+        .wakeReg                            (alu0_wake_reg),
+        .wakeEna                            (alu0_wake_ena)
     );
     Issue_RF_regs issue_alu1_regs(
         .*,
@@ -539,7 +562,9 @@ module mycpu_top(
         .issueBundle                        (issue_alu_inst_1),
         .primPauseReq                       (`FALSE),
         .rfBundle                           (alu1RFBundle),
-        .prfRequest                         (alu1RFReq)
+        .prfRequest                         (alu1RFReq),
+        .wakeReg                            (alu1_wake_reg),
+        .wakeEna                            (alu1_wake_ena)
     );
     Issue_RF_regs issue_lsu_regs(
         .*,
@@ -547,7 +572,9 @@ module mycpu_top(
         .issueBundle                        (issue_lsu_inst),
         .primPauseReq                       (lsu_busy),
         .rfBundle                           (lsuRFBundle),
-        .prfRequest                         (lsuRFReq)
+        .prfRequest                         (lsuRFReq),
+        .wakeReg(),
+        .wakeEna()
     );
     MDUIQ_RF_regs  issue_mdu_regs(
         .*,
@@ -743,5 +770,67 @@ module mycpu_top(
         assign debug_regfile[k] = soc_axi_lite_top.cpu.prf_u.prfs_bank0[soc_axi_lite_top.cpu.rr.u_map_table.committed_rename_map_table_bank0[k]];
     end
     endgenerate
+    
+    wire debug_pause_by_iCache      = ctrl_iCache.pauseReq;
+    wire debug_pause_by_backend     = ctrl_instBuffer.pauseReq;
+    
+    wire debug_pause_by_alu         = ~aluIQReady;
+    wire debug_pause_by_lsu         = ~lsuIQReady;
+    wire debug_pause_by_mdu         = ~mduIQReady;
+    wire debug_pause_by_rr          = ~renameAllocatable;
+    
+    wire debug_redirect             = backend_if0.redirect;
+    
+    logic [31:0]    debug_frontend_pause_count;
+    logic [31:0]    debug_backend_pause_count;
+    
+    logic [31:0]    debug_alu_pause_count;
+    logic [31:0]    debug_lsu_pause_count;
+    logic [31:0]    debug_mdu_pause_count;
+    logic [31:0]    debug_rr_pause_count;
+    
+    logic [31:0]    debug_redirect_penalty;
+    logic [31:0]    debug_total_cycle_count;
+    
+    wire [31:0]     debug_total_penalty = debug_frontend_pause_count + debug_backend_pause_count + debug_redirect_penalty;
+    
+    wire            debug_rob_dual_commit = rob_commit.valid && rob_commit.ready && commit.inst0Good && commit.inst1Good;
+    wire            debug_rob_single_commit = rob_commit.valid && rob_commit.ready && !debug_rob_dual_commit;
+    wire            debug_rob_no_commit = !debug_rob_dual_commit && !debug_rob_single_commit;
+    
+    logic [31:0]    debug_rob_dual_commit_count;
+    logic [31:0]    debug_rob_single_commit_count;
+    logic [31:0]    debug_rob_no_commit_count;
+    
+    always_ff @ (posedge clk) begin
+        if(rst) begin
+            debug_frontend_pause_count <= 0;
+            debug_backend_pause_count <= 0;
+            debug_alu_pause_count <= 0;
+            debug_lsu_pause_count <= 0;
+            debug_mdu_pause_count <= 0;
+            debug_rr_pause_count <= 0;
+            debug_redirect_penalty <= 0;
+            debug_total_cycle_count <= 0;
+            debug_rob_dual_commit_count <= 0;
+            debug_rob_single_commit_count <= 0;
+            debug_rob_no_commit_count <= 0;
+        end else begin
+            if(debug_pause_by_iCache) debug_frontend_pause_count <= debug_frontend_pause_count + 1;
+            if(debug_pause_by_backend) debug_backend_pause_count <= debug_backend_pause_count + 1;
+            if(debug_pause_by_alu) debug_alu_pause_count <= debug_alu_pause_count + 1;
+            if(debug_pause_by_lsu) debug_lsu_pause_count <= debug_lsu_pause_count + 1;
+            if(debug_pause_by_mdu) debug_mdu_pause_count <= debug_mdu_pause_count + 1;
+            if(debug_pause_by_rr) debug_rr_pause_count <= debug_rr_pause_count + 1;
+            if(debug_redirect) debug_redirect_penalty <= debug_redirect_penalty + 12;
+            debug_total_cycle_count <= debug_total_cycle_count + 1;
+            
+            if(debug_rob_dual_commit) debug_rob_dual_commit_count <= debug_rob_dual_commit_count + 1;
+            if(debug_rob_single_commit) debug_rob_single_commit_count <= debug_rob_single_commit_count + 1;
+            if(debug_rob_no_commit) debug_rob_no_commit_count <= debug_rob_no_commit_count + 1;
+        end
+    end
+    
     // synopsys translate_on
+    
 endmodule

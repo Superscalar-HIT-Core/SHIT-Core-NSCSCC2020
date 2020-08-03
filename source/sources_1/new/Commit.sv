@@ -35,9 +35,10 @@ module Commit(
     logic           isDS;
     logic           inst0Store;
     logic           inst1Store;
-    reg [5:0] ext_interrupt_signal;
+    (* mark_debug = "yes" *)reg [5:0] ext_interrupt_signal;
     logic causeInt;
     logic           pendingInt;
+
     always @(posedge clk)   begin
         if(rst) begin
             ext_interrupt_signal <= 0;
