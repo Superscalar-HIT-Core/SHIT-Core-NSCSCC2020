@@ -9,7 +9,7 @@ module AXIWarp(
 
     output wire [ 3:0]  awid      ,
     output wire [31:0]  awaddr    ,
-    output wire [ 7:0]  awlen     ,
+    output wire [ 3:0]  awlen     ,
     output wire [ 2:0]  awsize    ,
     output wire [ 1:0]  awburst   ,
     output wire [ 1:0]  awlock    ,
@@ -32,7 +32,7 @@ module AXIWarp(
 
     output wire [ 3:0]  arid      ,
     output wire [31:0]  araddr    ,
-    output wire [ 7:0]  arlen     ,
+    output wire [ 3:0]  arlen     ,
     output wire [ 2:0]  arsize    ,
     output wire [ 1:0]  arburst   ,
     output wire [ 1:0]  arlock    ,
@@ -51,12 +51,12 @@ module AXIWarp(
 
     assign awid       = axiWriteAddr.id;
     assign awaddr     = axiWriteAddr.address;
-    assign awlen[3:0] = axiWriteAddr.length;
-    assign awlen[7:4] = 4'h0;
+    assign awlen      = axiWriteAddr.length;
+    assign awsize     = axiWriteAddr.size;
     assign awburst    = axiWriteAddr.burst;
     assign awlock     = axiWriteAddr.lock;
     assign awcache    = axiWriteAddr.cache;
-    assign awsize     = axiWriteAddr.size;
+    assign awprot     = axiWriteAddr.protect;
     assign awburst    = axiWriteAddr.burst;
     assign awvalid    = axiWriteAddr.valid;
     
@@ -78,7 +78,6 @@ module AXIWarp(
     assign arid       = axiReadAddr.id;
     assign araddr     = axiReadAddr.address;
     assign arlen[3:0] = axiReadAddr.length;
-    assign arlen[7:4] = 4'h0;
     assign arsize     = axiReadAddr.size;
     assign arburst    = axiReadAddr.burst;
     assign arlock     = axiReadAddr.lock;

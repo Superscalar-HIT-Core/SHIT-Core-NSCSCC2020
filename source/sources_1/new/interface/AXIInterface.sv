@@ -19,7 +19,7 @@ module AXIInterface(
     DCacheResp.axi      dCacheResp
 );
 
-    typedef enum  { sRAddr, sRInst, sRData, sRDCache, sRRst } AXIRState;
+    typedef enum  { sRAddr, sRInst, sRData, sRDCache, sRPendingResp,sRRst } AXIRState;
     typedef enum  { sWAddr, sWData, sWDCache, sWDResp, sWDCResp, sWRst } AXIWState;
 
     AXIRState   rState, nextRState, lastRState;
@@ -65,6 +65,37 @@ module AXIInterface(
     logic           lastInstBusy;
     logic           lastDataBusy;
     logic           lastDCacheBusy;
+
+    logic           instPendingReadResp;
+    logic           dCPendingReadResp;
+    logic           dataPendingReadResp;
+    logic [31:0]    dataReadResp;
+
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            dataReadResp <= 0;
+            instPendingReadResp <= `FALSE;
+            dCPendingReadResp   <= `FALSE;
+            dataPendingReadResp <= `FALSE;
+        end else if(rState == sRData && axiReadData.valid && axiReadData.ready) begin
+            dataReadResp        <= axiReadData.data;
+            instPendingReadResp <= `FALSE;
+            dCPendingReadResp   <= `FALSE;
+            dataPendingReadResp <= `TRUE;
+        end else if(rState == sRDCache && axiReadData.valid && axiReadData.ready) begin
+            instPendingReadResp <= `FALSE;
+            dCPendingReadResp   <= `TRUE;
+            dataPendingReadResp <= `FALSE;
+        end else if(rState == sRInst && axiReadData.valid && axiReadData.ready) begin
+            instPendingReadResp <= `TRUE;
+            dCPendingReadResp   <= `FALSE;
+            dataPendingReadResp <= `FALSE;
+        end else if(rState == sRAddr) begin
+            instPendingReadResp <= `FALSE;
+            dCPendingReadResp   <= `FALSE;
+            dataPendingReadResp <= `FALSE;
+        end
+    end
 
     assign axiReadAddr.valid  = rState == sRAddr && ((instReqBusy || (dataReqBusy && !dataReqWEn)) || (dCacheReqBusy && !dCacheReqWEn));
     assign axiWriteAddr.valid = wState == sWAddr && ((dataReqBusy && dataReqWEn) || (dCacheReqBusy && dCacheReqWEn));
@@ -325,6 +356,7 @@ module AXIInterface(
         axiReadAddr.length  = 4'b0011;  // burst 4
         axiReadAddr.size    = 3'b010;
         axiReadAddr.burst   = 2'b10;
+        axiReadAddr.protect = 3'b101;
                 
         dReadReady          = `FALSE;
         iReadReady          = `FALSE;
@@ -341,18 +373,21 @@ module AXIInterface(
                     axiReadAddr.length  = 4'b0011;  // burst 4
                     axiReadAddr.size    = 3'b010;
                     axiReadAddr.burst   = 2'b10;
+                    axiReadAddr.protect = 3'b001;
                 end else if(dataReqBusy && !dataReqWEn) begin
                     axiReadAddr.id      = 4'h1;
                     axiReadAddr.address = dataReqAddr;
                     axiReadAddr.length  = 4'b0000;  // no burst
                     axiReadAddr.size    = dataReqSize;
                     axiReadAddr.burst   = 2'b00;
+                    axiReadAddr.protect = 3'b001;
                 end else if(instReqBusy) begin
                     axiReadAddr.id      = 4'h0;
                     axiReadAddr.address = instReqPC & 32'hFFFF_FFF0;
                     axiReadAddr.length  = 4'b0011;  // burst 4
                     axiReadAddr.size    = 3'b010;
                     axiReadAddr.burst   = 2'b10;
+                    axiReadAddr.protect = 3'b101;
                 end
                 
                 dReadReady  = `FALSE;
@@ -366,24 +401,33 @@ module AXIInterface(
                 if(axiReadData.valid) begin
                     dReadReady = `TRUE;
                     dataResp.data = axiReadData.data;
-                end
+                end else if(dataPendingReadResp) begin
+                    dReadReady = `TRUE;
+                    dataResp.data = dataReadResp;
+                end 
                 iReadReady  = `FALSE;
                 dcReadReady = `FALSE;
             end
             sRInst: begin
                 axiReadData.ready = `TRUE;
-                if(axiReadData.last) begin
+                if(axiReadData.last && axiReadData.valid && axiReadData.ready) begin
                     iReadReady = `TRUE;
                     instResp.cacheLine = {axiReadData.data, iReadRes[95:0]};
+                end else if(instPendingReadResp) begin
+                    iReadReady = `TRUE;
+                    instResp.cacheLine = iReadRes;
                 end
                 dReadReady  = `FALSE;
                 dcReadReady = `FALSE;
             end
             sRDCache: begin
                 axiReadData.ready = `TRUE;
-                if(axiReadData.last) begin
+                if(axiReadData.last && axiReadData.valid && axiReadData.ready) begin
                     dcReadReady     = `TRUE;
                     dCacheResp.data = {axiReadData.data, dcReadRes[95:0]};
+                end else if(dCPendingReadResp) begin
+                    dcReadReady = `TRUE;
+                    dCacheResp.data = dcReadRes;
                 end
                 iReadReady  = `FALSE;
                 dReadReady  = `FALSE;
@@ -409,6 +453,7 @@ module AXIInterface(
         axiWriteAddr.length     = 4'b0011;
         axiWriteAddr.size       = 3'b010;
         axiWriteAddr.burst      = 2'b10;
+        axiWriteAddr.protect    = 3'b001;
         axiWriteData.id         = 4'h0;
         axiWriteData.strobe     = 4'b1111;
         axiWriteData.data       = 0;

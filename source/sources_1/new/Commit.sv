@@ -262,5 +262,5 @@ module Commit(
     assign exceInfo.interrupt = ext_interrupt_signal;
     
     wire debug_is_branch = rob_commit.uOP0.branchType != typeNormal && inst0Good;
-    (* mark_debug = "yes" *)wire debug_redirect = backend_if0.redirect;
+    wire debug_redirect = backend_if0.redirect;
 endmodule
