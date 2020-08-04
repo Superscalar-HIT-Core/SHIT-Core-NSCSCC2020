@@ -48,10 +48,7 @@ module IFU(
     IF2_3_reg       if23reg(.*);
     IF_3            if3(.*);
     IF3_Output_reg  if3OutputReg(.*);
-    logic IF3_isBranch, IF3_isJ;
-    wire [31:0] pred_target;
-    wire pred_valid, pred_taken;
-    assign pred_valid = 1;
+
     // TAGEPred pred_info;
     // TAGE u_TAGE(
     //     .clk                    (clk                    ),
@@ -73,8 +70,11 @@ module IFU(
     //     .committed_branch_taken (backend_bpd.updTaken   ),
     //     .committed_mispred      (backend_bpd.updMisPred )
     // );
+    logic IF3_isBranch, IF3_isJ;
+    wire [31:0] pred_target;
+    wire pred_valid, pred_taken;
+    assign pred_valid = 1;
     PredInfo pred_info;
-    assign pred_target = 0;
     Predictor bpd_u(
         .clk                    (clk                    ),
         .rst                    (rst                    ),
@@ -86,10 +86,12 @@ module IFU(
         .br_PC                  (regs_iCache.PC         ),
         .pred_info              (pred_info              ),
         .pred_taken             (pred_taken             ),
+        .pred_target            (pred_target            ),
         .commit_valid           (backend_bpd.updValid   ),
-        .committed_target       (backend_bpd.updTarget  ),
         .committed_pred_info    (backend_bpd.updInfo    ),
         .committed_branch_taken (backend_bpd.updTaken   ),
-        .committed_mispred      (backend_bpd.updMisPred )
+        .committed_mispred      (backend_bpd.updMisPred ),
+        .commit_update_target_en(backend_bpd.updTarget_en),
+        .committed_target       (backend_bpd.updTarget   )
 );  
 endmodule

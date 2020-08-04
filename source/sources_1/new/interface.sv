@@ -351,12 +351,13 @@ endinterface //Regs_IF3
 interface BPDUpdate;
     logic           updValid;
     Word            updTarget;
-    TAGEPred        updInfo;           
+    logic           updTarget_en;
+    PredInfo        updInfo;           
     logic           updTaken;
     logic           updMisPred;           
 
-    modport backend(output updValid, updInfo, updTaken, updMisPred, updTarget);
-    modport bpd(input updValid, updInfo, updTaken, updMisPred, updTarget);
+    modport backend(output updValid, updInfo, updTaken, updMisPred, updTarget, updTarget_en);
+    modport bpd(input updValid, updInfo, updTaken, updMisPred, updTarget, updTarget_en);
 endinterface
 
 interface NLP_IF0;
