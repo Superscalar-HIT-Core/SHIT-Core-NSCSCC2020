@@ -12,7 +12,8 @@ module ALU(
     );
 wire overflow;
 logic j2BadVaddr;
-
+(* mark_debug = "yes" *) wire [31:0] ALUPC = uops.pc;
+(* mark_debug = "yes" *) wire ALU_Valid = uops.valid;
 // trigger on taken bad jump addr. If error is a ExcAddressErrIF, SET BOTH EPC AND BADVADDR TO BADVADDR
 assign j2BadVaddr = alu_rob.setBranchStatus &&  alu_rob.branchTaken && (|alu_rob.branchAddr[1:0]);
 assign alu_rob.setFinish = uops.valid;

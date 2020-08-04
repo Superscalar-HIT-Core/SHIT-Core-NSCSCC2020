@@ -251,6 +251,26 @@ module decode(
                     uOP1.dstwe      = `TRUE;
                     uOP1.valid      = `TRUE;
                 end
+                `MUL: begin
+                    uOP0.uOP        = MULTHI_U;
+                    uOP0.rs_type    = RS_MDU;
+                    uOP0.op0LAddr   = rs;
+                    uOP0.op1LAddr   = rt;
+                    uOP0.dstLAddr   = 0;    // discard high 32
+                    uOP0.op0re      = `TRUE;
+                    uOP0.op1re      = `TRUE;
+                    uOP0.dstwe      = `FALSE;
+
+                    uOP1.uOP        = MULTLO_U;
+                    uOP1.rs_type    = RS_MDU;
+                    uOP1.op0LAddr   = rs;
+                    uOP1.op1LAddr   = rt;
+                    uOP1.dstLAddr   = rd;
+                    uOP1.op0re      = `TRUE;
+                    uOP1.op1re      = `TRUE;
+                    uOP1.dstwe      = `TRUE;
+                    uOP1.valid      = `TRUE;
+                end
                 `AND: begin
                     uOP0.uOP        = AND_U;
                     uOP0.rs_type    = RS_ALU;

@@ -11,7 +11,9 @@ module Issue_RF_regs(
     input   UOPBundle   issueBundle,
     input   wire        primPauseReq,
     output  UOPBundle   rfBundle,
-    output  PRFrNums    prfRequest
+    output  PRFrNums    prfRequest,
+    output  PRFNum      wakeReg,
+    output              wakeEna
 );
 
     always_ff @ (posedge clk) begin
@@ -27,5 +29,6 @@ module Issue_RF_regs(
             prfRequest.rs1  <= issueBundle.op1PAddr;
         end
     end
-
+    assign wakeReg = rfBundle.dstPAddr;
+    assign wakeEna = rfBundle.dstwe && rfBundle.valid;
 endmodule
