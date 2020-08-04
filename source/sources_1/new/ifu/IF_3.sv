@@ -190,7 +190,7 @@ module IF_3(
     always_ff @ (posedge clk) begin
         if(rst || ctrl_if3.flush) begin
             waitDSRedirectTarget <= 0;
-        end else if(if3_regs.inst1.predTaken && inst1NLPTaken && if3_regs.inst0.predAddr != if3_regs.inst0.nlpInfo.target) begin
+        end else if(if3_regs.inst1.predTaken && inst1NLPTaken && if3_regs.inst1.predAddr != if3_regs.inst1.nlpInfo.target) begin
             waitDSRedirectTarget <= if3_regs.inst1.predAddr;
         end else if(if3_regs.inst1.predTaken && !inst1NLPTaken) begin
             waitDSRedirectTarget <= if3_regs.inst1.predAddr;
@@ -214,7 +214,7 @@ module IF_3(
             waitDS              <= `FALSE;
         end else if(!if3_regs.inst0.predTaken && inst0NLPTaken) begin
             waitDS              <= `FALSE;
-        end else if(if3_regs.inst1.predTaken && inst1NLPTaken && if3_regs.inst0.predAddr != if3_regs.inst0.nlpInfo.target) begin
+        end else if(if3_regs.inst1.predTaken && inst1NLPTaken && if3_regs.inst1.predAddr != if3_regs.inst1.nlpInfo.target) begin
             waitDS              <= `TRUE;
         end else if(if3_regs.inst1.predTaken && !inst1NLPTaken) begin
             waitDS              <= `TRUE;
