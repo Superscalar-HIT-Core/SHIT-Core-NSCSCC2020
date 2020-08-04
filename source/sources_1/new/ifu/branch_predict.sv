@@ -43,6 +43,19 @@ module Predictor(
         .br_PC_out(br_PC_dly)
     );
 
+    wire [31:0] pred_target_o;
+    wire [9:0] btb_index_o;
+    BTB btb(
+        .clk(clk),
+        .rst(rst),
+        .br_PC(br_PC_dly),
+        .pred_target(pred_target_o),
+        .pred_btb_index(btb_index_o),
+        .BHR(bhr),
+        .commit_update(commit_valid),
+        .commit_update_index(committed_pred_info.btb_index),
+        .commit_update_target() 
+    )
     GlobalHistPred committed_pred_info_global;
     assign committed_pred_info_global.pht_index_g = committed_pred_info.pht_index_g;
     GlobalHistPredictor globalhist(
@@ -83,10 +96,10 @@ module Predictor(
     end
 
     wire pred_taken_o, use_global_o;
-    assign pred_taken_o = CPHT[CPHT_index] == 1 ? pred_taken_global : pred_taken_local;
-    assign use_global_o = CPHT[CPHT_index] == 1;
-//    assign pred_taken_o = pred_taken_global;
-//    assign use_global_o = 1;
+    // assign pred_taken_o = CPHT[CPHT_index] == 1 ? pred_taken_global : pred_taken_local;
+    // assign use_global_o = CPHT[CPHT_index] == 1;
+    assign pred_taken_o = pred_taken_global;
+    assign use_global_o = 1;
     // Output logic
     PredInfo pred_info_o;
     assign pred_info_o.bht_index = pred_info_local_o.bht_index;
@@ -94,6 +107,8 @@ module Predictor(
     assign pred_info_o.pht_index_g = pred_info_global_o.pht_index_g;
     assign pred_info_o.cpht_index = CPHT_index;
     assign pred_info_o.use_global = use_global_o;
+    assign pred_info_o.btb_index = btb_index_o;
+
     always @(posedge clk)   begin
         if(rst) begin
             pred_info <= 0;

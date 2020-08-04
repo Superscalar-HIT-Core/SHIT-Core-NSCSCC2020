@@ -290,11 +290,15 @@ typedef struct packed {
     PHTIndex pht_index;
 } LocalHistPred;
 
+`define BTBIDXLEN 8
+typedef logic [`BTBIDXLEN-1:0] BTBIndex;
+
 typedef struct packed {
     BHTIndex bht_index;
     PHTIndex pht_index;
     PHTIndex_G pht_index_g;
     CPHTIndex cpht_index;
+    BTBIndex btb_index;
     logic use_global;
 } PredInfo;
 
