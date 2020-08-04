@@ -213,7 +213,7 @@ module Commit(
     always_comb begin
             backend_bpd.updValid         <= inst0Good && rob_commit.uOP0.branchType != typeNormal && rob_commit.uOP0.branchType != typeJ;
             backend_bpd.updTarget        <= rob_commit.uOP0.branchAddr;
-            backend_bpd.updTarget_en     <= rob_commit.uOP0.branchType == typeJR;           // Indirect branch need to update the btb
+            backend_bpd.updTarget_en     <= rob_commit.uOP0.branchType == typeJR && inst0Good;           // Indirect branch need to update the btb
             backend_bpd.updInfo          <= rob_commit.uOP0.predInfo;
             backend_bpd.updMisPred       <= rob_commit.uOP0.branchTaken != rob_commit.uOP0.predTaken;
             backend_bpd.updTaken         <= rob_commit.uOP0.branchTaken;

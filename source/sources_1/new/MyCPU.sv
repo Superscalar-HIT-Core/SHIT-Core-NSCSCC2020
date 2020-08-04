@@ -745,13 +745,13 @@ module mycpu_top(
     //     $display("========== arf disp finished ==========");
     // end
     
-    wire [31:0] debug_regfile[31:0];
-    genvar k;
-    generate
-    for(k=0;k<32;k=k+1) begin
-        assign debug_regfile[k] = soc_axi_lite_top.cpu.prf_u.prfs_bank0[soc_axi_lite_top.cpu.rr.u_map_table.committed_rename_map_table_bank0[k]];
-    end
-    endgenerate
+    // wire [31:0] debug_regfile[31:0];
+    // genvar k;
+    // generate
+    // for(k=0;k<32;k=k+1) begin
+    //     assign debug_regfile[k] = soc_axi_lite_top.cpu.prf_u.prfs_bank0[soc_axi_lite_top.cpu.rr.u_map_table.committed_rename_map_table_bank0[k]];
+    // end
+    // endgenerate
     
     wire debug_pause_by_iCache      = ctrl_iCache.pauseReq;
     wire debug_pause_by_backend     = ctrl_instBuffer.pauseReq;
