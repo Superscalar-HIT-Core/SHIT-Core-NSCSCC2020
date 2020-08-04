@@ -12,7 +12,7 @@ module LSU(
     input   UOPBundle       uOP,
     input   PRFrData        oprands,
     output  PRFwInfo        wbData,
-    output                  half_full,
+    (* mark_debug = "yes" *)    output                  half_full,
     FU_ROB.fu               lsu_commit_reg,
     DataReq.lsu             dataReq,
     DataResp.lsu            dataResp,
@@ -20,9 +20,10 @@ module LSU(
     DCacheResp.dCache       dCacheResp,
     UncachedLoadInfo.lsu    uncachedLoadInfo
     );
+    (* mark_debug = "yes" *) wire [31:0] LSU_execute_PC = uOP.pc;
+    (* mark_debug = "yes" *) wire LSU_execute_valid = uOP.valid;
     assign pauseReq = 1'b0;
     assign flushReq = 1'b0;
-    
     logic r_busy;
     logic w_busy;
     assign lsu_busy = r_busy | w_busy;
@@ -146,8 +147,8 @@ module LSU(
     assign lsu2rt.rfin = lsu2prf.valid;
     assign lsu2rt.rid = lsu2prf.id;
 
-    assign lsu_commit_reg.setFinish = lsu2rob.valid;
-    assign lsu_commit_reg.id = lsu2rob.id;
+(* mark_debug = "yes" *)    assign lsu_commit_reg.setFinish = lsu2rob.valid;
+(* mark_debug = "yes" *)    assign lsu_commit_reg.id = lsu2rob.id;
     assign lsu_commit_reg.setException = lsu2rob.set_ex;
     assign lsu_commit_reg.exceptionType = (lsu2rob.ls == 1'b1) ? ExcAddressErrS : ExcAddressErrL;
     assign lsu_commit_reg.BadVAddr = lsu2rob.bad_addr;

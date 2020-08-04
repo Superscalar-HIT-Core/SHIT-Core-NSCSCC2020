@@ -25,6 +25,8 @@ module dispatch(
     output pause_req
     );
 // 分配判断
+(* mark_debug = "yes" *) wire [31:0] dispatch_input_pc0 = inst_0_ops.pc;
+(* mark_debug = "yes" *) wire [31:0] dispatch_input_pc1 = inst_1_ops.pc;
 wire robEmpty = dispatch_rob.empty;
 wire hasPrivInst =  (inst_0_ops.valid && inst_0_ops.isPriv) || 
                     (inst_1_ops.valid && inst_1_ops.isPriv);
@@ -34,14 +36,14 @@ reg pause_req_cp0;
 assign pause_req = pause_req_cp0;           // rob的已经在外面处理�?
 // 对ROB发来的ROB ID进行处理
 wire [7:0] robID_0, robID_1;
-assign robID_0 = { dispatch_rob.robID[6:0], 1'b0 } ;
-assign robID_1 = { dispatch_rob.robID[6:0], 1'b1 } ;
+(* mark_debug = "yes" *) assign robID_0 = { dispatch_rob.robID[6:0], 1'b0 } ;
+(* mark_debug = "yes" *) assign robID_1 = { dispatch_rob.robID[6:0], 1'b1 } ;
 
 // 根据当前的状态，对当前的两个ops进行reorder (TODO) //////////////////////////////
 UOPBundle inst_0_ops_reordered, inst_1_ops_reordered;
 // Handle CP0 Logic
 typedef enum bit[2:0] { IDLE, WAIT_ROB_SLOT0, WR_ROB_SLOT0, WAIT_ROB_SLOT1, WR_ROB_SLOT1, DONE } dispatchState;
-dispatchState current_state, next_state;
+(* mark_debug = "yes" *)dispatchState current_state, next_state;
 
 always @(posedge clk)   begin
     if(rst) begin
@@ -51,6 +53,9 @@ always @(posedge clk)   begin
     end
 end
 
+// CP0?????????ROB????????????LSU?Store Buffer??????
+// ??????????????????????CP0????????ROB???????????????
+// ?LSU???????????????CP0??????????CP0????????Set Unbusy?????Set busy
 always_comb begin
     next_state = IDLE;
     case(current_state)
@@ -59,7 +64,7 @@ always_comb begin
             else            next_state = IDLE;
         end
         WAIT_ROB_SLOT0:   begin
-            if(robEmpty)    next_state = WR_ROB_SLOT0;
+            if(robEmpty && ~pause)    next_state = WR_ROB_SLOT0;
             else            next_state = WAIT_ROB_SLOT0;
         end
         WR_ROB_SLOT0:     begin
@@ -67,7 +72,7 @@ always_comb begin
             else            next_state = DONE;
         end
         WAIT_ROB_SLOT1:   begin
-            if(robEmpty)    next_state = WR_ROB_SLOT1;
+            if(robEmpty && ~pause)    next_state = WR_ROB_SLOT1;
             else            next_state = WAIT_ROB_SLOT1;
         end
         WR_ROB_SLOT1:     begin
@@ -132,7 +137,8 @@ always_comb begin   // 在此处完成reorder
     inst_1_ops_reordered.id = robID_1;
     inst_1_ops_reordered.busy = ( inst_1_ops_reordered.valid && inst_1_ops_reordered.uOP != NOP_U && inst_1_ops_reordered.uOP != MDBUBBLE_U );
 end
-
+(* mark_debug = "yes" *) wire [31:0] dispatch_out_pc0 = inst_0_ops_reordered.pc;
+(* mark_debug = "yes" *) wire [31:0] dispatch_out_pc1 = inst_1_ops_reordered.pc;
 wire inst0_isMul, inst1_isMul;
 wire inst0_isStore, inst1_isStore;
 assign inst0_isMul =    (inst_0_ops_reordered.uOP == MULTHI_U ) || 

@@ -24,9 +24,9 @@ module CP0(
     logic [31:0]    Count;
     logic [31:0]    EntryHi;
     logic [31:0]    Compare;
-    logic [31:0]    Status;
-    logic [31:0]    Cause;
-    logic [31:0]    EPc;
+    (* mark_debug = "yes" *)logic [31:0]    Status;
+    (* mark_debug = "yes" *)logic [31:0]    Cause;
+    (* mark_debug = "yes" *)logic [31:0]    EPc;
     logic [31:0]    PRId;
     logic [31:0]    EBase;
     logic [31:0]    Config;

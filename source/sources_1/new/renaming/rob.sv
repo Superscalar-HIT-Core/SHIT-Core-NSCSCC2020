@@ -11,7 +11,7 @@ module ROB(
     FU_ROB.rob              alu1_rob,
     FU_ROB.rob              mdu_rob,
     FU_ROB.rob              lsu_rob,
-(*mark_debug = "true"*)UncachedLoadInfo.rob    uncachedLoadInfo,
+    UncachedLoadInfo.rob    uncachedLoadInfo,
 
     ROB_Commit.rob          rob_commit
 );
