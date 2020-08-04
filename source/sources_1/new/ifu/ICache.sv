@@ -310,7 +310,7 @@ module ICache(
                 if(rst) begin
                     nxtState = sReset;
                 end else if(flush) begin
-                    nxtState = sRunning;
+                    nxtState = sIdle;
                 end else if(!ctrl_iCache.pause) begin
                     nxtState = sRunning;
                 end else begin
