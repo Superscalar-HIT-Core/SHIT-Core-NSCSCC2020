@@ -14,7 +14,8 @@ module IFU(
     Ctrl                ctrl_if3,
     Ctrl                ctrl_if3_output_regs,
     Ctrl                ctrl_nlp,
-    Ctrl                ctrl_tage,
+    Ctrl                ctrl_bpd_s0,
+    Ctrl                ctrl_bpd_s1,
     ICache_TLB          iCache_tlb,
     BackendRedirect     backend_if0,
     BPDUpdate           backend_bpd,
@@ -73,14 +74,15 @@ module IFU(
     logic IF3_isBranch, IF3_isJ;
     wire [31:0] pred_target;
     wire pred_valid, pred_taken;
-    assign pred_valid = 1;
     PredInfo pred_info;
     Predictor bpd_u(
         .clk                    (clk                    ),
         .rst                    (rst                    ),
-        // .pause                  (ctrl_tage.pause        ),
+        .pause                  (ctrl_bpd_s0.pause      ),
+        .hold                   (ctrl_bpd_s1.pause      ),
+        .pred_valid             (pred_valid             ),
     // 注意：此处的recover接的是regfile的recover，需要等分支指令提交进来了再进行恢复
-        .recover                (ctrl_tage.flush        ),
+        .recover                (ctrl_bpd_s0.flush        ),
         .IF3_isBR               (IF3_isBranch           ),
         .IF3_isJ                (IF3_isJ                ),
         .br_PC                  (regs_iCache.PC         ),

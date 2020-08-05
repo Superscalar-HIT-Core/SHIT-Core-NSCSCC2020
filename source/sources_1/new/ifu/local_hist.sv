@@ -5,6 +5,7 @@
 module LocalHistPredictor(
     input clk,
     input rst,
+    input pause,
     input [31:0] br_PC,
     output LocalHistPred pred_info,
     output BHREntry bhr,
@@ -39,7 +40,7 @@ module LocalHistPredictor(
             bhr <= 0;
             br_PC_out <= 0;
             bht_index_r <= 0;
-        end else begin
+        end else if(~pause) begin
             pht_index_r <= pht_index;
             bhr <= current_bhr;
             br_PC_out <= br_PC;

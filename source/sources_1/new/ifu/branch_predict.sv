@@ -3,11 +3,14 @@
 module Predictor(
     input clk,
     input rst,
+    input pause,
+    input hold,
     // Recover must be delayed for 1 cycle in case of flushing the newly committed history
     input recover,
     input [31:0] br_PC,
     input IF3_isBR,
     input IF3_isJ,
+    output reg pred_valid,
     output PredInfo pred_info,
     output reg pred_taken,
     output reg [31:0] pred_target,
@@ -17,9 +20,17 @@ module Predictor(
     input committed_mispred,
     input commit_update_target_en,
     input [31:0] committed_target
+    // For RAS
+    // input IF3_isLink,
+    // input IF3_isReturn,
+    // input [31:0] IF3_LinkPC,
+    // output reg [31:0] IF3_ReturnPC,
+    // input committed_isLink,
+    // input committed_isReturn,
+    // input commmit_valid,
+    // input [31:0] commit_LinkPC
 );  
-    // 虽然是竞争的分支预测，也�?要对两个进行更新
-    // 两个具有�?周期延时的预测器
+
     GlobalHistPred pred_info_global_o;
     LocalHistPred pred_info_local_o;
     BHREntry bhr;
@@ -28,13 +39,14 @@ module Predictor(
     CPHTIndex CPHT_index, CPHT_index_update;
     CPHT_Entry [1023:0] CPHT;
     wire [31:0] br_PC_dly;
-    // 内部拥有1级的pipeline
     LocalHistPred committed_pred_info_local;
     assign committed_pred_info_local.bht_index = committed_pred_info.bht_index;
     assign committed_pred_info_local.pht_index = committed_pred_info.pht_index;
+    wire pred_direction_valid, pred_address_valid;
     LocalHistPredictor localhist(
         .clk(clk),
         .rst(rst),
+        .pause(pause),
         .br_PC(br_PC),
         .pred_info(pred_info_local_o),
         .bhr(bhr),
@@ -51,6 +63,7 @@ module Predictor(
         .clk(clk),
         .rst(rst),
         .br_PC(br_PC_dly),
+        .pred_valid(pred_address_valid),
         .pred_target(pred_target_o),
         .pred_btb_index(btb_index_o),
         .BHR(bhr),
@@ -58,11 +71,27 @@ module Predictor(
         .commit_update_index(committed_pred_info.btb_index),
         .commit_update_target(committed_target) 
     );
+    // wire [31:0] IF3_ReturnPC_o;
+    // RAS ras(
+    //     .clk(clk),
+    //     .rst(rst),
+    //     .pause(pause),
+    //     .recover(recover),
+    //     .isLink(IF3_isLink),
+    //     .isReturn(IF3_isReturn),
+    //     .target(IF3_ReturnPC_o),
+    //     .commit_valid(commit_valid),
+    //     .committed_isLink(committed_isLink),
+    //     .committed_isReturn(committed_isReturn),
+    //     .committed_pc(commit_LinkPC)
+    // );
     GlobalHistPred committed_pred_info_global;
     assign committed_pred_info_global.pht_index_g = committed_pred_info.pht_index_g;
     GlobalHistPredictor globalhist(
         .clk(clk),
         .rst(rst),
+        .pause(pause),
+        .pred_valid(pred_direction_valid),
         .br_PC(br_PC),
         .recover(recover),
         .pred_info(pred_info_global_o),
@@ -118,10 +147,14 @@ module Predictor(
             pred_info <= 0;
             pred_taken <= 0;
             pred_target <= 0;
-        end else begin
+            pred_valid <= 0;
+            // IF3_ReturnPC <= 0;
+        end else if(~hold) begin
             pred_info <= pred_info_o;
             pred_taken <= pred_taken_o;
             pred_target <= pred_target_o;
+            pred_valid <= pred_address_valid | pred_direction_valid;
+            // IF3_ReturnPC <= IF3_ReturnPC_o;
         end
     end
 

@@ -31,7 +31,8 @@ wire robEmpty = dispatch_rob.empty;
 wire hasPrivInst =  (inst_0_ops.valid && inst_0_ops.isPriv) || 
                     (inst_1_ops.valid && inst_1_ops.isPriv);
 wire slotsFull = inst_0_ops.valid && inst_1_ops.valid;
-wire passThrough = ~hasPrivInst;                // 不需要暂停，直接传�?�过�?
+wire PrivInstisDS = (inst_1_ops.valid && inst_1_ops.isPriv && inst_1_ops.isDS);
+wire passThrough = ~hasPrivInst || PrivInstisDS;                // 不需要暂停，直接传�?�过�?
 reg pause_req_cp0;
 assign pause_req = pause_req_cp0;           // rob的已经在外面处理�?
 // 对ROB发来的ROB ID进行处理
@@ -60,7 +61,7 @@ always_comb begin
     next_state = IDLE;
     case(current_state)
         IDLE:       begin
-            if(hasPrivInst) next_state = WAIT_ROB_SLOT0;
+            if(~passThrough) next_state = WAIT_ROB_SLOT0;
             else            next_state = IDLE;
         end
         WAIT_ROB_SLOT0:   begin
@@ -91,7 +92,7 @@ always_comb begin   // 在此处完成reorder
     inst_1_ops_reordered = 0;
     case(current_state)
         IDLE:       begin
-            if(~dispatch_rob.ready || hasPrivInst) begin
+            if( ~dispatch_rob.ready || ~passThrough  ) begin
                 pause_req_cp0 = 1;
                 inst_0_ops_reordered = 0;
                 inst_1_ops_reordered = 0;

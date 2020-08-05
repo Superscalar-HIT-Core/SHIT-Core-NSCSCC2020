@@ -3,7 +3,9 @@
 `include "../defines/defines.svh"
 
 module RAS(
-    input   logic [31:0]    pc,
+    input                   clk,
+    input                   rst,
+    input                   pause,
     input                   recover,
     input   logic           valid,
     input   logic           isLink,
@@ -28,10 +30,10 @@ module RAS(
                 ras[i] <= committed_ras[i];
             end
             ras_top <= committed_ras_top;
-        end else if(valid && isLink)    begin
+        end else if(isLink && ~pause)    begin
             ras[ras_top] <= pc + 32'h8;
             ras_top <= ras_top + 1;
-        end else if(valid && isReturn)  begin
+        end else if(isReturn && ~pause)  begin
             ras_top <= ras_top - 1;
         end
     end

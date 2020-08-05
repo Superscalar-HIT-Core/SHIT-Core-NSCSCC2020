@@ -19,7 +19,11 @@ module IF_3(
     input TAGEPred          pred_info,
     output                  IF3_isBranch,    // To BPD, update the global history
     output                  IF3_isJ
+    //output                  IF3_isLink,
+    //output                  IF3_LinkPC,
+    //output                  IF3_isReturn
 );
+    // TODO: 如果IF3是Link，则直接选择RAS里面的做跳转
     logic           inst0Jr;
     logic           inst1Jr;
     logic           inst0J;
@@ -41,7 +45,7 @@ module IF_3(
     wire            isJ, isBranch;
     assign          isBranch =  inst0Jr | inst0J | inst0Br |
                                 inst1Jr | inst1J | inst1Br ;
-    assign          isJ =  inst0J | inst1J ;
+    assign          isJ =  inst0J | inst1J | inst0Jr | inst1Jr ;
     assign          IF3_isBranch = isBranch;
     assign          IF3_isJ = isJ;
     Predecoder pre0(
@@ -122,7 +126,7 @@ module IF_3(
             if3_regs.inst1.predAddr     = 0;
         end else if (if3_regs.inst1.isJ) begin
             if(inst1Jr) begin
-                if(pred_taken) begin
+                if(pred_valid) begin
                     if3_regs.inst1.predTaken    = `TRUE;
                     if3_regs.inst1.predAddr     = pred_target;
                 end else if(if3_regs.inst1.nlpInfo.valid) begin
@@ -183,6 +187,8 @@ module IF_3(
 
         if(waitDS || lastWaitDS) begin
             if3_regs.inst1.valid = `FALSE;
+        end else if(!inst0IsCtrl && inst0NLPTaken && if3_regs.inst0.nlpInfo.taken) begin
+            if3_regs.inst1.valid = `FALSE;
         end
     end
 
@@ -190,6 +196,8 @@ module IF_3(
     always_ff @ (posedge clk) begin
         if(rst || ctrl_if3.flush) begin
             waitDSRedirectTarget <= 0;
+        end else if (ctrl_if3.pause) begin
+            waitDSRedirectTarget <= waitDSRedirectTarget;
         end else if(if3_regs.inst1.predTaken && inst1NLPTaken && if3_regs.inst1.predAddr != if3_regs.inst1.nlpInfo.target) begin
             waitDSRedirectTarget <= if3_regs.inst1.predAddr;
         end else if(if3_regs.inst1.predTaken && !inst1NLPTaken) begin
