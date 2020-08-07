@@ -125,7 +125,7 @@ module mycpu_top(
     NLPUpdate           backend_nlp();
     
     CP0WRInterface      alu0_cp0();
-    CP0WRInterface      alu1_cp0_fake();
+    CP0WRInterface      alu1_cp0();
     CP0WRInterface      exception_cp0();
     CP0Exception        exceInfo();
     CommitExce          exce_commit();
@@ -634,7 +634,7 @@ module mycpu_top(
     );
     ALU alu1(
         .uops                               (alu1UOPBundle),
-        .alu_cp0                            (alu1_cp0_fake),
+        .alu_cp0                            (alu1_cp0),
         .rdata                              (alu1Oprands),
         .bypass_alu0                        (alu0WBReq),
         .bypass_alu1                        (alu1WBReq),

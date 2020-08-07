@@ -5,6 +5,7 @@ module CP0(
     input wire          clk,
     input wire          rst,
     CP0WRInterface.cp0  alu0_cp0,
+    CP0WRInterface.cp0  alu1_cp0,
     CP0_TLB.cp0         cp0_tlb,
     CP0Exception.cp0    exceInfo,
     CP0StatusRegs.cp0   cp0StatusRegs
@@ -189,6 +190,27 @@ module CP0(
                 `CP0CONFIG   : Config   <= (Config     & ~`CP0CONFIGMASK    ) | (alu0_cp0.writeData & `CP0CONFIGMASK   );
                 `CP0ERROREPC : ErrorEPC <= (ErrorEPC   & ~`CP0ERROREPCMASK  ) | (alu0_cp0.writeData & `CP0ERROREPCMASK );
             endcase
+        end else if(alu1_cp0.writeEn) begin         // CP0写使能
+            case(alu1_cp0.addr)
+                `CP0INDEX    : Index    <= (Index      & ~`CP0INDEXMASK     ) | (alu1_cp0.writeData & `CP0INDEXMASK    );
+                `CP0ENTRYLO0 : EntryLo0 <= (EntryLo0   & ~`CP0ENTRYLO0MASK  ) | (alu1_cp0.writeData & `CP0ENTRYLO0MASK );
+                `CP0ENTRYLO1 : EntryLo1 <= (EntryLo1   & ~`CP0ENTRYLO1MASK  ) | (alu1_cp0.writeData & `CP0ENTRYLO1MASK );
+                `CP0CONTEXT  : Context  <= (Context    & ~`CP0CONTEXTMASK   ) | (alu1_cp0.writeData & `CP0CONTEXTMASK  );
+                `CP0PAGEMASK : PageMask <= (PageMask   & ~`CP0PAGEMASKMASK  ) | (alu1_cp0.writeData & `CP0PAGEMASKMASK );
+                `CP0WIRED    : Wired    <= (Wired      & ~`CP0WIREDMASK     ) | (alu1_cp0.writeData & `CP0WIREDMASK    );
+                `CP0ENTRYHI  : EntryHi  <= (EntryHi    & ~`CP0ENTRYHIMASK   ) | (alu1_cp0.writeData & `CP0ENTRYHIMASK  );
+                `CP0COMPARE  : Compare  <= (Compare    & ~`CP0COMPAREMASK   ) | (alu1_cp0.writeData & `CP0COMPAREMASK  );
+                `CP0STATUS   : Status   <= (Status     & ~`CP0STATUSMASK    ) | (alu1_cp0.writeData & `CP0STATUSMASK   );
+                `CP0CAUSE    : begin    // 因为Cause上面会写
+                    Cause[9:8] <= alu0_cp0.writeData[9:8];
+                    Cause[22]  <= alu0_cp0.writeData[22];
+                    Cause[23]  <= alu0_cp0.writeData[23];
+                end
+                `CP0EPC      : EPc      <= (EPc        & ~`CP0EPCMASK       ) | (alu1_cp0.writeData & `CP0EPCMASK      );
+                `CP0EBASE    : EBase    <= (EBase      & ~`CP0EBASEMASK     ) | (alu1_cp0.writeData & `CP0EBASEMASK    );
+                `CP0CONFIG   : Config   <= (Config     & ~`CP0CONFIGMASK    ) | (alu1_cp0.writeData & `CP0CONFIGMASK   );
+                `CP0ERROREPC : ErrorEPC <= (ErrorEPC   & ~`CP0ERROREPCMASK  ) | (alu1_cp0.writeData & `CP0ERROREPCMASK );
+            endcase
         end
         if(cp0_tlb.writeEn) begin
                 EntryLo0 <= (EntryLo0 & ~`CP0ENTRYLO0MASK) | (cp0_tlb.wEntryHi  & `CP0ENTRYLO0MASK);
@@ -232,6 +254,44 @@ module CP0(
             end
             `CP0ERROREPC    : alu0_cp0.readData = ErrorEPC;
             default         : alu0_cp0.readData = 32'h0000000;
+        endcase
+    end
+
+
+    always_comb begin
+        case (alu1_cp0.addr)
+            `CP0INDEX       : alu1_cp0.readData = Index;
+            `CP0RANDOM      : alu1_cp0.readData = Random;
+            `CP0ENTRYLO0    : alu1_cp0.readData = EntryLo0;
+            `CP0ENTRYLO1    : alu1_cp0.readData = EntryLo1;
+            `CP0CONTEXT     : alu1_cp0.readData = Context;
+            `CP0PAGEMASK    : alu1_cp0.readData = PageMask;
+            `CP0WIRED       : alu1_cp0.readData = Wired;
+            `CP0BADVADDR    : alu1_cp0.readData = BadVAddr;
+            `CP0COUNT       : alu1_cp0.readData = Count;
+            `CP0ENTRYHI     : alu1_cp0.readData = EntryHi;
+            `CP0COMPARE     : alu1_cp0.readData = Compare;
+            `CP0STATUS      : alu1_cp0.readData = Status;
+            `CP0CAUSE       : alu1_cp0.readData = Cause;
+            `CP0EPC         : alu1_cp0.readData = EPc;
+            `CP0PRID        ,
+            `CP0EBASE       : begin
+                case(alu1_cp0.sel)
+                    3'b000  : alu1_cp0.readData = PRId;
+                    3'b001  : alu1_cp0.readData = EBase;
+                    default : alu1_cp0.readData = 32'h0;
+                endcase
+            end
+            `CP0CONFIG      ,
+            `CP0CONFIG1     : begin
+                case(alu1_cp0.sel)
+                    3'b000  : alu1_cp0.readData = Config;
+                    3'b001  : alu1_cp0.readData = Config1;
+                    default : alu1_cp0.readData = 32'h0;
+                endcase
+            end
+            `CP0ERROREPC    : alu1_cp0.readData = ErrorEPC;
+            default         : alu1_cp0.readData = 32'h0000000;
         endcase
     end
 

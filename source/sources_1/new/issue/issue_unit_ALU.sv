@@ -206,36 +206,20 @@ ALU_Queue_Meta                  alu_queue_dout0, alu_queue_dout1;
 UOPBundle                       uops0, uops1;
 assign uops0                    = alu_queue_dout0.ops;
 assign uops1                    = alu_queue_dout1.ops;
-logic wake_reg_0   ;
-logic wake_reg_1   ;
-logic wake_reg_0_en;
-logic wake_reg_1_en;
+assign wake_reg_0               = uops0.dstPAddr;
+assign wake_reg_1               = uops1.dstPAddr;
+assign wake_reg_0_en            = uops0.dstwe && sel0_valid;
+assign wake_reg_1_en            = uops1.dstwe && sel1_valid;
 
 always_comb begin
-    if(uops1.isPriv)    begin
-        issue_info_0             = uops1;
-        issue_info_1             = uops0;
-        issue_info_0.valid       = issue_en_1;
-        issue_info_1.valid       = issue_en_0;
-        wake_reg_0               = uops1.dstPAddr;
-        wake_reg_1               = uops0.dstPAddr;
-        wake_reg_0_en            = uops1.dstwe && sel1_valid;
-        wake_reg_1_en            = uops0.dstwe && sel0_valid;
-    end else begin
-        issue_info_0             = uops0;
-        issue_info_1             = uops1;
-        issue_info_0.valid       = issue_en_0;
-        issue_info_1.valid       = issue_en_1;
-        wake_reg_0               = uops0.dstPAddr;
-        wake_reg_1               = uops1.dstPAddr;
-        wake_reg_0_en            = uops0.dstwe && sel0_valid;
-        wake_reg_1_en            = uops1.dstwe && sel1_valid;
-    end
+    issue_info_0             = uops0;
+    issue_info_1             = uops1;
+    issue_info_0.valid       = issue_en_0;
+    issue_info_1.valid       = issue_en_1;
 end
 
 assign issue_en_0               = sel0_valid;
 assign issue_en_1               = sel1_valid;
-
 iq_alu u_iq_alu(
     // Global Signals
     .clk            (clk            ),
