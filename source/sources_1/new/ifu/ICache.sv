@@ -289,7 +289,7 @@ module ICache(
             sRecover: begin
                 if(rst) begin
                     nxtState = sReset;
-                end else if(instResp.valid && ctrl_iCache.pause) begin
+                end else if(instResp.valid && (ctrl_iCache.pause || ctrl_iCache.flush)) begin
                     nxtState = sIdle;
                 end else if(instResp.valid && !ctrl_iCache.pause) begin
                     nxtState = sRunning;
