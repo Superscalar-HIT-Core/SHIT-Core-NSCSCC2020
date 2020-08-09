@@ -17,8 +17,8 @@ module NLP(
 // fake nlp for now
 
     // fixed 16 entry
-    NLPEntry            data        [15:0];
-    logic       [3:0]   currentHead;
+    NLPEntry            data        [31:0];
+    logic       [4:0]   currentHead;
     logic               backendUpdateMatch;
     logic               if3UpdateMatch;
 
@@ -26,7 +26,7 @@ module NLP(
 `ifndef DISABLE_NLP
         nlp_if0.nlpInfo0 = 0;
         nlp_if0.nlpInfo1 = 0;
-        for(integer i = 0; i < 16; i++) begin
+        for(integer i = 0; i < 32; i++) begin
             if(data[i].valid && data[i].pc == (regs_nlp.PC & 32'hffff_fffc)) begin
                 nlp_if0.nlpInfo0.target     = data[i].targetAddr;
                 nlp_if0.nlpInfo0.bimState   = data[i].bimState;
@@ -35,7 +35,7 @@ module NLP(
                 break;
             end
         end
-        for(integer i = 0; i < 16; i++) begin
+        for(integer i = 0; i < 32; i++) begin
             if(data[i].valid && data[i].pc == (regs_nlp.PC | 32'h0000_0004)) begin
                 nlp_if0.nlpInfo1.target     = data[i].targetAddr;
                 nlp_if0.nlpInfo1.bimState   = data[i].bimState;
@@ -47,7 +47,7 @@ module NLP(
 
         backendUpdateMatch  = `FALSE;
         if3UpdateMatch      = `FALSE;
-        for(integer i = 0; i < 16; i++) begin
+        for(integer i = 0; i < 32; i++) begin
             if(data[i].valid && data[i].pc == backend_nlp.update.pc) begin
                 backendUpdateMatch  = `TRUE;
             end
@@ -70,11 +70,11 @@ module NLP(
     always_ff @(posedge clk) begin
         if(rst) begin
             currentHead <= 0;
-            for(integer i = 0; i < 16; i++) data[i] <= 0;
+            for(integer i = 0; i < 32; i++) data[i] <= 0;
         end 
         else begin
             if (if3_nlp.update.valid && if3UpdateMatch) begin
-                for(integer i = 0; i < 16; i++) begin
+                for(integer i = 0; i < 32; i++) begin
                     if(data[i].valid && data[i].pc == if3_nlp.update.pc) begin
                         data[i].targetAddr     <= if3_nlp.update.target;
                         if(if3_nlp.update.shouldTake) begin
@@ -93,7 +93,7 @@ module NLP(
             end
 
             if (backend_nlp.update.valid && backendUpdateMatch) begin
-                for(integer i = 0; i < 16; i++) begin
+                for(integer i = 0; i < 32; i++) begin
                     if(data[i].valid && data[i].pc == backend_nlp.update.pc) begin
                         data[i].targetAddr     <= backend_nlp.update.target;
                         if(backend_nlp.update.shouldTake) begin
