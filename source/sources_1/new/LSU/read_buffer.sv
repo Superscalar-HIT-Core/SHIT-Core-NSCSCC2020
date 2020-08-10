@@ -58,7 +58,7 @@ module read_buffer(
         for(l = 0; l < 16; l = l + 1)
             if(valids[j])
                 cnt = cnt + 1;
-        lsu2rb.half = cnt >= 8;
+        lsu2rb.half = cnt >= 6;
     end
 
     assign lsu2rb.busy = (rbuffer[avail].valid == 1'b1) | lsu2rb.flush;

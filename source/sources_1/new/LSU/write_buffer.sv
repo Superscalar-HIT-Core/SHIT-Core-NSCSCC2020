@@ -37,7 +37,7 @@ module write_buffer(
         for(j = 0; j < 16; j = j + 1)
             if(wbuffer[j].valid)
                 cnt = cnt + 1;
-        lsu2wb.half = cnt >= 8;
+        lsu2wb.half = cnt >= 6;
     end
 
     always_ff @(posedge g.clk)
