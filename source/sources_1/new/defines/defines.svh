@@ -15,9 +15,9 @@
 `define CMPQ_SEL_UP2    2'b11
 
 `define UOP_WIDTH   7:0
-`define ROB_SIZE    64
+`define ROB_SIZE    32
 `define ROB_ID_W    1+`ROB_ADDR_W
-`define ROB_ADDR_W  5:0
+`define ROB_ADDR_W  4:0
 `define TRUE        1'b1
 `define FALSE       1'b0
 

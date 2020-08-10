@@ -30,6 +30,30 @@ module Predictor(
     // input commmit_valid,
     // input [31:0] commit_LinkPC
 );  
+    reg         commit_valid_r;
+    PredInfo    committed_pred_info_r;
+    reg         committed_branch_taken_r;
+    reg         committed_mispred_r;
+    reg         commit_update_target_en_r;
+    reg[31:0]   committed_target_r;
+
+    always @(posedge clk)  begin
+        if(rst) begin
+            commit_valid_r                  <= 0;
+            committed_pred_info_r           <= 0;
+            committed_branch_taken_r        <= 0;
+            committed_mispred_r             <= 0;
+            commit_update_target_en_r       <= 0;
+            committed_target_r              <= 0;
+        end else begin
+            commit_valid_r                  <= commit_valid           ;
+            committed_pred_info_r           <= committed_pred_info    ;
+            committed_branch_taken_r        <= committed_branch_taken ;
+            committed_mispred_r             <= committed_mispred      ;
+            commit_update_target_en_r       <= commit_update_target_en;
+            committed_target_r              <= committed_target       ;
+        end
+    end
 
     GlobalHistPred pred_info_global_o;
     LocalHistPred pred_info_local_o;
@@ -40,8 +64,8 @@ module Predictor(
     CPHT_Entry [1023:0] CPHT;
     wire [31:0] br_PC_dly;
     LocalHistPred committed_pred_info_local;
-    assign committed_pred_info_local.bht_index = committed_pred_info.bht_index;
-    assign committed_pred_info_local.pht_index = committed_pred_info.pht_index;
+    assign committed_pred_info_local.bht_index = committed_pred_info_r.bht_index;
+    assign committed_pred_info_local.pht_index = committed_pred_info_r.pht_index;
     wire pred_direction_valid, pred_address_valid;
     LocalHistPredictor localhist(
         .clk(clk),
@@ -51,12 +75,11 @@ module Predictor(
         .pred_info(pred_info_local_o),
         .bhr(bhr),
         .pred_taken(pred_taken_local),
-        .commit_update(commit_valid),
+        .commit_update(commit_valid_r),
         .committed_pred_info(committed_pred_info_local),
-        .committed_taken(committed_branch_taken),
+        .committed_taken(committed_branch_taken_r),
         .br_PC_out(br_PC_dly)
     );
-
     wire [31:0] pred_target_o;
     wire [9:0] btb_index_o;
     BTB btb(
@@ -67,9 +90,9 @@ module Predictor(
         .pred_target(pred_target_o),
         .pred_btb_index(btb_index_o),
         .BHR(bhr),
-        .commit_update_en(commit_valid && commit_update_target_en), // Only update for inderect branches
-        .commit_update_index(committed_pred_info.btb_index),
-        .commit_update_target(committed_target) 
+        .commit_update_en(commit_valid_r && commit_update_target_en_r), // Only update for inderect branches
+        .commit_update_index(committed_pred_info_r.btb_index),
+        .commit_update_target(committed_target_r) 
     );
     // wire [31:0] IF3_ReturnPC_o;
     // RAS ras(
@@ -80,13 +103,13 @@ module Predictor(
     //     .isLink(IF3_isLink),
     //     .isReturn(IF3_isReturn),
     //     .target(IF3_ReturnPC_o),
-    //     .commit_valid(commit_valid),
+    //     .commit_valid_r(commit_valid_r),
     //     .committed_isLink(committed_isLink),
     //     .committed_isReturn(committed_isReturn),
     //     .committed_pc(commit_LinkPC)
     // );
     GlobalHistPred committed_pred_info_global;
-    assign committed_pred_info_global.pht_index_g = committed_pred_info.pht_index_g;
+    assign committed_pred_info_global.pht_index_g = committed_pred_info_r.pht_index_g;
     GlobalHistPredictor globalhist(
         .clk(clk),
         .rst(rst),
@@ -100,9 +123,9 @@ module Predictor(
         // For updating global histroy
         .pred_valid_local( IF3_isBR || IF3_isJ ), 
         .pred_taken_local( pred_taken || IF3_isJ ),
-        .commit_update(commit_valid),
+        .commit_update(commit_valid_r),
         .committed_pred_info(committed_pred_info_global),
-        .committed_taken(committed_branch_taken)
+        .committed_taken(committed_branch_taken_r)
     );
 
 
@@ -116,7 +139,7 @@ module Predictor(
     //         for(integer i = 0; i < 1024; i++)   begin
     //             CPHT[i] <= 0;
     //         end
-    //     end else if(commit_valid) begin
+    //     end else if(commit_valid_r) begin
     //         // TODO
     //         if(committed_pred_info.use_global && committed_mispred)   begin
     //             CPHT[CPHT_index_update] <= CPHT[CPHT_index_update] == 2'b00 ? 2'b00 : CPHT[CPHT_index_update] - 2'b01;

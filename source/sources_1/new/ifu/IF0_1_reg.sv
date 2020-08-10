@@ -20,8 +20,8 @@ module IF0_1_reg(
 
     logic           headIsDS;
     logic [31:0]    dsAddr;
-    (* mark_debug = "yes" *)logic [31:0]    PC;
-    (* mark_debug = "yes" *)wire debug_redirect = backend_if0.redirect;
+    logic [31:0]    PC;
+    wire debug_redirect = backend_if0.redirect;
 
     assign if0_regs.PC      = PC;
     assign regs_nlp.PC      = PC;

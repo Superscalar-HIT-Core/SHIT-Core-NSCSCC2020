@@ -234,22 +234,27 @@ module IF_3(
     end
 
     // nlp update info
-    always_comb begin
-        if3_nlp.update = 0;
-        if(if3_regs.inst0.valid && (pred_valid && inst0IsCtrl || (if3_regs.inst0.isJ && (!inst0Jr || (inst0Jr && if3_regs.inst0.nlpInfo.valid))))) begin
-            if3_nlp.update.pc          = if3_regs.inst0.pc;
-            if3_nlp.update.target      = if3_regs.inst0.predAddr;
-            if3_nlp.update.bimState    = if3_regs.inst0.nlpInfo.valid ? if3_regs.inst0.nlpInfo.bimState : 2'b01;
-            if3_nlp.update.shouldTake  = if3_regs.inst0.predTaken;
-            if3_nlp.update.valid       = `TRUE;
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            if3_nlp.update.pc          <= 0;
+            if3_nlp.update.target      <= 0;
+            if3_nlp.update.bimState    <= 0;
+            if3_nlp.update.shouldTake  <= 0;
+            if3_nlp.update.valid       <= 0;
+        end else if(if3_regs.inst0.valid && (pred_valid && inst0IsCtrl || (if3_regs.inst0.isJ && (!inst0Jr || (inst0Jr && if3_regs.inst0.nlpInfo.valid))))) begin
+            if3_nlp.update.pc          <= if3_regs.inst0.pc;
+            if3_nlp.update.target      <= if3_regs.inst0.predAddr;
+            if3_nlp.update.bimState    <= if3_regs.inst0.nlpInfo.valid ? if3_regs.inst0.nlpInfo.bimState : 2'b01;
+            if3_nlp.update.shouldTake  <= if3_regs.inst0.predTaken;
+            if3_nlp.update.valid       <= `TRUE;
         end else if(if3_regs.inst1.valid && (pred_valid && inst1IsCtrl || (if3_regs.inst1.isJ && (!inst1Jr || (inst1Jr && if3_regs.inst1.nlpInfo.valid))))) begin
-            if3_nlp.update.pc          = if3_regs.inst1.pc;
-            if3_nlp.update.target      = if3_regs.inst1.predAddr;
-            if3_nlp.update.bimState    = if3_regs.inst1.nlpInfo.valid ? if3_regs.inst1.nlpInfo.bimState : 2'b01;
-            if3_nlp.update.shouldTake  = if3_regs.inst1.predTaken;
-            if3_nlp.update.valid       = `TRUE;
+            if3_nlp.update.pc          <= if3_regs.inst1.pc;
+            if3_nlp.update.target      <= if3_regs.inst1.predAddr;
+            if3_nlp.update.bimState    <= if3_regs.inst1.nlpInfo.valid ? if3_regs.inst1.nlpInfo.bimState : 2'b01;
+            if3_nlp.update.shouldTake  <= if3_regs.inst1.predTaken;
+            if3_nlp.update.valid       <= `TRUE;
         end else begin
-            if3_nlp.update.valid       = `FALSE;
+            if3_nlp.update.valid       <= `FALSE;
         end
     end
 endmodule

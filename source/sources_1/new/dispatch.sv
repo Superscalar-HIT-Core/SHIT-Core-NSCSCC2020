@@ -16,7 +16,6 @@ module dispatch(
     output ALU_Queue_Meta rs_alu_dout_0, rs_alu_dout_1,
     output MDU_Queue_Meta rs_mdu_dout_0,
     output LSU_Queue_Meta rs_lsu_dout_0, rs_lsu_dout_1,
-    // Dispatch阶段设置busy位，写Scoreboard
     output PRFNum dispatch_inst0_wnum,
     output PRFNum dispatch_inst1_wnum,
     output dispatch_inst0_wen,
@@ -24,27 +23,24 @@ module dispatch(
     Dispatch_ROB.dispatch dispatch_rob,
     output pause_req
     );
-// 分配判断
-(* mark_debug = "yes" *) wire [31:0] dispatch_input_pc0 = inst_0_ops.pc;
-(* mark_debug = "yes" *) wire [31:0] dispatch_input_pc1 = inst_1_ops.pc;
+wire [31:0] dispatch_input_pc0 = inst_0_ops.pc;
+wire [31:0] dispatch_input_pc1 = inst_1_ops.pc;
 wire robEmpty = dispatch_rob.empty;
 wire hasPrivInst =  (inst_0_ops.valid && inst_0_ops.isPriv) || 
                     (inst_1_ops.valid && inst_1_ops.isPriv);
 wire slotsFull = inst_0_ops.valid && inst_1_ops.valid;
 wire PrivInstisDS = (inst_1_ops.valid && inst_1_ops.isPriv && inst_1_ops.isDS);
-wire passThrough = ~hasPrivInst || PrivInstisDS;                // 不需要暂停，直接传�?�过�?
+wire passThrough = ~hasPrivInst || PrivInstisDS;                
 reg pause_req_cp0;
-assign pause_req = pause_req_cp0;           // rob的已经在外面处理�?
-// 对ROB发来的ROB ID进行处理
-wire [7:0] robID_0, robID_1;
-(* mark_debug = "yes" *) assign robID_0 = { dispatch_rob.robID[6:0], 1'b0 } ;
-(* mark_debug = "yes" *) assign robID_1 = { dispatch_rob.robID[6:0], 1'b1 } ;
+assign pause_req = pause_req_cp0;           
+wire [`ROB_ID_W] robID_0, robID_1;
+assign robID_0 = { dispatch_rob.robID[`ROB_ADDR_W], 1'b0 } ;
+assign robID_1 = { dispatch_rob.robID[`ROB_ADDR_W], 1'b1 } ;
 
-// 根据当前的状态，对当前的两个ops进行reorder (TODO) //////////////////////////////
 UOPBundle inst_0_ops_reordered, inst_1_ops_reordered;
 // Handle CP0 Logic
 typedef enum bit[2:0] { IDLE, WAIT_ROB_SLOT0, WR_ROB_SLOT0, WAIT_ROB_SLOT1, WR_ROB_SLOT1, DONE } dispatchState;
-(* mark_debug = "yes" *)dispatchState current_state, next_state;
+dispatchState current_state, next_state;
 
 always @(posedge clk)   begin
     if(rst) begin
@@ -54,9 +50,6 @@ always @(posedge clk)   begin
     end
 end
 
-// CP0?????????ROB????????????LSU?Store Buffer??????
-// ??????????????????????CP0????????ROB???????????????
-// ?LSU???????????????CP0??????????CP0????????Set Unbusy?????Set busy
 always_comb begin
     next_state = IDLE;
     case(current_state)
@@ -86,7 +79,7 @@ always_comb begin
     endcase
 end
 
-always_comb begin   // 在此处完成reorder
+always_comb begin  
     pause_req_cp0 = 0;
     inst_0_ops_reordered = 0;
     inst_1_ops_reordered = 0;
@@ -138,8 +131,8 @@ always_comb begin   // 在此处完成reorder
     inst_1_ops_reordered.id = robID_1;
     inst_1_ops_reordered.busy = ( inst_1_ops_reordered.valid && inst_1_ops_reordered.uOP != NOP_U && inst_1_ops_reordered.uOP != MDBUBBLE_U );
 end
-(* mark_debug = "yes" *) wire [31:0] dispatch_out_pc0 = inst_0_ops_reordered.pc;
-(* mark_debug = "yes" *) wire [31:0] dispatch_out_pc1 = inst_1_ops_reordered.pc;
+wire [31:0] dispatch_out_pc0 = inst_0_ops_reordered.pc;
+wire [31:0] dispatch_out_pc1 = inst_1_ops_reordered.pc;
 wire inst0_isMul, inst1_isMul;
 wire inst0_isStore, inst1_isStore;
 assign inst0_isMul =    (inst_0_ops_reordered.uOP == MULTHI_U ) || 
@@ -167,7 +160,7 @@ wire inst_1_is_alu = (inst_1_ops_reordered.rs_type == RS_ALU) && inst_1_ops_reor
 wire inst_0_is_mdu = (inst_0_ops_reordered.rs_type == RS_MDU) && inst_0_ops_reordered.valid;
 wire inst_0_is_lsu = (inst_0_ops_reordered.rs_type == RS_LSU) && inst_0_ops_reordered.valid;
 wire inst_1_is_lsu = (inst_1_ops_reordered.rs_type == RS_LSU) && inst_1_ops_reordered.valid;
-// 每个指令的操作数是否已经准备好（这里只是设置是否读寄存器�?
+// 
 wire inst0_r0_ren = inst_0_ops_reordered.op0re && (|inst_0_ops_reordered.op0LAddr);
 wire inst0_r1_ren = inst_0_ops_reordered.op1re && (|inst_0_ops_reordered.op1LAddr);
 wire inst1_r0_ren = inst_1_ops_reordered.op0re && (|inst_1_ops_reordered.op0LAddr);
@@ -178,8 +171,7 @@ assign inst0_rdy.prs2_rdy = ~(inst0_r1_ren);
 assign inst1_rdy.prs1_rdy = ~(inst1_r0_ren);
 assign inst1_rdy.prs2_rdy = ~(inst1_r1_ren);
 
-// 分发出去的指令是否会写寄存器
-// 用于分发阶段的setBusy(各个Scoreboard)
+
 assign dispatch_inst0_wnum = inst_0_ops_reordered.dstPAddr;
 assign dispatch_inst1_wnum = inst_1_ops_reordered.dstPAddr;
 assign dispatch_inst0_wen = inst_0_ops_reordered.dstwe && inst_0_ops_reordered.valid;

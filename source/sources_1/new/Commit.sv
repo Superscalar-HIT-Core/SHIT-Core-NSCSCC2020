@@ -35,13 +35,13 @@ module Commit(
     logic           isDS;
     logic           inst0Store;
     logic           inst1Store;
-    (* mark_debug = "yes" *) reg [5:0] ext_interrupt_signal;
-    (* mark_debug = "yes" *) logic causeInt;
-    (* mark_debug = "yes" *) logic           pendingInt;
-    (* mark_debug = "yes" *) wire [31:0] debug_rob_pc0 = rob_commit.uOP0.pc;
-    (* mark_debug = "yes" *) wire [31:0] debug_rob_pc1 = rob_commit.uOP1.pc;
-    (* mark_debug = "yes" *) wire busy_pc0 = rob_commit.uOP0.busy;
-    (* mark_debug = "yes" *) wire busy_pc1 = rob_commit.uOP1.busy;
+    reg [5:0] ext_interrupt_signal;
+    logic causeInt;
+    logic           pendingInt;
+    wire [31:0] debug_rob_pc0 = rob_commit.uOP0.pc;
+    wire [31:0] debug_rob_pc1 = rob_commit.uOP1.pc;
+    wire busy_pc0 = rob_commit.uOP0.busy;
+    wire busy_pc1 = rob_commit.uOP1.busy;
     always @(posedge clk)   begin
         if(rst) begin
             ext_interrupt_signal <= 0;
