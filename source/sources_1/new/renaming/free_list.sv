@@ -45,13 +45,42 @@ freelist_enc64 enc1(
 
 assign free_list_3 = inst_1_req ? (free_list_2 | (1'b1 << free_num_1)) : free_list_2;   // 第二条指令分配之后
 
-assign allocatable =    (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req) ||
-                        (free_valid_0 && inst_0_req && ~inst_1_req) ||
-                        (free_valid_1 && inst_1_req && ~inst_0_req) || (~inst_0_req && ~inst_1_req); // 只有一个指令请求，且请求完就满了的情况
+// assign allocatable =    (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req) ||
+//                         (free_valid_0 && inst_0_req && ~inst_1_req) ||
+//                         (free_valid_1 && inst_1_req && ~inst_0_req) || (~inst_0_req && ~inst_1_req); // 只有一个指令请求，且请求完就满了的情况
 
-// assign allocatable =  (free_valid_0 && inst_0_req && free_valid_1 && inst_1_req && (free_num_0 != free_num_1)) ||
-//                     (free_valid_0 && inst_0_req && ~inst_1_req) ||
-//                     (free_valid_1 && inst_1_req && ~inst_0_req); // 只有一个指令请求，且请求完就满了的情况
+reg [5:0] num_free_regs, committed_num_free_regs;
+// Once an instruction is committed, the number of free regs will not increase
+// Only need to consider the newly allocated regs(stale is zero)
+// For newly allocated register, if the stale is 0, it has no register to free
+wire commit_allocate_new_0 = commit_info_0.wr_reg_commit && commit_valid_0 && commit_info_0.stale_prf == 0;
+wire commit_allocate_new_1 = commit_info_1.wr_reg_commit && commit_valid_1 && commit_info_1.stale_prf == 0;
+// The committed instruction has a register to free
+wire commit_free_0 = commit_info_0.wr_reg_commit && commit_valid_0 && commit_info_0.stale_prf != 0;
+wire commit_free_1 = commit_info_1.wr_reg_commit && commit_valid_1 && commit_info_1.stale_prf != 0;
+assign allocatable =    ( inst_0_req ^ inst_1_req ) ? num_free_regs >=1 : 
+                        ( inst_0_req & inst_1_req ) ? num_free_regs >=2 : 1;
+always_ff @(posedge clk) begin
+    if(rst) begin
+        num_free_regs <= 63;
+    end else if(recover) begin
+        num_free_regs <= committed_num_free_regs;
+    end else if(allocatable && ~pause) begin
+        num_free_regs <= num_free_regs - inst_0_req - inst_1_req + commit_free_0 + commit_free_1;
+    end else begin
+        num_free_regs <= num_free_regs + commit_free_0 + commit_free_1;
+    end
+end
+
+always_ff @(posedge clk) begin
+    if(rst) begin
+        committed_num_free_regs <= 63;
+    end else begin
+        committed_num_free_regs <= committed_num_free_regs - commit_allocate_new_0 - commit_allocate_new_1;
+    end
+end
+
+
 
 // free_list after freeing the registers
 wire [`PRF_NUM-1:0] free_list_after_alloc = allocatable ? free_list_3 : free_list_1;    // 必须一次能够分配两个，否则暂停
@@ -92,5 +121,17 @@ end
 
 assign inst_0_prf = free_num_0;
 assign inst_1_prf = free_num_1;
+
+// synopsys_translate_off
+reg [5:0] debug_commit_free_regs, debug_free_regs;
+always_comb begin
+    debug_commit_free_regs = 0;
+    debug_free_regs = 0;
+    for(integer i = 0;i<64;i++) begin
+        if(committed_fl[i] == 0) debug_commit_free_regs = debug_commit_free_regs + 1;
+        if(free_list_1[i] == 0) debug_free_regs = debug_free_regs + 1;
+    end
+end
+// synopsys_translate_on
 
 endmodule
