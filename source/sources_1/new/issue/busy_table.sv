@@ -6,6 +6,11 @@ module busy_table_6w4r(
     input clk,
     input rst,
     input flush,
+    `ifdef SNAPSHOT
+    input make_snapshot,
+    input recover_snapshot,
+    input release_snapshot,
+    `endif
     // 4 read ports for dispatching, handles bypass logic 
     PRFNum rd_port0,
     PRFNum rd_port1,
@@ -79,15 +84,43 @@ assign busy1 = ~busy1_cleaned & busytable_bank0[rd_port1];
 assign busy2 = ~busy2_cleaned & busytable_bank1[rd_port2];
 assign busy3 = ~busy3_cleaned & busytable_bank1[rd_port3];
 
+`ifdef SNAPSHOT
+reg [63:0] snapshot[3:0];
+reg [1:0] tail_ptr, head_ptr;
+`endif
 always @(posedge clk)   begin
     if(rst || flush)    begin
         busytable_bank0 <= `PRF_NUM'b0;
         busytable_bank1 <= `PRF_NUM'b0;
+`ifdef SNAPSHOT
+    end else if(recover_snapshot) begin
+        busytable_bank0 <= snapshot[tail_ptr];
+        busytable_bank1 <= snapshot[tail_ptr];
+`endif
     end else begin
         busytable_bank0 <= (busytable_bank0 | set_busy_vec) & clr_busy_vec;
         busytable_bank1 <= (busytable_bank1 | set_busy_vec) & clr_busy_vec;
     end
 end
 
+`ifdef SNAPSHOT
+always @(posedge clk)   begin
+    if(rst || flush)    begin
+        for(integer i=0;i<4;i++) begin
+            snapshot[i] <= `PRF_NUM'b0;
+        end
+        head_ptr <= 0;
+        tail_ptr <= 0;
+    end else if (recover_snapshot) begin  // When encounters a mistaken wake, the scoreboard must be recovered
+        head_ptr <= 0;
+        tail_ptr <= 0;
+    end else if(release_snapshot) begin     // When the LSU reports a "hit", the snapshot can be released
+        tail_ptr <= tail_ptr + 1;
+    end else if(make_snapshot) begin        // When the LSU queue issues a new instruction, a snapshot must be taken 
+        snapshot[head_ptr] <= busytable_bank0;
+        head_ptr <= head_ptr + 1;
+    end
+end
+`endif
 
 endmodule

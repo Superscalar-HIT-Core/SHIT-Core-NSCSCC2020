@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 `include "../defs.sv"
-`define USE_RECOVER_WRITE_ICACHE
+`define _USE_RECOVER_WRITE_ICACHE
 //  virtually index, physically tag
 //  index : low 10 bit[9:0]
 //      128bit/cacheline (16 byte), [3:0] addr in line
@@ -75,7 +75,7 @@ module ICache(
     logic           hit1;
     logic           hit2;
     logic           hit3;
-    logic  [20 :0]  tag;
+    logic  [21 :0]  tag;
     logic  [5  :0]  lineAddress;
     logic  [127:0]  hitLine;
     logic  [31 :0]  hitInsts[3 :0];
@@ -156,10 +156,10 @@ module ICache(
     assign hitInsts[2] = hitLine[95 :64];
     assign hitInsts[3] = hitLine[127:96];
     always_ff @ (posedge clk) begin
-        collision0          <= tag0IO.address != compInputPC[9:4];
-        collision1          <= tag1IO.address != compInputPC[9:4];
-        collision2          <= tag2IO.address != compInputPC[9:4];
-        collision3          <= tag3IO.address != compInputPC[9:4];
+        collision0          <= tag0IO.writeEn;
+        collision1          <= tag1IO.writeEn;
+        collision2          <= tag2IO.writeEn;
+        collision3          <= tag3IO.writeEn;
         if(rst) begin
             for (integer i = 0; i < 4; i++) begin
                 valid[i]    <= 0;
@@ -246,10 +246,11 @@ module ICache(
     assign hit2         = tag2IO.dataOut == tag && valid[2][lineAddress] && !collision2;
     assign hit3         = tag3IO.dataOut == tag && valid[3][lineAddress] && !collision3;
     assign hit          = hit0 || hit1 || hit2 || hit3;
-    assign hitLine      =   hit0 ? data0IO.dataOut :
+    assign hitLine      = (instResp.valid && instResp.ready) ? instResp.cacheLine :
+                            hit0 ? data0IO.dataOut :
                             hit1 ? data1IO.dataOut :
                             hit2 ? data2IO.dataOut :
-                            hit3 ? data3IO.dataOut : instResp.cacheLine;
+                            hit3 ? data3IO.dataOut : 0;
     assign lineAddress  = PCReg[9 : 4];
     assign tag          = iCache_tlb.phyAddr0[31:10];
 
@@ -298,9 +299,9 @@ module ICache(
                 end
             end
             sIdle: begin
-                if(rst || ctrl_iCache.flush) begin
+                if(rst) begin
                     nxtState = sReset;
-                end else if(!ctrl_iCache.pause) begin
+                end else if(!ctrl_iCache.pause && !ctrl_iCache.flush) begin
                     nxtState = sRunning;
                 end else begin
                     nxtState = sIdle;

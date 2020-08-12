@@ -2,6 +2,46 @@
 `include "../defs.sv"
 `include "../defines/defines.svh"
 
+//                                             Push Enable
+//                                             (IF-3 Detects a CALL Instruction) 
+//                                     +-------------------------------------+
+//                                     |                                     |
+//                                     |                                     |
+//                                     |                                     |
+//                                     |                                     |
+//                                     |                                     |
+//             +-+                     |                       ++            |
+//             | |                     |                       ||            |
+//             | |                     |                       ||            |
+//             | |            +-----------------+               ||     +--------------------------+
+//             | |            |         |       |               ||     |      +                   |
+//             | |            |         v       |               ||     |                          |
+//             | |            |                 |               ||     |                          |
+//             | |            |                 |  Stack Top    ||     |                          |
+//             | |            |                 |  Return Addr  |-------->                        |
+//             | |            |                 |               ||     |                          |
+//             | |            |                 +-------------->-|     |                          |
+//             | |            |       RAS       |               ||     |          IF-3            |
+//             | |            |                 |               ||     |                          |
+//             | |            |                 |               ||     |                          |
+//             | |            |                 |               ||     |                          |
+//             | |            |                 |               ||     |                          |
+//             | |            |                 |               ||     |                          |
+//             | |            |                 |               ||     |                          |
+//             | |            |                 |               ||     |                          |
+//             | |            +-----------+-----+               ||     +--+-----------------------+
+//             | |                        ^                     ||        |
+//             | |                        |                     ||        |
+//             | |                        |                     ||        |
+//             +-+                        |                     ++        |
+//                                        |                               |
+//                                        |                               |
+//                                        +-------------------------------+
+//                                                POP Enable
+//                                                (IF-3 Uses the Address)
+
+
+
 module RAS(
     input                   clk,
     input                   rst,
@@ -10,7 +50,7 @@ module RAS(
     input   logic           valid,
     input   logic           isLink,
     input   logic           isReturn,
-    output  logic [31:0]    target
+    output  logic [31:0]    target,
     input   logic           commit_valid,
     input   logic           committed_isLink,
     input   logic           committed_isReturn,
@@ -38,7 +78,7 @@ module RAS(
         end
     end
 
-    assign target = ras[ras_top];
+    assign target = ras[ras_top-1];
     
     reg [31:0] committed_ras [15:0];  // 16 Depth ras(committed)
 
