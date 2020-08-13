@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 `include "../defs.sv"
-`define _USE_RECOVER_WRITE_ICACHE
+`define USE_RECOVER_WRITE_ICACHE
 //  virtually index, physically tag
 //  index : low 10 bit[9:0]
 //      128bit/cacheline (16 byte), [3:0] addr in line
@@ -156,10 +156,10 @@ module ICache(
     assign hitInsts[2] = hitLine[95 :64];
     assign hitInsts[3] = hitLine[127:96];
     always_ff @ (posedge clk) begin
-        collision0          <= tag0IO.writeEn;
-        collision1          <= tag1IO.writeEn;
-        collision2          <= tag2IO.writeEn;
-        collision3          <= tag3IO.writeEn;
+        collision0          <= tag0IO.writeEn && (tag0IO.address != compInputPC[9:4]);
+        collision1          <= tag1IO.writeEn && (tag1IO.address != compInputPC[9:4]);
+        collision2          <= tag2IO.writeEn && (tag2IO.address != compInputPC[9:4]);
+        collision3          <= tag3IO.writeEn && (tag3IO.address != compInputPC[9:4]);
         if(rst) begin
             for (integer i = 0; i < 4; i++) begin
                 valid[i]    <= 0;
