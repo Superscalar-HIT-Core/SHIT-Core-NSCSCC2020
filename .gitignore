@@ -3,10 +3,5 @@
 !*.sv
 !*.svh
 !*.coe
-!ifuTest.txt
-!*.xpr
-!*.wcfg
-!source
-!*.asm
-!*.hex
-!*.docx
+!src
+!*.pdf
