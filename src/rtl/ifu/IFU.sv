@@ -44,7 +44,6 @@ module IFU(
     IF_0            if0(.*);
     IF0_1_reg       if01reg(.*);
     NLP             nlp(.*);
-    BPD             bpd(.*);
     ICache          iCache(.*);
     IF2_3_reg       if23reg(.*);
     IF_3            if3(.*);
@@ -59,7 +58,7 @@ module IFU(
     //     .IF3_isBranch           (IF3_isBranch           ),
     //     .IF3_isJ                (IF3_isJ                ),
     //     .br_pc                  (regs_iCache.PC         ),
-    //     // 送出的结果
+    //     // 送出的结�?
     //     .pred_valid             (pred_valid             ),
     //     .pred_taken             (pred_taken             ),
     //     .pred_target            (pred_target            ),
