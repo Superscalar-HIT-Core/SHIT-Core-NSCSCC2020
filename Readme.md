@@ -32,12 +32,12 @@ Superscalar HIT Core is a quad-issue out-of-order processor core implementing MI
 - Support privileged CP0 instructions 
 - GShare branch predictor
 
-Design document and slides is available only in Chinese.
+Design document and slides are available in Chinese.
 
 
 ## 作者 Authors
 
 - 胡博涵 Bohan Hu (hubohancser@gmail.com)
-- 黎庚祉 Gnegzhi Li (willsonlgz@gmail.com)
+- 黎庚祉 Gengzhi Li (willsonlgz@gmail.com)
 - 施杨 Yang Shi (Gyhanis@gmail.com)
 - 王世焜 Shikun Wang (tanimodoli@gmail.com)
